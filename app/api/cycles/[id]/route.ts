@@ -5,6 +5,7 @@ import {
   CycleDetail,
   EngineerWithCapacity,
   PitchWithAssignments,
+  PitchStatus,
 } from "@/lib/types";
 
 export async function GET(
@@ -73,7 +74,7 @@ export async function GET(
         title: pitch.title,
         pitchDocUrl: pitch.pitchDocUrl,
         estimateWeeks,
-        status: pitch.status,
+        status: pitch.status as PitchStatus,
         priority: pitch.priority,
         notes: pitch.notes,
         assignedWeeks,
