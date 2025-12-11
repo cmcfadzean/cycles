@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Engineer {
+  id          String                  @id @default(cuid())
+  name        String
+  email       String?                 @unique
+  active      Boolean                 @default(true)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  capacities  EngineerCycleCapacity[]
+  assignments Assignment[]
+}
+
+model Cycle {
+  id          String                  @id @default(cuid())
+  name        String
+  startDate   DateTime
+  endDate     DateTime
+  description String?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  pitches     Pitch[]
+  capacities  EngineerCycleCapacity[]
+  assignments Assignment[]
+}
+
+model EngineerCycleCapacity {
+  id             String   @id @default(cuid())
+  engineer       Engineer @relation(fields: [engineerId], references: [id], onDelete: Cascade)
+  engineerId     String
+  cycle          Cycle    @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  cycleId        String
+  availableWeeks Decimal
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([engineerId, cycleId])
+}
+
+model Pitch {
+  id            String       @id @default(cuid())
+  cycle         Cycle        @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  cycleId       String
+  title         String
+  pitchDocUrl   String?
+  estimateWeeks Decimal
+  status        String       @default("PLANNED")
+  priority      Int?
+  notes         String?
+  assignments   Assignment[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Assignment {
+  id             String   @id @default(cuid())
+  cycle          Cycle    @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  cycleId        String
+  engineer       Engineer @relation(fields: [engineerId], references: [id], onDelete: Cascade)
+  engineerId     String
+  pitch          Pitch    @relation(fields: [pitchId], references: [id], onDelete: Cascade)
+  pitchId        String
+  weeksAllocated Decimal
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([cycleId, engineerId, pitchId])
+}
+
+// PitchStatus values: PLANNED, IN_PROGRESS, DONE, DROPPED
