@@ -508,6 +508,7 @@ export default function CycleDetailPage() {
   const [isDeleteEngineerModalOpen, setIsDeleteEngineerModalOpen] = useState(false);
   const [isAddPitchModalOpen, setIsAddPitchModalOpen] = useState(false);
   const [isEditPitchModalOpen, setIsEditPitchModalOpen] = useState(false);
+  const [isEditCycleModalOpen, setIsEditCycleModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [pendingAssignment, setPendingAssignment] = useState<{
     engineer: EngineerWithCapacity;
@@ -547,6 +548,12 @@ export default function CycleDetailPage() {
     name: "",
     email: "",
     availableWeeks: "",
+  });
+  const [editCycleForm, setEditCycleForm] = useState({
+    name: "",
+    startDate: "",
+    endDate: "",
+    description: "",
   });
 
   const sensors = useSensors(
@@ -1031,6 +1038,50 @@ export default function CycleDetailPage() {
     }
   }
 
+  function handleOpenEditCycle() {
+    if (!cycle) return;
+    setEditCycleForm({
+      name: cycle.name,
+      startDate: new Date(cycle.startDate).toISOString().split("T")[0],
+      endDate: new Date(cycle.endDate).toISOString().split("T")[0],
+      description: cycle.description || "",
+    });
+    setIsEditCycleModalOpen(true);
+  }
+
+  async function handleEditCycle(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (!editCycleForm.name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/cycles/${cycleId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editCycleForm.name.trim(),
+          startDate: editCycleForm.startDate,
+          endDate: editCycleForm.endDate,
+          description: editCycleForm.description.trim() || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update cycle");
+      }
+
+      toast.success("Cycle updated");
+      setIsEditCycleModalOpen(false);
+      fetchCycle();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update cycle");
+    }
+  }
+
   // Engineers not yet in this cycle
   const availableEngineers = allEngineers.filter(
     (eng) => !cycle?.engineers.find((e) => e.id === eng.id)
@@ -1090,29 +1141,50 @@ export default function CycleDetailPage() {
               <p className="mt-2 text-slate-400">{cycle.description}</p>
             )}
           </div>
-          <button
-            onClick={() => {
-              const shareUrl = `${window.location.origin}/cycles/${cycleId}/share`;
-              navigator.clipboard.writeText(shareUrl);
-              toast.success("Share link copied to clipboard!");
-            }}
-            className="btn-secondary flex items-center gap-2"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleOpenEditCycle}
+              className="btn-secondary flex items-center gap-2"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-              />
-            </svg>
-            Share
-          </button>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
+              Edit
+            </button>
+            <button
+              onClick={() => {
+                const shareUrl = `${window.location.origin}/cycles/${cycleId}/share`;
+                navigator.clipboard.writeText(shareUrl);
+                toast.success("Share link copied to clipboard!");
+              }}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                />
+              </svg>
+              Share
+            </button>
+          </div>
         </div>
 
         {/* Summary Bar */}
@@ -1948,6 +2020,92 @@ export default function CycleDetailPage() {
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* Edit Cycle Modal */}
+      <Modal
+        isOpen={isEditCycleModalOpen}
+        onClose={() => setIsEditCycleModalOpen(false)}
+        title="Edit Cycle"
+      >
+        <form onSubmit={handleEditCycle} className="space-y-5">
+          <div>
+            <label htmlFor="editCycleName" className="label">
+              Cycle Name
+            </label>
+            <input
+              id="editCycleName"
+              type="text"
+              required
+              className="input"
+              value={editCycleForm.name}
+              onChange={(e) =>
+                setEditCycleForm({ ...editCycleForm, name: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="editCycleStartDate" className="label">
+                Start Date
+              </label>
+              <input
+                id="editCycleStartDate"
+                type="date"
+                required
+                className="input"
+                value={editCycleForm.startDate}
+                onChange={(e) =>
+                  setEditCycleForm({ ...editCycleForm, startDate: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <label htmlFor="editCycleEndDate" className="label">
+                End Date
+              </label>
+              <input
+                id="editCycleEndDate"
+                type="date"
+                required
+                className="input"
+                value={editCycleForm.endDate}
+                onChange={(e) =>
+                  setEditCycleForm({ ...editCycleForm, endDate: e.target.value })
+                }
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="editCycleDescription" className="label">
+              Description (optional)
+            </label>
+            <textarea
+              id="editCycleDescription"
+              rows={3}
+              className="input resize-none"
+              value={editCycleForm.description}
+              onChange={(e) =>
+                setEditCycleForm({ ...editCycleForm, description: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => setIsEditCycleModalOpen(false)}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary">
+              Save Changes
+            </button>
+          </div>
+        </form>
       </Modal>
     </DndContext>
   );
