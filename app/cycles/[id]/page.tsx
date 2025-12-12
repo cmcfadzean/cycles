@@ -42,9 +42,13 @@ function formatDate(date: string | Date) {
 function DraggableEngineerCard({
   engineer,
   isDragging,
+  onEdit,
+  onDelete,
 }: {
   engineer: EngineerWithCapacity;
   isDragging?: boolean;
+  onEdit: (engineer: EngineerWithCapacity) => void;
+  onDelete: (engineer: EngineerWithCapacity) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `engineer-${engineer.id}`,
@@ -100,6 +104,32 @@ function DraggableEngineerCard({
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(engineer);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+            title="Edit engineer"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(engineer);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+            title="Remove from cycle"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
           <svg
             className="w-4 h-4 text-slate-400"
             fill="none"
@@ -474,6 +504,8 @@ export default function CycleDetailPage() {
 
   // Modal states
   const [isAddEngineerModalOpen, setIsAddEngineerModalOpen] = useState(false);
+  const [isEditEngineerModalOpen, setIsEditEngineerModalOpen] = useState(false);
+  const [isDeleteEngineerModalOpen, setIsDeleteEngineerModalOpen] = useState(false);
   const [isAddPitchModalOpen, setIsAddPitchModalOpen] = useState(false);
   const [isEditPitchModalOpen, setIsEditPitchModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -483,6 +515,8 @@ export default function CycleDetailPage() {
   } | null>(null);
   const [assignmentWeeks, setAssignmentWeeks] = useState("");
   const [editingPitch, setEditingPitch] = useState<PitchWithAssignments | null>(null);
+  const [editingEngineer, setEditingEngineer] = useState<EngineerWithCapacity | null>(null);
+  const [engineerToDelete, setEngineerToDelete] = useState<EngineerWithCapacity | null>(null);
 
   // Form states
   const [addEngineerForm, setAddEngineerForm] = useState({
@@ -508,6 +542,11 @@ export default function CycleDetailPage() {
     status: "PLANNED" as PitchStatus,
     priority: "",
     notes: "",
+  });
+  const [editEngineerForm, setEditEngineerForm] = useState({
+    name: "",
+    email: "",
+    availableWeeks: "",
   });
 
   const sensors = useSensors(
@@ -896,6 +935,102 @@ export default function CycleDetailPage() {
     }
   }
 
+  function handleOpenEditEngineer(engineer: EngineerWithCapacity) {
+    setEditingEngineer(engineer);
+    setEditEngineerForm({
+      name: engineer.name,
+      email: engineer.email || "",
+      availableWeeks: engineer.availableWeeks.toString(),
+    });
+    setIsEditEngineerModalOpen(true);
+  }
+
+  async function handleEditEngineer(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingEngineer) return;
+
+    if (!editEngineerForm.name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+
+    const weeks = parseFloat(editEngineerForm.availableWeeks);
+    if (isNaN(weeks) || weeks <= 0) {
+      toast.error("Please enter valid available weeks");
+      return;
+    }
+
+    try {
+      // Update engineer details
+      const res = await fetch(`/api/engineers/${editingEngineer.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editEngineerForm.name.trim(),
+          email: editEngineerForm.email.trim() || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update engineer");
+      }
+
+      // Update capacity for this cycle
+      const capacityRes = await fetch(
+        `/api/engineers/${editingEngineer.id}/capacities/${cycleId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            availableWeeks: weeks,
+          }),
+        }
+      );
+
+      if (!capacityRes.ok) {
+        const data = await capacityRes.json();
+        throw new Error(data.error || "Failed to update capacity");
+      }
+
+      toast.success("Engineer updated");
+      setIsEditEngineerModalOpen(false);
+      setEditingEngineer(null);
+      fetchCycle();
+      fetchEngineers();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update engineer");
+    }
+  }
+
+  function handleOpenDeleteEngineer(engineer: EngineerWithCapacity) {
+    setEngineerToDelete(engineer);
+    setIsDeleteEngineerModalOpen(true);
+  }
+
+  async function handleDeleteEngineer() {
+    if (!engineerToDelete) return;
+
+    try {
+      const res = await fetch(`/api/engineers/${engineerToDelete.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete engineer");
+      }
+
+      toast.success("Engineer deleted");
+      setIsDeleteEngineerModalOpen(false);
+      setEngineerToDelete(null);
+      fetchCycle();
+      fetchEngineers();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete engineer");
+    }
+  }
+
   // Engineers not yet in this cycle
   const availableEngineers = allEngineers.filter(
     (eng) => !cycle?.engineers.find((e) => e.id === eng.id)
@@ -1069,6 +1204,8 @@ export default function CycleDetailPage() {
                     key={engineer.id}
                     engineer={engineer}
                     isDragging={activeEngineer?.id === engineer.id}
+                    onEdit={handleOpenEditEngineer}
+                    onDelete={handleOpenDeleteEngineer}
                   />
                 ))}
               </div>
@@ -1658,6 +1795,128 @@ export default function CycleDetailPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Edit Engineer Modal */}
+      <Modal
+        isOpen={isEditEngineerModalOpen}
+        onClose={() => {
+          setIsEditEngineerModalOpen(false);
+          setEditingEngineer(null);
+        }}
+        title="Edit Engineer"
+      >
+        <form onSubmit={handleEditEngineer} className="space-y-5">
+          <div>
+            <label htmlFor="editEngineerName" className="label">
+              Name
+            </label>
+            <input
+              id="editEngineerName"
+              type="text"
+              required
+              className="input"
+              value={editEngineerForm.name}
+              onChange={(e) =>
+                setEditEngineerForm({ ...editEngineerForm, name: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <label htmlFor="editEngineerEmail" className="label">
+              Email (optional)
+            </label>
+            <input
+              id="editEngineerEmail"
+              type="email"
+              className="input"
+              placeholder="engineer@company.com"
+              value={editEngineerForm.email}
+              onChange={(e) =>
+                setEditEngineerForm({ ...editEngineerForm, email: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <label htmlFor="editEngineerWeeks" className="label">
+              Available Weeks (this cycle)
+            </label>
+            <input
+              id="editEngineerWeeks"
+              type="number"
+              step="0.5"
+              min="0.5"
+              required
+              className="input"
+              value={editEngineerForm.availableWeeks}
+              onChange={(e) =>
+                setEditEngineerForm({
+                  ...editEngineerForm,
+                  availableWeeks: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditEngineerModalOpen(false);
+                setEditingEngineer(null);
+              }}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary">
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Engineer Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteEngineerModalOpen}
+        onClose={() => {
+          setIsDeleteEngineerModalOpen(false);
+          setEngineerToDelete(null);
+        }}
+        title="Delete Engineer"
+      >
+        <div className="space-y-5">
+          <p className="text-slate-600">
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-slate-900">
+              {engineerToDelete?.name}
+            </span>
+            ? This will remove them from all cycles and delete all their assignments.
+            This action cannot be undone.
+          </p>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsDeleteEngineerModalOpen(false);
+                setEngineerToDelete(null);
+              }}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteEngineer}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+            >
+              Delete Engineer
+            </button>
+          </div>
+        </div>
       </Modal>
     </DndContext>
   );
