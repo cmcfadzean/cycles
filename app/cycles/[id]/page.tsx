@@ -1199,15 +1199,23 @@ export default function CycleDetailPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {cycle.engineers.map((engineer) => (
-                  <DraggableEngineerCard
-                    key={engineer.id}
-                    engineer={engineer}
-                    isDragging={activeEngineer?.id === engineer.id}
-                    onEdit={handleOpenEditEngineer}
-                    onDelete={handleOpenDeleteEngineer}
-                  />
-                ))}
+                {cycle.engineers
+                  .filter((engineer) => engineer.remainingWeeks > 0)
+                  .map((engineer) => (
+                    <DraggableEngineerCard
+                      key={engineer.id}
+                      engineer={engineer}
+                      isDragging={activeEngineer?.id === engineer.id}
+                      onEdit={handleOpenEditEngineer}
+                      onDelete={handleOpenDeleteEngineer}
+                    />
+                  ))}
+                {cycle.engineers.filter((e) => e.remainingWeeks > 0).length === 0 &&
+                  cycle.engineers.length > 0 && (
+                    <div className="text-center py-6 text-slate-500 text-sm">
+                      All engineers are fully allocated
+                    </div>
+                  )}
               </div>
             )}
           </div>
