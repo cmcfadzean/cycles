@@ -163,12 +163,14 @@ function DroppablePitchCard({
   cycleId,
   onAssignmentDelete,
   onAssignmentUpdate,
+  onEdit,
   isOver,
 }: {
   pitch: PitchWithAssignments;
   cycleId: string;
   onAssignmentDelete: (id: string) => void;
   onAssignmentUpdate: (id: string, weeks: number) => void;
+  onEdit: (pitch: PitchWithAssignments) => void;
   isOver?: boolean;
 }) {
   const { setNodeRef } = useDroppable({
@@ -234,6 +236,15 @@ function DroppablePitchCard({
           </div>
           <StatusBadge status={pitch.status} />
         </div>
+        <button
+          onClick={() => onEdit(pitch)}
+          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          title="Edit pitch"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+        </button>
       </div>
 
       {pitch.notes && (
@@ -464,12 +475,14 @@ export default function CycleDetailPage() {
   // Modal states
   const [isAddEngineerModalOpen, setIsAddEngineerModalOpen] = useState(false);
   const [isAddPitchModalOpen, setIsAddPitchModalOpen] = useState(false);
+  const [isEditPitchModalOpen, setIsEditPitchModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [pendingAssignment, setPendingAssignment] = useState<{
     engineer: EngineerWithCapacity;
     pitch: PitchWithAssignments;
   } | null>(null);
   const [assignmentWeeks, setAssignmentWeeks] = useState("");
+  const [editingPitch, setEditingPitch] = useState<PitchWithAssignments | null>(null);
 
   // Form states
   const [addEngineerForm, setAddEngineerForm] = useState({
@@ -485,6 +498,14 @@ export default function CycleDetailPage() {
     title: "",
     pitchDocUrl: "",
     estimateWeeks: "",
+    priority: "",
+    notes: "",
+  });
+  const [editPitchForm, setEditPitchForm] = useState({
+    title: "",
+    pitchDocUrl: "",
+    estimateWeeks: "",
+    status: "PLANNED" as PitchStatus,
     priority: "",
     notes: "",
   });
@@ -822,6 +843,59 @@ export default function CycleDetailPage() {
     }
   }
 
+  function handleOpenEditPitch(pitch: PitchWithAssignments) {
+    setEditingPitch(pitch);
+    setEditPitchForm({
+      title: pitch.title,
+      pitchDocUrl: pitch.pitchDocUrl || "",
+      estimateWeeks: pitch.estimateWeeks.toString(),
+      status: pitch.status,
+      priority: pitch.priority?.toString() || "",
+      notes: pitch.notes || "",
+    });
+    setIsEditPitchModalOpen(true);
+  }
+
+  async function handleEditPitch(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingPitch) return;
+
+    const estimateWeeks = parseFloat(editPitchForm.estimateWeeks);
+    if (isNaN(estimateWeeks) || estimateWeeks <= 0) {
+      toast.error("Please enter valid estimate weeks");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/pitches/${editingPitch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editPitchForm.title,
+          pitchDocUrl: editPitchForm.pitchDocUrl || null,
+          estimateWeeks,
+          status: editPitchForm.status,
+          priority: editPitchForm.priority
+            ? parseInt(editPitchForm.priority)
+            : null,
+          notes: editPitchForm.notes || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update pitch");
+      }
+
+      toast.success("Pitch updated");
+      setIsEditPitchModalOpen(false);
+      setEditingPitch(null);
+      fetchCycle();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update pitch");
+    }
+  }
+
   // Engineers not yet in this cycle
   const availableEngineers = allEngineers.filter(
     (eng) => !cycle?.engineers.find((e) => e.id === eng.id)
@@ -1045,6 +1119,7 @@ export default function CycleDetailPage() {
                     cycleId={cycleId}
                     onAssignmentDelete={handleAssignmentDelete}
                     onAssignmentUpdate={handleAssignmentUpdate}
+                    onEdit={handleOpenEditPitch}
                     isOver={dropTargetPitchId === pitch.id}
                   />
                 ))}
@@ -1448,6 +1523,141 @@ export default function CycleDetailPage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Edit Pitch Modal */}
+      <Modal
+        isOpen={isEditPitchModalOpen}
+        onClose={() => {
+          setIsEditPitchModalOpen(false);
+          setEditingPitch(null);
+        }}
+        title="Edit Pitch"
+      >
+        <form onSubmit={handleEditPitch} className="space-y-5">
+          <div>
+            <label htmlFor="editTitle" className="label">
+              Title
+            </label>
+            <input
+              id="editTitle"
+              type="text"
+              required
+              className="input"
+              value={editPitchForm.title}
+              onChange={(e) =>
+                setEditPitchForm({ ...editPitchForm, title: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <label htmlFor="editPitchDocUrl" className="label">
+              Pitch Doc URL (optional)
+            </label>
+            <input
+              id="editPitchDocUrl"
+              type="url"
+              className="input"
+              placeholder="https://docs.example.com/pitch/..."
+              value={editPitchForm.pitchDocUrl}
+              onChange={(e) =>
+                setEditPitchForm({ ...editPitchForm, pitchDocUrl: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="editEstimateWeeks" className="label">
+                Estimate (weeks)
+              </label>
+              <input
+                id="editEstimateWeeks"
+                type="number"
+                step="0.5"
+                min="0.5"
+                required
+                className="input"
+                value={editPitchForm.estimateWeeks}
+                onChange={(e) =>
+                  setEditPitchForm({
+                    ...editPitchForm,
+                    estimateWeeks: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label htmlFor="editPriority" className="label">
+                Priority (optional)
+              </label>
+              <input
+                id="editPriority"
+                type="number"
+                min="1"
+                className="input"
+                value={editPitchForm.priority}
+                onChange={(e) =>
+                  setEditPitchForm({ ...editPitchForm, priority: e.target.value })
+                }
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="editStatus" className="label">
+              Status
+            </label>
+            <select
+              id="editStatus"
+              className="input"
+              value={editPitchForm.status}
+              onChange={(e) =>
+                setEditPitchForm({
+                  ...editPitchForm,
+                  status: e.target.value as PitchStatus,
+                })
+              }
+            >
+              <option value="PLANNED">Planned</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="DONE">Done</option>
+              <option value="DROPPED">Dropped</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="editNotes" className="label">
+              Notes (optional)
+            </label>
+            <textarea
+              id="editNotes"
+              rows={3}
+              className="input resize-none"
+              value={editPitchForm.notes}
+              onChange={(e) =>
+                setEditPitchForm({ ...editPitchForm, notes: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditPitchModalOpen(false);
+                setEditingPitch(null);
+              }}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary">
+              Save Changes
+            </button>
+          </div>
+        </form>
       </Modal>
     </DndContext>
   );
