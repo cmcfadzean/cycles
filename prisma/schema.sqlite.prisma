@@ -9,7 +9,7 @@ datasource db {
 
 model Engineer {
   id          String                  @id @default(cuid())
-  name        String
+  name        String                  @unique
   email       String?                 @unique
   active      Boolean                 @default(true)
   createdAt   DateTime                @default(now())

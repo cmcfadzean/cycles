@@ -62,6 +62,19 @@ export async function PATCH(
           { status: 400 }
         );
       }
+      // Check for duplicate name
+      const nameExists = await prisma.engineer.findFirst({
+        where: {
+          name: body.name.trim(),
+          id: { not: params.id },
+        },
+      });
+      if (nameExists) {
+        return NextResponse.json(
+          { error: "An engineer with this name already exists" },
+          { status: 400 }
+        );
+      }
       updateData.name = body.name.trim();
     }
 

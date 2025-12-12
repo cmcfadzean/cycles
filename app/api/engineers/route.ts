@@ -35,12 +35,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for duplicate name
+    const existingName = await prisma.engineer.findUnique({
+      where: { name: body.name.trim() },
+    });
+    if (existingName) {
+      return NextResponse.json(
+        { error: "An engineer with this name already exists" },
+        { status: 400 }
+      );
+    }
+
     // Check for duplicate email if provided
     if (body.email) {
-      const existing = await prisma.engineer.findUnique({
+      const existingEmail = await prisma.engineer.findUnique({
         where: { email: body.email },
       });
-      if (existing) {
+      if (existingEmail) {
         return NextResponse.json(
           { error: "An engineer with this email already exists" },
           { status: 400 }
@@ -50,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     const engineer = await prisma.engineer.create({
       data: {
-        name: body.name,
+        name: body.name.trim(),
         email: body.email || null,
       },
     });
