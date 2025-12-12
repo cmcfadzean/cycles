@@ -85,8 +85,8 @@ export default function CyclesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Cycles</h1>
-          <p className="mt-1 text-slate-600">
+          <h1 className="text-3xl font-bold text-slate-100">Cycles</h1>
+          <p className="mt-1 text-slate-400">
             Plan and manage your engineering cycles
           </p>
         </div>
@@ -114,7 +114,7 @@ export default function CyclesPage() {
       {/* Cycles Table */}
       {cycles.length === 0 ? (
         <div className="card p-12 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-700 flex items-center justify-center">
             <svg
               className="w-8 h-8 text-slate-400"
               fill="none"
@@ -129,8 +129,8 @@ export default function CyclesPage() {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-slate-900">No cycles yet</h3>
-          <p className="mt-1 text-slate-600">
+          <h3 className="text-lg font-semibold text-slate-100">No cycles yet</h3>
+          <p className="mt-1 text-slate-400">
             Create your first cycle to get started
           </p>
           <button
@@ -145,33 +145,33 @@ export default function CyclesPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/50">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <tr className="border-b border-slate-700 bg-slate-800/50">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Cycle
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Date Range
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Pitches
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Available
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Required
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Balance
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-slate-700">
                 {cycles.map((cycle) => (
                   <tr
                     key={cycle.id}
                     onClick={() => router.push(`/cycles/${cycle.id}`)}
-                    className="hover:bg-slate-50 cursor-pointer transition-colors group"
+                    className="hover:bg-slate-700/50 cursor-pointer transition-colors group"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -191,7 +191,7 @@ export default function CyclesPage() {
                           </svg>
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-900 group-hover:text-primary-600 transition-colors">
+                          <div className="font-semibold text-slate-100 group-hover:text-primary-400 transition-colors">
                             {cycle.name}
                           </div>
                           {cycle.description && (
@@ -202,21 +202,21 @@ export default function CyclesPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
+                    <td className="px-6 py-4 text-sm text-slate-400">
                       {formatDate(cycle.startDate)} — {formatDate(cycle.endDate)}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-sm font-medium text-slate-700">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-700 text-sm font-medium text-slate-300">
                         {cycle.pitchCount}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-slate-300">
                         {cycle.totalAvailableWeeks.toFixed(1)}w
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-slate-300">
                         {cycle.totalRequiredWeeks.toFixed(1)}w
                       </span>
                     </td>
@@ -225,8 +225,8 @@ export default function CyclesPage() {
                         className={clsx(
                           "inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold",
                           cycle.surplusOrDeficit >= 0
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-red-100 text-red-700"
+                            ? "bg-emerald-900/50 text-emerald-300 border border-emerald-700/50"
+                            : "bg-red-900/50 text-red-300 border border-red-700/50"
                         )}
                       >
                         {cycle.surplusOrDeficit >= 0 ? "+" : ""}
@@ -356,4 +356,3 @@ export default function CyclesPage() {
     </div>
   );
 }
-

@@ -40,8 +40,8 @@ const config: Config = {
         mono: ["var(--font-geist-mono)", "monospace"],
       },
       boxShadow: {
-        soft: "0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)",
-        glow: "0 0 20px rgba(14, 165, 233, 0.15)",
+        soft: "0 2px 15px -3px rgba(0, 0, 0, 0.3), 0 10px 20px -2px rgba(0, 0, 0, 0.2)",
+        glow: "0 0 20px rgba(14, 165, 233, 0.25)",
       },
     },
   },

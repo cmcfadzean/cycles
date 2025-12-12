@@ -90,16 +90,16 @@ function DraggableEngineerCard({
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-white text-sm font-semibold">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-sm font-semibold">
             {engineer.name
               .split(" ")
               .map((n) => n[0])
               .join("")}
           </div>
           <div>
-            <div className="font-semibold text-slate-900">{engineer.name}</div>
+            <div className="font-semibold text-slate-100">{engineer.name}</div>
             {engineer.email && (
-              <div className="text-xs text-slate-500">{engineer.email}</div>
+              <div className="text-xs text-slate-400">{engineer.email}</div>
             )}
           </div>
         </div>
@@ -110,7 +110,7 @@ function DraggableEngineerCard({
               onEdit(engineer);
             }}
             onPointerDown={(e) => e.stopPropagation()}
-            className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+            className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded transition-colors"
             title="Edit engineer"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,8 +148,8 @@ function DraggableEngineerCard({
 
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-600">Capacity</span>
-          <span className="font-medium text-slate-900">
+          <span className="text-slate-400">Capacity</span>
+          <span className="font-medium text-slate-200">
             {engineer.availableWeeks.toFixed(1)}w
           </span>
         </div>
@@ -162,7 +162,7 @@ function DraggableEngineerCard({
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-600">Remaining</span>
+          <span className="text-slate-400">Remaining</span>
           <span
             className={clsx(
               "font-semibold",
@@ -179,7 +179,7 @@ function DraggableEngineerCard({
       </div>
 
       {engineer.remainingWeeks <= 0 && (
-        <div className="mt-3 text-xs text-center text-red-600 font-medium bg-red-50 rounded-lg py-1.5">
+        <div className="mt-3 text-xs text-center text-red-300 font-medium bg-red-900/30 border border-red-800/50 rounded-lg py-1.5">
           Fully allocated
         </div>
       )}
@@ -224,14 +224,14 @@ function DroppablePitchCard({
       ref={setNodeRef}
       className={clsx(
         "card p-5 transition-all duration-200",
-        isOver && "ring-2 ring-primary-400 ring-offset-2 bg-primary-50/50"
+        isOver && "ring-2 ring-primary-400 ring-offset-2 ring-offset-slate-900 bg-primary-900/30"
       )}
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             {pitch.priority && (
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-700 text-xs font-semibold text-slate-300">
                 {pitch.priority}
               </span>
             )}
@@ -240,7 +240,7 @@ function DroppablePitchCard({
                 href={pitch.pitchDocUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold text-slate-900 hover:text-primary-600 transition-colors truncate"
+                className="font-semibold text-slate-100 hover:text-primary-400 transition-colors truncate"
                 onClick={(e) => e.stopPropagation()}
               >
                 {pitch.title}
@@ -259,7 +259,7 @@ function DroppablePitchCard({
                 </svg>
               </a>
             ) : (
-              <span className="font-semibold text-slate-900 truncate">
+              <span className="font-semibold text-slate-100 truncate">
                 {pitch.title}
               </span>
             )}
@@ -268,7 +268,7 @@ function DroppablePitchCard({
         </div>
         <button
           onClick={() => onEdit(pitch)}
-          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded-lg transition-colors"
           title="Edit pitch"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,13 +278,13 @@ function DroppablePitchCard({
       </div>
 
       {pitch.notes && (
-        <p className="text-sm text-slate-600 mb-4 line-clamp-2">{pitch.notes}</p>
+        <p className="text-sm text-slate-400 mb-4 line-clamp-2">{pitch.notes}</p>
       )}
 
       <div className="space-y-3 mb-4">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-600">Estimate</span>
-          <span className="font-medium text-slate-900">
+          <span className="text-slate-400">Estimate</span>
+          <span className="font-medium text-slate-200">
             {pitch.estimateWeeks.toFixed(1)}w
           </span>
         </div>
@@ -297,8 +297,8 @@ function DroppablePitchCard({
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-600">Assigned</span>
-          <span className="font-medium text-slate-900">
+          <span className="text-slate-400">Assigned</span>
+          <span className="font-medium text-slate-200">
             {pitch.assignedWeeks.toFixed(1)}w
           </span>
         </div>
@@ -309,8 +309,8 @@ function DroppablePitchCard({
           className={clsx(
             "text-xs text-center font-medium rounded-lg py-1.5 mb-4",
             pitch.remainingWeeks > 0
-              ? "text-amber-700 bg-amber-50"
-              : "text-red-700 bg-red-50"
+              ? "text-amber-300 bg-amber-900/30 border border-amber-800/50"
+              : "text-red-300 bg-red-900/30 border border-red-800/50"
           )}
         >
           {pitch.remainingWeeks > 0
@@ -320,7 +320,7 @@ function DroppablePitchCard({
       )}
 
       {pitch.remainingWeeks === 0 && (
-        <div className="text-xs text-center font-medium rounded-lg py-1.5 mb-4 text-emerald-700 bg-emerald-50">
+        <div className="text-xs text-center font-medium rounded-lg py-1.5 mb-4 text-emerald-300 bg-emerald-900/30 border border-emerald-800/50">
           Fully staffed
         </div>
       )}
@@ -328,7 +328,7 @@ function DroppablePitchCard({
       {/* Assigned Engineers */}
       {pitch.assignments.length > 0 && (
         <div className="space-y-2">
-          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+          <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">
             Team
           </div>
           <div className="space-y-2">
@@ -345,9 +345,9 @@ function DroppablePitchCard({
       )}
 
       {pitch.assignments.length === 0 && (
-        <div className="text-center py-4 border-2 border-dashed border-slate-200 rounded-lg">
+        <div className="text-center py-4 border-2 border-dashed border-slate-600 rounded-lg">
           <svg
-            className="w-6 h-6 mx-auto text-slate-300 mb-2"
+            className="w-6 h-6 mx-auto text-slate-500 mb-2"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -359,7 +359,7 @@ function DroppablePitchCard({
               d="M12 4v16m8-8H4"
             />
           </svg>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-500">
             Drag an engineer here to assign
           </p>
         </div>
@@ -397,15 +397,15 @@ function AssignmentPill({
   };
 
   return (
-    <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 group">
+    <div className="flex items-center justify-between bg-slate-700/50 rounded-lg px-3 py-2 group">
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center text-white text-xs font-semibold">
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-xs font-semibold">
           {assignment.engineerName
             .split(" ")
             .map((n) => n[0])
             .join("")}
         </div>
-        <span className="text-sm font-medium text-slate-700">
+        <span className="text-sm font-medium text-slate-200">
           {assignment.engineerName}
         </span>
       </div>
@@ -425,20 +425,20 @@ function AssignmentPill({
                 setIsEditing(false);
               }
             }}
-            className="w-16 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-16 text-sm font-medium text-slate-100 bg-slate-800 border border-slate-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
             autoFocus
           />
         ) : (
           <button
             onClick={() => setIsEditing(true)}
-            className="text-sm font-semibold text-primary-600 hover:text-primary-700 px-2 py-1 rounded hover:bg-primary-50 transition-colors"
+            className="text-sm font-semibold text-primary-400 hover:text-primary-300 px-2 py-1 rounded hover:bg-primary-900/30 transition-colors"
           >
             {assignment.weeksAllocated.toFixed(1)}w
           </button>
         )}
         <button
           onClick={onDelete}
-          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 transition-all"
+          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-400 transition-all"
         >
           <svg
             className="w-4 h-4"
@@ -468,7 +468,7 @@ function EngineerDragOverlay({
   if (!engineer) return null;
 
   return (
-    <div className="card p-4 shadow-2xl scale-105 cursor-grabbing w-64 bg-white/95 backdrop-blur-sm">
+    <div className="card p-4 shadow-2xl scale-105 cursor-grabbing w-64 bg-slate-800/95 backdrop-blur-sm border border-slate-600">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-sm font-semibold">
           {engineer.name
@@ -477,8 +477,8 @@ function EngineerDragOverlay({
             .join("")}
         </div>
         <div>
-          <div className="font-semibold text-slate-900">{engineer.name}</div>
-          <div className="text-xs text-slate-500">
+          <div className="font-semibold text-slate-100">{engineer.name}</div>
+          <div className="text-xs text-slate-400">
             {engineer.remainingWeeks.toFixed(1)}w available
           </div>
         </div>
@@ -1047,7 +1047,7 @@ export default function CycleDetailPage() {
   if (!cycle) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-600">Cycle not found</p>
+        <p className="text-slate-400">Cycle not found</p>
       </div>
     );
   }
@@ -1065,7 +1065,7 @@ export default function CycleDetailPage() {
           <div>
             <button
               onClick={() => router.push("/")}
-              className="inline-flex items-center text-sm text-slate-600 hover:text-slate-900 mb-2"
+              className="inline-flex items-center text-sm text-slate-400 hover:text-slate-200 mb-2"
             >
               <svg
                 className="w-4 h-4 mr-1"
@@ -1082,12 +1082,12 @@ export default function CycleDetailPage() {
               </svg>
               Back to Cycles
             </button>
-            <h1 className="text-3xl font-bold text-slate-900">{cycle.name}</h1>
-            <p className="mt-1 text-slate-600">
+            <h1 className="text-3xl font-bold text-slate-100">{cycle.name}</h1>
+            <p className="mt-1 text-slate-400">
               {formatDate(cycle.startDate)} — {formatDate(cycle.endDate)}
             </p>
             {cycle.description && (
-              <p className="mt-2 text-slate-600">{cycle.description}</p>
+              <p className="mt-2 text-slate-400">{cycle.description}</p>
             )}
           </div>
         </div>
@@ -1095,10 +1095,10 @@ export default function CycleDetailPage() {
         {/* Summary Bar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="card p-5">
-            <div className="text-sm font-medium text-slate-600 mb-1">
+            <div className="text-sm font-medium text-slate-400 mb-1">
               Available Weeks
             </div>
-            <div className="text-3xl font-bold text-slate-900">
+            <div className="text-3xl font-bold text-slate-100">
               {cycle.totalAvailableWeeks.toFixed(1)}
               <span className="text-lg font-normal text-slate-500 ml-1">
                 weeks
@@ -1111,10 +1111,10 @@ export default function CycleDetailPage() {
           </div>
 
           <div className="card p-5">
-            <div className="text-sm font-medium text-slate-600 mb-1">
+            <div className="text-sm font-medium text-slate-400 mb-1">
               Required Weeks
             </div>
-            <div className="text-3xl font-bold text-slate-900">
+            <div className="text-3xl font-bold text-slate-100">
               {cycle.totalRequiredWeeks.toFixed(1)}
               <span className="text-lg font-normal text-slate-500 ml-1">
                 weeks
@@ -1132,7 +1132,7 @@ export default function CycleDetailPage() {
               cycle.surplusOrDeficit < 0 && "bg-red-50 border-red-200"
             )}
           >
-            <div className="text-sm font-medium text-slate-600 mb-1">
+            <div className="text-sm font-medium text-slate-400 mb-1">
               Balance
             </div>
             <div
@@ -1163,7 +1163,7 @@ export default function CycleDetailPage() {
           {/* Engineers Panel */}
           <div className="lg:col-span-1 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Engineers</h2>
+              <h2 className="text-lg font-semibold text-slate-100">Engineers</h2>
               <button
                 onClick={() => setIsAddEngineerModalOpen(true)}
                 className="btn-ghost text-sm"
@@ -1223,7 +1223,7 @@ export default function CycleDetailPage() {
           {/* Pitches Panel */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Pitches</h2>
+              <h2 className="text-lg font-semibold text-slate-100">Pitches</h2>
               <button
                 onClick={() => setIsAddPitchModalOpen(true)}
                 className="btn-ghost text-sm"
@@ -1439,11 +1439,11 @@ export default function CycleDetailPage() {
               </p>
             </div>
 
-            <div className="border-t border-slate-200 pt-4 mt-4">
+            <div className="border-t border-slate-700 pt-4 mt-4">
               <button
                 type="button"
                 onClick={() => setIsCreatingNewEngineer(true)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-primary-400 hover:text-primary-300 hover:bg-primary-900/30 rounded-lg transition-colors"
               >
                 <svg
                   className="w-4 h-4"
@@ -1604,7 +1604,7 @@ export default function CycleDetailPage() {
       >
         {pendingAssignment && (
           <div className="space-y-5">
-            <div className="text-slate-700">
+            <div className="text-slate-300">
               How many weeks should{" "}
               <span className="font-semibold">
                 {pendingAssignment.engineer.name}
@@ -1617,15 +1617,15 @@ export default function CycleDetailPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-slate-50 rounded-lg p-3">
+              <div className="bg-slate-700/50 rounded-lg p-3">
                 <div className="text-slate-500">Engineer available</div>
-                <div className="font-semibold text-slate-900">
+                <div className="font-semibold text-slate-100">
                   {pendingAssignment.engineer.remainingWeeks.toFixed(1)} weeks
                 </div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-3">
+              <div className="bg-slate-700/50 rounded-lg p-3">
                 <div className="text-slate-500">Pitch needs</div>
-                <div className="font-semibold text-slate-900">
+                <div className="font-semibold text-slate-100">
                   {pendingAssignment.pitch.remainingWeeks.toFixed(1)} weeks
                 </div>
               </div>
@@ -1896,9 +1896,9 @@ export default function CycleDetailPage() {
         title="Delete Engineer"
       >
         <div className="space-y-5">
-          <p className="text-slate-600">
+          <p className="text-slate-400">
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-slate-900">
+            <span className="font-semibold text-slate-100">
               {engineerToDelete?.name}
             </span>
             ? This will remove them from all cycles and delete all their assignments.
