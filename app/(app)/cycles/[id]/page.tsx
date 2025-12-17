@@ -1126,11 +1126,38 @@ export default function CycleDetailPage() {
     }
   }
 
+  // Get engineers assigned to pitches in a specific pod
+  function getEngineersInPod(podId: string): { id: string; name: string }[] {
+    if (!cycle) return [];
+    
+    const podPitches = cycle.pitches.filter((p) => p.podId === podId);
+    const engineerIds = new Set<string>();
+    const engineers: { id: string; name: string }[] = [];
+    
+    podPitches.forEach((pitch) => {
+      pitch.assignments.forEach((assignment) => {
+        if (!engineerIds.has(assignment.engineerId)) {
+          engineerIds.add(assignment.engineerId);
+          engineers.push({
+            id: assignment.engineerId,
+            name: assignment.engineerName,
+          });
+        }
+      });
+    });
+    
+    return engineers;
+  }
+
   function handleOpenEditPod(pod: Pod) {
     setEditingPod(pod);
+    // Check if current leader is still valid (assigned to a pitch in this pod)
+    const validEngineers = getEngineersInPod(pod.id);
+    const leaderStillValid = pod.leaderId && validEngineers.some(e => e.id === pod.leaderId);
+    
     setPodForm({
       name: pod.name,
-      leaderId: pod.leaderId || "",
+      leaderId: leaderStillValid ? pod.leaderId! : "",
     });
     setIsEditPodModalOpen(true);
   }
@@ -2356,26 +2383,9 @@ export default function CycleDetailPage() {
             />
           </div>
 
-          <div>
-            <label htmlFor="podLeader" className="label">
-              Pod Leader (optional)
-            </label>
-            <select
-              id="podLeader"
-              className="input"
-              value={podForm.leaderId}
-              onChange={(e) =>
-                setPodForm({ ...podForm, leaderId: e.target.value })
-              }
-            >
-              <option value="">Select a leader...</option>
-              {cycle?.engineers.map((eng) => (
-                <option key={eng.id} value={eng.id}>
-                  {eng.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <p className="text-sm text-slate-400">
+            You can assign a pod leader after adding pitches and assigning engineers to them.
+          </p>
 
           <div className="flex justify-end gap-3 pt-4">
             <button
@@ -2426,21 +2436,27 @@ export default function CycleDetailPage() {
             <label htmlFor="editPodLeader" className="label">
               Pod Leader (optional)
             </label>
-            <select
-              id="editPodLeader"
-              className="input"
-              value={podForm.leaderId}
-              onChange={(e) =>
-                setPodForm({ ...podForm, leaderId: e.target.value })
-              }
-            >
-              <option value="">No leader</option>
-              {cycle?.engineers.map((eng) => (
-                <option key={eng.id} value={eng.id}>
-                  {eng.name}
-                </option>
-              ))}
-            </select>
+            {editingPod && getEngineersInPod(editingPod.id).length > 0 ? (
+              <select
+                id="editPodLeader"
+                className="input"
+                value={podForm.leaderId}
+                onChange={(e) =>
+                  setPodForm({ ...podForm, leaderId: e.target.value })
+                }
+              >
+                <option value="">No leader</option>
+                {getEngineersInPod(editingPod.id).map((eng) => (
+                  <option key={eng.id} value={eng.id}>
+                    {eng.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="text-sm text-slate-400 py-2">
+                No engineers assigned to pitches in this pod yet. Add pitches and assign engineers first.
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
