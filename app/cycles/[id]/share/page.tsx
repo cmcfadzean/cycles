@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { CycleDetail, PitchStatus } from "@/lib/types";
+import { CycleDetail, PitchStatus, PitchWithAssignments } from "@/lib/types";
 import clsx from "clsx";
 
 function formatDate(date: string | Date) {
@@ -31,6 +31,158 @@ const statusConfig: Record<PitchStatus, { label: string; className: string }> = 
     className: "bg-red-900/50 text-red-300 border border-red-700/50",
   },
 };
+
+function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
+  const statusInfo = statusConfig[pitch.status];
+  const isFullyStaffed = pitch.remainingWeeks <= 0;
+
+  return (
+    <div className="bg-slate-800/80 rounded-xl border border-slate-700/60 p-5 backdrop-blur-sm">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2">
+            {pitch.priority && (
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-700 text-xs font-bold text-slate-300">
+                {pitch.priority}
+              </span>
+            )}
+            {pitch.pitchDocUrl ? (
+              <a
+                href={pitch.pitchDocUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-slate-100 hover:text-primary-400 transition-colors truncate flex items-center gap-1"
+              >
+                {pitch.title}
+                <svg
+                  className="w-3.5 h-3.5 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </a>
+            ) : (
+              <h3 className="font-semibold text-slate-100 truncate">
+                {pitch.title}
+              </h3>
+            )}
+          </div>
+          <span
+            className={clsx(
+              "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+              statusInfo.className
+            )}
+          >
+            {statusInfo.label}
+          </span>
+        </div>
+      </div>
+
+      {pitch.notes && (
+        <p className="text-sm text-slate-400 mb-4 line-clamp-2">
+          {pitch.notes}
+        </p>
+      )}
+
+      {/* Estimate */}
+      <div className="space-y-3 mb-4">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-400">Estimate</span>
+          <span className="font-medium text-slate-200">
+            {pitch.estimateWeeks.toFixed(1)}w
+          </span>
+        </div>
+
+        <div className="h-2 rounded-full overflow-hidden bg-slate-700">
+          <div
+            className={clsx(
+              "h-full rounded-full transition-all duration-300",
+              pitch.remainingWeeks < 0
+                ? "bg-red-500"
+                : pitch.remainingWeeks === 0
+                  ? "bg-emerald-500"
+                  : "bg-amber-500"
+            )}
+            style={{
+              width: `${Math.min((pitch.assignedWeeks / pitch.estimateWeeks) * 100, 100)}%`,
+            }}
+          />
+        </div>
+
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-400">Assigned</span>
+          <span className="font-medium text-slate-200">
+            {pitch.assignedWeeks.toFixed(1)}w
+          </span>
+        </div>
+      </div>
+
+      {/* Status indicator */}
+      <div
+        className={clsx(
+          "text-xs text-center font-medium rounded-lg py-1.5 mb-4",
+          isFullyStaffed
+            ? pitch.remainingWeeks < 0
+              ? "text-red-300 bg-red-900/30 border border-red-800/50"
+              : "text-emerald-300 bg-emerald-900/30 border border-emerald-800/50"
+            : "text-amber-300 bg-amber-900/30 border border-amber-800/50"
+        )}
+      >
+        {isFullyStaffed
+          ? pitch.remainingWeeks < 0
+            ? `Over by ${Math.abs(pitch.remainingWeeks).toFixed(1)}w`
+            : "Fully staffed"
+          : `${pitch.remainingWeeks.toFixed(1)}w unassigned`}
+      </div>
+
+      {/* Assignments */}
+      {pitch.assignments.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+            Team
+          </div>
+          <div className="space-y-2">
+            {pitch.assignments.map((assignment) => (
+              <div
+                key={assignment.id}
+                className="flex items-center justify-between bg-slate-700/50 rounded-lg px-3 py-2"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-xs font-semibold">
+                    {assignment.engineerName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </div>
+                  <span className="text-sm text-slate-200">
+                    {assignment.engineerName}
+                  </span>
+                </div>
+                <span className="text-sm font-medium text-primary-400">
+                  {assignment.weeksAllocated.toFixed(1)}w
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {pitch.assignments.length === 0 && (
+        <div className="text-center py-3 border-2 border-dashed border-slate-600 rounded-lg">
+          <p className="text-sm text-slate-500">No engineers assigned</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ShareCyclePage() {
   const params = useParams();
@@ -161,161 +313,46 @@ export default function ShareCyclePage() {
             <p className="text-slate-400">No pitches in this cycle yet</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {sortedPitches.map((pitch) => {
-              const statusInfo = statusConfig[pitch.status];
-              const isFullyStaffed = pitch.remainingWeeks <= 0;
+          <div className="space-y-8">
+            {/* Pods with their pitches */}
+            {cycle.pods.map((pod) => {
+              const podPitches = sortedPitches.filter((p) => p.podId === pod.id);
+              if (podPitches.length === 0) return null;
 
               return (
-                <div
-                  key={pitch.id}
-                  className="bg-slate-800/80 rounded-xl border border-slate-700/60 p-5 backdrop-blur-sm"
-                >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        {pitch.priority && (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-700 text-xs font-bold text-slate-300">
-                            {pitch.priority}
-                          </span>
-                        )}
-                        {pitch.pitchDocUrl ? (
-                          <a
-                            href={pitch.pitchDocUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-semibold text-slate-100 hover:text-primary-400 transition-colors truncate flex items-center gap-1"
-                          >
-                            {pitch.title}
-                            <svg
-                              className="w-3.5 h-3.5 shrink-0"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                              />
-                            </svg>
-                          </a>
-                        ) : (
-                          <h3 className="font-semibold text-slate-100 truncate">
-                            {pitch.title}
-                          </h3>
-                        )}
-                      </div>
-                      <span
-                        className={clsx(
-                          "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-                          statusInfo.className
-                        )}
-                      >
-                        {statusInfo.label}
+                <div key={pod.id} className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-semibold text-slate-200">{pod.name}</h3>
+                    {pod.leaderName && (
+                      <span className="text-xs bg-primary-900/30 text-primary-300 px-2 py-0.5 rounded-full border border-primary-700/50">
+                        Lead: {pod.leaderName}
                       </span>
-                    </div>
-                  </div>
-
-                  {pitch.notes && (
-                    <p className="text-sm text-slate-400 mb-4 line-clamp-2">
-                      {pitch.notes}
-                    </p>
-                  )}
-
-                  {/* Estimate */}
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-400">Estimate</span>
-                      <span className="font-medium text-slate-200">
-                        {pitch.estimateWeeks.toFixed(1)}w
-                      </span>
-                    </div>
-
-                    <div className="h-2 rounded-full overflow-hidden bg-slate-700">
-                      <div
-                        className={clsx(
-                          "h-full rounded-full transition-all duration-300",
-                          pitch.remainingWeeks < 0
-                            ? "bg-red-500"
-                            : pitch.remainingWeeks === 0
-                              ? "bg-emerald-500"
-                              : "bg-amber-500"
-                        )}
-                        style={{
-                          width: `${Math.min((pitch.assignedWeeks / pitch.estimateWeeks) * 100, 100)}%`,
-                        }}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-400">Assigned</span>
-                      <span className="font-medium text-slate-200">
-                        {pitch.assignedWeeks.toFixed(1)}w
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Status indicator */}
-                  <div
-                    className={clsx(
-                      "text-xs text-center font-medium rounded-lg py-1.5 mb-4",
-                      isFullyStaffed
-                        ? pitch.remainingWeeks < 0
-                          ? "text-red-300 bg-red-900/30 border border-red-800/50"
-                          : "text-emerald-300 bg-emerald-900/30 border border-emerald-800/50"
-                        : "text-amber-300 bg-amber-900/30 border border-amber-800/50"
                     )}
-                  >
-                    {isFullyStaffed
-                      ? pitch.remainingWeeks < 0
-                        ? `Over by ${Math.abs(pitch.remainingWeeks).toFixed(1)}w`
-                        : "Fully staffed"
-                      : `${pitch.remainingWeeks.toFixed(1)}w unassigned`}
                   </div>
-
-                  {/* Assignments */}
-                  {pitch.assignments.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                        Team
-                      </div>
-                      <div className="space-y-2">
-                        {pitch.assignments.map((assignment) => (
-                          <div
-                            key={assignment.id}
-                            className="flex items-center justify-between bg-slate-700/50 rounded-lg px-3 py-2"
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-xs font-semibold">
-                                {assignment.engineerName
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </div>
-                              <span className="text-sm text-slate-200">
-                                {assignment.engineerName}
-                              </span>
-                            </div>
-                            <span className="text-sm font-medium text-primary-400">
-                              {assignment.weeksAllocated.toFixed(1)}w
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {pitch.assignments.length === 0 && (
-                    <div className="text-center py-3 border-2 border-dashed border-slate-600 rounded-lg">
-                      <p className="text-sm text-slate-500">No engineers assigned</p>
-                    </div>
-                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pl-4 border-l-2 border-primary-600/30">
+                    {podPitches.map((pitch) => (
+                      <PitchCard key={pitch.id} pitch={pitch} />
+                    ))}
+                  </div>
                 </div>
               );
             })}
+
+            {/* Ungrouped pitches */}
+            {sortedPitches.filter((p) => !p.podId).length > 0 && (
+              <div className="space-y-4">
+                {cycle.pods.length > 0 && (
+                  <h3 className="text-lg font-semibold text-slate-400">Ungrouped</h3>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {sortedPitches
+                    .filter((p) => !p.podId)
+                    .map((pitch) => (
+                      <PitchCard key={pitch.id} pitch={pitch} />
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>

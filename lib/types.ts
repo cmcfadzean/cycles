@@ -29,6 +29,7 @@ export interface PitchWithAssignments {
   status: PitchStatus;
   priority: number | null;
   notes: string | null;
+  podId: string | null;
   assignedWeeks: number;
   remainingWeeks: number;
   assignments: {
@@ -37,6 +38,13 @@ export interface PitchWithAssignments {
     engineerName: string;
     weeksAllocated: number;
   }[];
+}
+
+export interface Pod {
+  id: string;
+  name: string;
+  leaderId: string | null;
+  leaderName: string | null;
 }
 
 export interface CycleDetail {
@@ -50,6 +58,7 @@ export interface CycleDetail {
   surplusOrDeficit: number;
   engineers: EngineerWithCapacity[];
   pitches: PitchWithAssignments[];
+  pods: Pod[];
 }
 
 export interface CycleSummary {
@@ -98,6 +107,7 @@ export interface UpdatePitchRequest {
   status?: PitchStatus;
   priority?: number;
   notes?: string;
+  podId?: string | null;
 }
 
 export interface CreateAssignmentRequest {

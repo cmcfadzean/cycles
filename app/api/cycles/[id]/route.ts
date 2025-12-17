@@ -6,6 +6,7 @@ import {
   EngineerWithCapacity,
   PitchWithAssignments,
   PitchStatus,
+  Pod,
 } from "@/lib/types";
 
 export async function GET(
@@ -30,6 +31,11 @@ export async function GET(
             },
           },
           orderBy: [{ priority: "asc" }, { createdAt: "asc" }],
+        },
+        pods: {
+          include: {
+            leader: true,
+          },
         },
         assignments: true,
       },
@@ -77,6 +83,7 @@ export async function GET(
         status: pitch.status as PitchStatus,
         priority: pitch.priority,
         notes: pitch.notes,
+        podId: pitch.podId,
         assignedWeeks,
         remainingWeeks: estimateWeeks - assignedWeeks,
         assignments: pitch.assignments.map((a) => ({
@@ -87,6 +94,14 @@ export async function GET(
         })),
       };
     });
+
+    // Map pods
+    const pods: Pod[] = cycle.pods.map((pod) => ({
+      id: pod.id,
+      name: pod.name,
+      leaderId: pod.leaderId,
+      leaderName: pod.leader?.name || null,
+    }));
 
     const totalAvailableWeeks = engineers.reduce(
       (sum, e) => sum + e.availableWeeks,
@@ -108,6 +123,7 @@ export async function GET(
       surplusOrDeficit: totalAvailableWeeks - totalRequiredWeeks,
       engineers,
       pitches,
+      pods,
     };
 
     return NextResponse.json(cycleDetail);

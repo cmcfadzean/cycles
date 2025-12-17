@@ -43,6 +43,7 @@ export async function PATCH(
     }
     if (body.priority !== undefined) updateData.priority = body.priority;
     if (body.notes !== undefined) updateData.notes = body.notes;
+    if (body.podId !== undefined) updateData.podId = body.podId || null;
 
     const pitch = await prisma.pitch.update({
       where: { id: params.id },

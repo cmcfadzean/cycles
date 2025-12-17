@@ -20,6 +20,7 @@ import {
   EngineerWithCapacity,
   PitchWithAssignments,
   PitchStatus,
+  Pod,
 } from "@/lib/types";
 import toast from "react-hot-toast";
 import clsx from "clsx";
@@ -509,6 +510,9 @@ export default function CycleDetailPage() {
   const [isAddPitchModalOpen, setIsAddPitchModalOpen] = useState(false);
   const [isEditPitchModalOpen, setIsEditPitchModalOpen] = useState(false);
   const [isEditCycleModalOpen, setIsEditCycleModalOpen] = useState(false);
+  const [isCreatePodModalOpen, setIsCreatePodModalOpen] = useState(false);
+  const [isEditPodModalOpen, setIsEditPodModalOpen] = useState(false);
+  const [editingPod, setEditingPod] = useState<Pod | null>(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [pendingAssignment, setPendingAssignment] = useState<{
     engineer: EngineerWithCapacity;
@@ -543,6 +547,7 @@ export default function CycleDetailPage() {
     status: "PLANNED" as PitchStatus,
     priority: "",
     notes: "",
+    podId: "",
   });
   const [editEngineerForm, setEditEngineerForm] = useState({
     name: "",
@@ -554,6 +559,10 @@ export default function CycleDetailPage() {
     startDate: "",
     endDate: "",
     description: "",
+  });
+  const [podForm, setPodForm] = useState({
+    name: "",
+    leaderId: "",
   });
 
   const sensors = useSensors(
@@ -898,6 +907,7 @@ export default function CycleDetailPage() {
       status: pitch.status,
       priority: pitch.priority?.toString() || "",
       notes: pitch.notes || "",
+      podId: pitch.podId || "",
     });
     setIsEditPitchModalOpen(true);
   }
@@ -925,6 +935,7 @@ export default function CycleDetailPage() {
             ? parseInt(editPitchForm.priority)
             : null,
           notes: editPitchForm.notes || null,
+          podId: editPitchForm.podId || null,
         }),
       });
 
@@ -1079,6 +1090,104 @@ export default function CycleDetailPage() {
       fetchCycle();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update cycle");
+    }
+  }
+
+  async function handleCreatePod(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (!podForm.name.trim()) {
+      toast.error("Pod name is required");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/pods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: podForm.name.trim(),
+          cycleId,
+          leaderId: podForm.leaderId || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to create pod");
+      }
+
+      toast.success("Pod created");
+      setIsCreatePodModalOpen(false);
+      setPodForm({ name: "", leaderId: "" });
+      fetchCycle();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create pod");
+    }
+  }
+
+  function handleOpenEditPod(pod: Pod) {
+    setEditingPod(pod);
+    setPodForm({
+      name: pod.name,
+      leaderId: pod.leaderId || "",
+    });
+    setIsEditPodModalOpen(true);
+  }
+
+  async function handleEditPod(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingPod) return;
+
+    if (!podForm.name.trim()) {
+      toast.error("Pod name is required");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/pods/${editingPod.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: podForm.name.trim(),
+          leaderId: podForm.leaderId || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update pod");
+      }
+
+      toast.success("Pod updated");
+      setIsEditPodModalOpen(false);
+      setEditingPod(null);
+      setPodForm({ name: "", leaderId: "" });
+      fetchCycle();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update pod");
+    }
+  }
+
+  async function handleDeletePod(podId: string) {
+    if (!confirm("Are you sure you want to delete this pod? Pitches will be ungrouped.")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/pods/${podId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete pod");
+      }
+
+      toast.success("Pod deleted");
+      fetchCycle();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete pod");
     }
   }
 
@@ -1319,25 +1428,46 @@ export default function CycleDetailPage() {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-100">Pitches</h2>
-              <button
-                onClick={() => setIsAddPitchModalOpen(true)}
-                className="btn-ghost text-sm"
-              >
-                <svg
-                  className="w-4 h-4 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsCreatePodModalOpen(true)}
+                  className="btn-ghost text-sm"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Add Pitch
-              </button>
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                  Add Pod
+                </button>
+                <button
+                  onClick={() => setIsAddPitchModalOpen(true)}
+                  className="btn-ghost text-sm"
+                >
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Add Pitch
+                </button>
+              </div>
             </div>
 
             {cycle.pitches.length === 0 ? (
@@ -1351,18 +1481,84 @@ export default function CycleDetailPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {cycle.pitches.map((pitch) => (
-                  <DroppablePitchCard
-                    key={pitch.id}
-                    pitch={pitch}
-                    cycleId={cycleId}
-                    onAssignmentDelete={handleAssignmentDelete}
-                    onAssignmentUpdate={handleAssignmentUpdate}
-                    onEdit={handleOpenEditPitch}
-                    isOver={dropTargetPitchId === pitch.id}
-                  />
-                ))}
+              <div className="space-y-6">
+                {/* Pods with their pitches */}
+                {cycle.pods.map((pod) => {
+                  const podPitches = cycle.pitches.filter((p) => p.podId === pod.id);
+                  if (podPitches.length === 0) return null;
+                  
+                  return (
+                    <div key={pod.id} className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-md font-semibold text-slate-200">{pod.name}</h3>
+                          {pod.leaderName && (
+                            <span className="text-xs bg-primary-900/30 text-primary-300 px-2 py-0.5 rounded-full border border-primary-700/50">
+                              Lead: {pod.leaderName}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleOpenEditPod(pod)}
+                            className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded transition-colors"
+                            title="Edit pod"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDeletePod(pod.id)}
+                            className="p-1 text-slate-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
+                            title="Delete pod"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-primary-600/30">
+                        {podPitches.map((pitch) => (
+                          <DroppablePitchCard
+                            key={pitch.id}
+                            pitch={pitch}
+                            cycleId={cycleId}
+                            onAssignmentDelete={handleAssignmentDelete}
+                            onAssignmentUpdate={handleAssignmentUpdate}
+                            onEdit={handleOpenEditPitch}
+                            isOver={dropTargetPitchId === pitch.id}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Ungrouped pitches */}
+                {cycle.pitches.filter((p) => !p.podId).length > 0 && (
+                  <div className="space-y-3">
+                    {cycle.pods.length > 0 && (
+                      <h3 className="text-md font-semibold text-slate-400">Ungrouped</h3>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {cycle.pitches
+                        .filter((p) => !p.podId)
+                        .map((pitch) => (
+                          <DroppablePitchCard
+                            key={pitch.id}
+                            pitch={pitch}
+                            cycleId={cycleId}
+                            onAssignmentDelete={handleAssignmentDelete}
+                            onAssignmentUpdate={handleAssignmentUpdate}
+                            onEdit={handleOpenEditPitch}
+                            isOver={dropTargetPitchId === pitch.id}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1845,26 +2041,51 @@ export default function CycleDetailPage() {
             </div>
           </div>
 
-          <div>
-            <label htmlFor="editStatus" className="label">
-              Status
-            </label>
-            <select
-              id="editStatus"
-              className="input"
-              value={editPitchForm.status}
-              onChange={(e) =>
-                setEditPitchForm({
-                  ...editPitchForm,
-                  status: e.target.value as PitchStatus,
-                })
-              }
-            >
-              <option value="PLANNED">Planned</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="DONE">Done</option>
-              <option value="DROPPED">Dropped</option>
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="editStatus" className="label">
+                Status
+              </label>
+              <select
+                id="editStatus"
+                className="input"
+                value={editPitchForm.status}
+                onChange={(e) =>
+                  setEditPitchForm({
+                    ...editPitchForm,
+                    status: e.target.value as PitchStatus,
+                  })
+                }
+              >
+                <option value="PLANNED">Planned</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="DONE">Done</option>
+                <option value="DROPPED">Dropped</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="editPod" className="label">
+                Pod (optional)
+              </label>
+              <select
+                id="editPod"
+                className="input"
+                value={editPitchForm.podId}
+                onChange={(e) =>
+                  setEditPitchForm({
+                    ...editPitchForm,
+                    podId: e.target.value,
+                  })
+                }
+              >
+                <option value="">No pod</option>
+                {cycle?.pods.map((pod) => (
+                  <option key={pod.id} value={pod.id}>
+                    {pod.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>
@@ -2097,6 +2318,139 @@ export default function CycleDetailPage() {
             <button
               type="button"
               onClick={() => setIsEditCycleModalOpen(false)}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary">
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Create Pod Modal */}
+      <Modal
+        isOpen={isCreatePodModalOpen}
+        onClose={() => {
+          setIsCreatePodModalOpen(false);
+          setPodForm({ name: "", leaderId: "" });
+        }}
+        title="Create Pod"
+      >
+        <form onSubmit={handleCreatePod} className="space-y-5">
+          <div>
+            <label htmlFor="podName" className="label">
+              Pod Name
+            </label>
+            <input
+              id="podName"
+              type="text"
+              required
+              className="input"
+              placeholder="e.g., Platform Team"
+              value={podForm.name}
+              onChange={(e) =>
+                setPodForm({ ...podForm, name: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <label htmlFor="podLeader" className="label">
+              Pod Leader (optional)
+            </label>
+            <select
+              id="podLeader"
+              className="input"
+              value={podForm.leaderId}
+              onChange={(e) =>
+                setPodForm({ ...podForm, leaderId: e.target.value })
+              }
+            >
+              <option value="">Select a leader...</option>
+              {cycle?.engineers.map((eng) => (
+                <option key={eng.id} value={eng.id}>
+                  {eng.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsCreatePodModalOpen(false);
+                setPodForm({ name: "", leaderId: "" });
+              }}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary">
+              Create Pod
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Pod Modal */}
+      <Modal
+        isOpen={isEditPodModalOpen}
+        onClose={() => {
+          setIsEditPodModalOpen(false);
+          setEditingPod(null);
+          setPodForm({ name: "", leaderId: "" });
+        }}
+        title="Edit Pod"
+      >
+        <form onSubmit={handleEditPod} className="space-y-5">
+          <div>
+            <label htmlFor="editPodName" className="label">
+              Pod Name
+            </label>
+            <input
+              id="editPodName"
+              type="text"
+              required
+              className="input"
+              value={podForm.name}
+              onChange={(e) =>
+                setPodForm({ ...podForm, name: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <label htmlFor="editPodLeader" className="label">
+              Pod Leader (optional)
+            </label>
+            <select
+              id="editPodLeader"
+              className="input"
+              value={podForm.leaderId}
+              onChange={(e) =>
+                setPodForm({ ...podForm, leaderId: e.target.value })
+              }
+            >
+              <option value="">No leader</option>
+              {cycle?.engineers.map((eng) => (
+                <option key={eng.id} value={eng.id}>
+                  {eng.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditPodModalOpen(false);
+                setEditingPod(null);
+                setPodForm({ name: "", leaderId: "" });
+              }}
               className="btn-secondary"
             >
               Cancel

@@ -16,6 +16,7 @@ model Engineer {
   updatedAt   DateTime                @updatedAt
   capacities  EngineerCycleCapacity[]
   assignments Assignment[]
+  leadingPods Pod[]
 }
 
 model Cycle {
@@ -27,8 +28,21 @@ model Cycle {
   createdAt   DateTime                @default(now())
   updatedAt   DateTime                @updatedAt
   pitches     Pitch[]
+  pods        Pod[]
   capacities  EngineerCycleCapacity[]
   assignments Assignment[]
+}
+
+model Pod {
+  id        String   @id @default(cuid())
+  name      String
+  cycle     Cycle    @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  cycleId   String
+  leader    Engineer? @relation(fields: [leaderId], references: [id], onDelete: SetNull)
+  leaderId  String?
+  pitches   Pitch[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model EngineerCycleCapacity {
@@ -48,6 +62,8 @@ model Pitch {
   id            String       @id @default(cuid())
   cycle         Cycle        @relation(fields: [cycleId], references: [id], onDelete: Cascade)
   cycleId       String
+  pod           Pod?         @relation(fields: [podId], references: [id], onDelete: SetNull)
+  podId         String?
   title         String
   pitchDocUrl   String?
   estimateWeeks Decimal
@@ -75,4 +91,3 @@ model Assignment {
 }
 
 // PitchStatus values: PLANNED, IN_PROGRESS, DONE, DROPPED
-
