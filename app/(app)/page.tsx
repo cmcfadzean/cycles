@@ -32,6 +32,13 @@ export default function CyclesPage() {
     fetchCycles();
   }, []);
 
+  // Listen for sidebar event to open create modal
+  useEffect(() => {
+    const handleOpenCreate = () => setIsCreateModalOpen(true);
+    window.addEventListener("openCreateCycle", handleOpenCreate);
+    return () => window.removeEventListener("openCreateCycle", handleOpenCreate);
+  }, []);
+
   async function fetchCycles() {
     try {
       const res = await fetch("/api/cycles");
