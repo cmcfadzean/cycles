@@ -112,3 +112,6 @@ Similar to Neon, Supabase offers free PostgreSQL.
 ### Local dev not working after switching
 - Delete `node_modules/.prisma` and run `npm run db:setup:dev`
 
+
+
+

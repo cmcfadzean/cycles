@@ -510,6 +510,8 @@ export default function CycleDetailPage() {
   const [isAddPitchModalOpen, setIsAddPitchModalOpen] = useState(false);
   const [isEditPitchModalOpen, setIsEditPitchModalOpen] = useState(false);
   const [isEditCycleModalOpen, setIsEditCycleModalOpen] = useState(false);
+  const [isDeleteCycleModalOpen, setIsDeleteCycleModalOpen] = useState(false);
+  const [deleteCycleConfirmation, setDeleteCycleConfirmation] = useState("");
   const [isCreatePodModalOpen, setIsCreatePodModalOpen] = useState(false);
   const [isEditPodModalOpen, setIsEditPodModalOpen] = useState(false);
   const [editingPod, setEditingPod] = useState<Pod | null>(null);
@@ -1093,6 +1095,33 @@ export default function CycleDetailPage() {
     }
   }
 
+  async function handleDeleteCycle(e: React.FormEvent) {
+    e.preventDefault();
+    
+    if (!cycle) return;
+    
+    if (deleteCycleConfirmation !== cycle.name) {
+      toast.error("Cycle name does not match");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/cycles/${cycleId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete cycle");
+      }
+
+      toast.success("Cycle deleted");
+      router.push("/");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete cycle");
+    }
+  }
+
   async function handleCreatePod(e: React.FormEvent) {
     e.preventDefault();
 
@@ -1319,6 +1348,25 @@ export default function CycleDetailPage() {
                 />
               </svg>
               Share
+            </button>
+            <button
+              onClick={() => setIsDeleteCycleModalOpen(true)}
+              className="btn-danger flex items-center gap-2"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              Delete
             </button>
           </div>
         </div>
@@ -2351,6 +2399,59 @@ export default function CycleDetailPage() {
             </button>
             <button type="submit" className="btn-primary">
               Save Changes
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Cycle Modal */}
+      <Modal
+        isOpen={isDeleteCycleModalOpen}
+        onClose={() => {
+          setIsDeleteCycleModalOpen(false);
+          setDeleteCycleConfirmation("");
+        }}
+        title="Delete Cycle"
+      >
+        <form onSubmit={handleDeleteCycle} className="space-y-5">
+          <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p className="text-red-400 text-sm">
+              <strong>Warning:</strong> This action cannot be undone. All pitches, assignments, and pod data associated with this cycle will be permanently deleted.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="deleteCycleConfirmation" className="label">
+              Type <span className="font-mono text-red-400">{cycle?.name}</span> to confirm
+            </label>
+            <input
+              id="deleteCycleConfirmation"
+              type="text"
+              required
+              className="input"
+              placeholder="Enter cycle name to confirm"
+              value={deleteCycleConfirmation}
+              onChange={(e) => setDeleteCycleConfirmation(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsDeleteCycleModalOpen(false);
+                setDeleteCycleConfirmation("");
+              }}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn-danger"
+              disabled={deleteCycleConfirmation !== cycle?.name}
+            >
+              Delete Cycle
             </button>
           </div>
         </form>
