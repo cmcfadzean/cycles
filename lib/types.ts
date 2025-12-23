@@ -108,6 +108,7 @@ export interface UpdatePitchRequest {
   priority?: number;
   notes?: string;
   podId?: string | null;
+  cycleId?: string | null;
 }
 
 export interface CreateAssignmentRequest {
