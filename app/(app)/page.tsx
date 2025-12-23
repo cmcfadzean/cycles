@@ -206,10 +206,10 @@ export default function CyclesPage() {
                     <td className="px-5 py-4 text-center">
                       <span
                         className={clsx(
-                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                          "inline-flex items-center px-2.5 py-1 rounded text-xs font-bold",
                           cycle.surplusOrDeficit >= 0
-                            ? "bg-emerald-500/15 text-emerald-400"
-                            : "bg-red-500/15 text-red-400"
+                            ? "bg-emerald-500/25 text-emerald-400"
+                            : "bg-red-500/25 text-red-400"
                         )}
                       >
                         {cycle.surplusOrDeficit >= 0 ? "+" : ""}

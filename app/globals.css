@@ -24,7 +24,7 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md transition-colors duration-150 hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-violet-600 rounded-md transition-colors duration-150 hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
@@ -32,7 +32,7 @@
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-red-400 bg-transparent border border-red-500/30 rounded-md transition-colors duration-150 hover:bg-red-500/10 hover:border-red-500/50 focus:outline-none focus:ring-2 focus:ring-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md transition-colors duration-150 hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-ghost {
@@ -40,7 +40,7 @@
   }
 
   .input {
-    @apply block w-full px-3 py-2 text-sm text-gray-100 bg-gray-900 border border-gray-700 rounded-md placeholder-gray-500 transition-colors duration-150 focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:border-gray-600;
+    @apply block w-full px-3 py-2 text-sm text-gray-100 bg-gray-900 border border-gray-700 rounded-md placeholder-gray-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40;
   }
 
   .label {
@@ -48,27 +48,27 @@
   }
 
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold;
   }
 
   .badge-success {
-    @apply badge bg-emerald-500/15 text-emerald-400 border border-emerald-500/20;
+    @apply badge bg-emerald-500/20 text-emerald-400;
   }
 
   .badge-warning {
-    @apply badge bg-amber-500/15 text-amber-400 border border-amber-500/20;
+    @apply badge bg-amber-500/20 text-amber-400;
   }
 
   .badge-danger {
-    @apply badge bg-red-500/15 text-red-400 border border-red-500/20;
+    @apply badge bg-red-500/20 text-red-400;
   }
 
   .badge-info {
-    @apply badge bg-primary-500/15 text-primary-400 border border-primary-500/20;
+    @apply badge bg-violet-500/20 text-violet-400;
   }
 
   .badge-neutral {
-    @apply badge bg-gray-800 text-gray-400 border border-gray-700;
+    @apply badge bg-gray-800 text-gray-400;
   }
 
   .progress-bar {
@@ -90,7 +90,7 @@
   }
 
   .drop-target {
-    @apply ring-1 ring-primary-500/50 bg-primary-500/5;
+    @apply ring-2 ring-violet-500 bg-violet-500/10;
   }
 
   .scrollbar-thin {

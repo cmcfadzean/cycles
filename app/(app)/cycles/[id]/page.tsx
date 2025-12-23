@@ -168,10 +168,10 @@ function DraggableEngineerCard({
             className={clsx(
               "font-semibold",
               engineer.remainingWeeks < 0
-                ? "text-red-600"
+                ? "text-red-400"
                 : engineer.remainingWeeks <= engineer.availableWeeks * 0.2
-                  ? "text-amber-600"
-                  : "text-emerald-600"
+                  ? "text-amber-400"
+                  : "text-emerald-400"
             )}
           >
             {engineer.remainingWeeks.toFixed(1)}w
@@ -180,7 +180,7 @@ function DraggableEngineerCard({
       </div>
 
       {engineer.remainingWeeks <= 0 && (
-        <div className="mt-3 text-xs text-center text-red-300 font-medium bg-red-900/30 border border-red-800/50 rounded-lg py-1.5">
+        <div className="mt-3 text-xs text-center text-red-400 font-semibold bg-red-500/20 rounded py-1.5">
           Fully allocated
         </div>
       )}
@@ -310,8 +310,8 @@ function DroppablePitchCard({
           className={clsx(
             "text-xs text-center font-medium rounded-lg py-1.5 mb-4",
             pitch.remainingWeeks > 0
-              ? "text-amber-300 bg-amber-900/30 border border-amber-800/50"
-              : "text-red-300 bg-red-900/30 border border-red-800/50"
+              ? "text-amber-400 bg-amber-500/20"
+              : "text-red-400 bg-red-500/20"
           )}
         >
           {pitch.remainingWeeks > 0
@@ -321,7 +321,7 @@ function DroppablePitchCard({
       )}
 
       {pitch.remainingWeeks === 0 && (
-        <div className="text-xs text-center font-medium rounded-lg py-1.5 mb-4 text-emerald-300 bg-emerald-900/30 border border-emerald-800/50">
+        <div className="text-xs text-center font-semibold rounded py-1.5 mb-4 text-emerald-400 bg-emerald-500/20">
           Fully staffed
         </div>
       )}
@@ -1417,7 +1417,7 @@ export default function CycleDetailPage() {
             <div
               className={clsx(
                 "text-3xl font-bold",
-                cycle.surplusOrDeficit >= 0 ? "text-emerald-600" : "text-red-600"
+                cycle.surplusOrDeficit >= 0 ? "text-emerald-400" : "text-red-400"
               )}
             >
               {cycle.surplusOrDeficit >= 0 ? "+" : ""}
@@ -1425,12 +1425,12 @@ export default function CycleDetailPage() {
               <span className="text-lg font-normal ml-1">weeks</span>
             </div>
             {cycle.surplusOrDeficit < 0 ? (
-              <div className="mt-2 text-sm text-red-600 font-medium">
+              <div className="mt-2 text-sm text-red-400 font-medium">
                 ⚠️ Over capacity by{" "}
                 {Math.abs(cycle.surplusOrDeficit).toFixed(1)} weeks
               </div>
             ) : (
-              <div className="mt-2 text-sm text-emerald-600">
+              <div className="mt-2 text-sm text-emerald-400">
                 ✓ Capacity available
               </div>
             )}

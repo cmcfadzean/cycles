@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Linear-inspired monochromatic palette
+        // Vibrant violet for primary actions
         primary: {
           50: "#f5f3ff",
           100: "#ede9fe",
@@ -34,9 +34,9 @@ const config: Config = {
           600: "#525252",
           700: "#404040",
           800: "#262626",
-          850: "#1a1a1a",
+          850: "#1c1c1c",
           900: "#171717",
-          925: "#121212",
+          925: "#131313",
           950: "#0a0a0a",
         },
       },
@@ -46,7 +46,7 @@ const config: Config = {
       },
       boxShadow: {
         soft: "0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3)",
-        glow: "0 0 20px rgba(139, 92, 246, 0.15)",
+        glow: "0 0 20px rgba(139, 92, 246, 0.3)",
       },
       borderColor: {
         DEFAULT: "#262626",

@@ -9,7 +9,7 @@ export default function AppLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <a href="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-md bg-primary-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-md bg-violet-600 flex items-center justify-center">
                 <svg
                   className="w-4.5 h-4.5 text-white"
                   fill="none"

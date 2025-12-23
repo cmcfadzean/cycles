@@ -16,19 +16,19 @@ function formatDate(date: string | Date) {
 const statusConfig: Record<PitchStatus, { label: string; className: string }> = {
   PLANNED: {
     label: "Planned",
-    className: "bg-gray-800 text-gray-400 border border-gray-700",
+    className: "bg-gray-700 text-gray-300",
   },
   IN_PROGRESS: {
     label: "In Progress",
-    className: "bg-primary-500/15 text-primary-400 border border-primary-500/20",
+    className: "bg-violet-500/25 text-violet-400",
   },
   DONE: {
     label: "Done",
-    className: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20",
+    className: "bg-emerald-500/25 text-emerald-400",
   },
   DROPPED: {
     label: "Dropped",
-    className: "bg-gray-800 text-gray-500 border border-gray-700 line-through",
+    className: "bg-gray-700 text-gray-500 line-through",
   },
 };
 
@@ -128,12 +128,12 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
       {/* Status indicator */}
       <div
         className={clsx(
-          "text-xs text-center font-medium rounded py-1.5 mb-3",
+          "text-xs text-center font-semibold rounded py-1.5 mb-3",
           isFullyStaffed
             ? pitch.remainingWeeks < 0
-              ? "text-red-400 bg-red-500/10"
-              : "text-emerald-400 bg-emerald-500/10"
-            : "text-amber-400 bg-amber-500/10"
+              ? "text-red-400 bg-red-500/20"
+              : "text-emerald-400 bg-emerald-500/20"
+            : "text-amber-400 bg-amber-500/20"
         )}
       >
         {isFullyStaffed
@@ -263,7 +263,7 @@ export default function ShareCyclePage() {
       <header className="border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-primary-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-md bg-violet-600 flex items-center justify-center">
               <svg
                 className="w-5 h-5 text-white"
                 fill="none"
