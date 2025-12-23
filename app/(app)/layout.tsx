@@ -8,10 +8,10 @@ export default function AppLayout({
       <header className="sticky top-0 z-40 bg-gray-950/90 backdrop-blur-md border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
-            <a href="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-md bg-violet-600 flex items-center justify-center">
+            <a href="/" className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-md bg-violet-600 flex items-center justify-center shrink-0">
                 <svg
-                  className="w-4.5 h-4.5 text-white"
+                  className="w-4 h-4 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -24,7 +24,7 @@ export default function AppLayout({
                   />
                 </svg>
               </div>
-              <span className="text-lg font-semibold text-gray-100">
+              <span className="text-base font-semibold text-gray-100">
                 Cycles
               </span>
             </a>
