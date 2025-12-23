@@ -91,16 +91,16 @@ function DraggableEngineerCard({
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-sm font-semibold">
+          <div className="w-8 h-8 rounded-md bg-gray-700 flex items-center justify-center text-gray-300 text-sm font-medium">
             {engineer.name
               .split(" ")
               .map((n) => n[0])
               .join("")}
           </div>
           <div>
-            <div className="font-semibold text-slate-100">{engineer.name}</div>
+            <div className="font-semibold text-gray-100">{engineer.name}</div>
             {engineer.email && (
-              <div className="text-xs text-slate-400">{engineer.email}</div>
+              <div className="text-xs text-gray-400">{engineer.email}</div>
             )}
           </div>
         </div>
@@ -111,7 +111,7 @@ function DraggableEngineerCard({
               onEdit(engineer);
             }}
             onPointerDown={(e) => e.stopPropagation()}
-            className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded transition-colors"
+            className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded transition-colors"
             title="Edit engineer"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +124,7 @@ function DraggableEngineerCard({
               onDelete(engineer);
             }}
             onPointerDown={(e) => e.stopPropagation()}
-            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
             title="Remove from cycle"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +132,7 @@ function DraggableEngineerCard({
             </svg>
           </button>
           <svg
-            className="w-4 h-4 text-slate-400"
+            className="w-4 h-4 text-gray-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -149,8 +149,8 @@ function DraggableEngineerCard({
 
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-400">Capacity</span>
-          <span className="font-medium text-slate-200">
+          <span className="text-gray-400">Capacity</span>
+          <span className="font-medium text-gray-200">
             {engineer.availableWeeks.toFixed(1)}w
           </span>
         </div>
@@ -163,7 +163,7 @@ function DraggableEngineerCard({
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-400">Remaining</span>
+          <span className="text-gray-400">Remaining</span>
           <span
             className={clsx(
               "font-semibold",
@@ -225,14 +225,14 @@ function DroppablePitchCard({
       ref={setNodeRef}
       className={clsx(
         "card p-5 transition-all duration-200",
-        isOver && "ring-2 ring-primary-400 ring-offset-2 ring-offset-slate-900 bg-primary-900/30"
+        isOver && "ring-2 ring-primary-400 ring-offset-2 ring-offset-gray-900 bg-primary-900/30"
       )}
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             {pitch.priority && (
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-700 text-xs font-semibold text-slate-300">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-700 text-xs font-semibold text-gray-300">
                 {pitch.priority}
               </span>
             )}
@@ -241,7 +241,7 @@ function DroppablePitchCard({
                 href={pitch.pitchDocUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold text-slate-100 hover:text-primary-400 transition-colors truncate"
+                className="font-semibold text-gray-100 hover:text-primary-400 transition-colors truncate"
                 onClick={(e) => e.stopPropagation()}
               >
                 {pitch.title}
@@ -260,7 +260,7 @@ function DroppablePitchCard({
                 </svg>
               </a>
             ) : (
-              <span className="font-semibold text-slate-100 truncate">
+              <span className="font-semibold text-gray-100 truncate">
                 {pitch.title}
               </span>
             )}
@@ -269,7 +269,7 @@ function DroppablePitchCard({
         </div>
         <button
           onClick={() => onEdit(pitch)}
-          className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded-lg transition-colors"
+          className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded-lg transition-colors"
           title="Edit pitch"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,13 +279,13 @@ function DroppablePitchCard({
       </div>
 
       {pitch.notes && (
-        <p className="text-sm text-slate-400 mb-4 line-clamp-2">{pitch.notes}</p>
+        <p className="text-sm text-gray-400 mb-4 line-clamp-2">{pitch.notes}</p>
       )}
 
       <div className="space-y-3 mb-4">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-400">Estimate</span>
-          <span className="font-medium text-slate-200">
+          <span className="text-gray-400">Estimate</span>
+          <span className="font-medium text-gray-200">
             {pitch.estimateWeeks.toFixed(1)}w
           </span>
         </div>
@@ -298,8 +298,8 @@ function DroppablePitchCard({
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-400">Assigned</span>
-          <span className="font-medium text-slate-200">
+          <span className="text-gray-400">Assigned</span>
+          <span className="font-medium text-gray-200">
             {pitch.assignedWeeks.toFixed(1)}w
           </span>
         </div>
@@ -329,7 +329,7 @@ function DroppablePitchCard({
       {/* Assigned Engineers */}
       {pitch.assignments.length > 0 && (
         <div className="space-y-2">
-          <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
             Team
           </div>
           <div className="space-y-2">
@@ -346,9 +346,9 @@ function DroppablePitchCard({
       )}
 
       {pitch.assignments.length === 0 && (
-        <div className="text-center py-4 border-2 border-dashed border-slate-600 rounded-lg">
+        <div className="text-center py-4 border-2 border-dashed border-gray-600 rounded-lg">
           <svg
-            className="w-6 h-6 mx-auto text-slate-500 mb-2"
+            className="w-6 h-6 mx-auto text-gray-500 mb-2"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -360,7 +360,7 @@ function DroppablePitchCard({
               d="M12 4v16m8-8H4"
             />
           </svg>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-gray-500">
             Drag an engineer here to assign
           </p>
         </div>
@@ -398,15 +398,15 @@ function AssignmentPill({
   };
 
   return (
-    <div className="flex items-center justify-between bg-slate-700/50 rounded-lg px-3 py-2 group">
+    <div className="flex items-center justify-between bg-gray-700/50 rounded-lg px-3 py-2 group">
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-xs font-semibold">
+        <div className="w-6 h-6 rounded-md bg-gray-700 flex items-center justify-center text-gray-300 text-xs font-medium">
           {assignment.engineerName
             .split(" ")
             .map((n) => n[0])
             .join("")}
         </div>
-        <span className="text-sm font-medium text-slate-200">
+        <span className="text-sm font-medium text-gray-200">
           {assignment.engineerName}
         </span>
       </div>
@@ -426,7 +426,7 @@ function AssignmentPill({
                 setIsEditing(false);
               }
             }}
-            className="w-16 text-sm font-medium text-slate-100 bg-slate-800 border border-slate-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-16 text-sm font-medium text-gray-100 bg-gray-800 border border-gray-700 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-gray-600"
             autoFocus
           />
         ) : (
@@ -439,7 +439,7 @@ function AssignmentPill({
         )}
         <button
           onClick={onDelete}
-          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-400 transition-all"
+          className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400 transition-all"
         >
           <svg
             className="w-4 h-4"
@@ -469,17 +469,17 @@ function EngineerDragOverlay({
   if (!engineer) return null;
 
   return (
-    <div className="card p-4 shadow-2xl scale-105 cursor-grabbing w-64 bg-slate-800/95 backdrop-blur-sm border border-slate-600">
+    <div className="card p-4 shadow-2xl scale-105 cursor-grabbing w-64 bg-gray-800/95 backdrop-blur-sm border border-gray-600">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-sm font-semibold">
+        <div className="w-8 h-8 rounded-md bg-gray-700 flex items-center justify-center text-gray-300 text-sm font-medium">
           {engineer.name
             .split(" ")
             .map((n) => n[0])
             .join("")}
         </div>
         <div>
-          <div className="font-semibold text-slate-100">{engineer.name}</div>
-          <div className="text-xs text-slate-400">
+          <div className="font-semibold text-gray-100">{engineer.name}</div>
+          <div className="text-xs text-gray-400">
             {engineer.remainingWeeks.toFixed(1)}w available
           </div>
         </div>
@@ -1255,7 +1255,7 @@ export default function CycleDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-6 h-6 border-2 border-gray-600 border-t-gray-300 rounded-full" />
       </div>
     );
   }
@@ -1263,7 +1263,7 @@ export default function CycleDetailPage() {
   if (!cycle) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-400">Cycle not found</p>
+        <p className="text-gray-400">Cycle not found</p>
       </div>
     );
   }
@@ -1281,7 +1281,7 @@ export default function CycleDetailPage() {
           <div>
             <button
               onClick={() => router.push("/")}
-              className="inline-flex items-center text-sm text-slate-400 hover:text-slate-200 mb-2"
+              className="inline-flex items-center text-sm text-gray-400 hover:text-gray-200 mb-2"
             >
               <svg
                 className="w-4 h-4 mr-1"
@@ -1298,12 +1298,12 @@ export default function CycleDetailPage() {
               </svg>
               Back to Cycles
             </button>
-            <h1 className="text-3xl font-bold text-slate-100">{cycle.name}</h1>
-            <p className="mt-1 text-slate-400">
+            <h1 className="text-3xl font-bold text-gray-100">{cycle.name}</h1>
+            <p className="mt-1 text-gray-400">
               {formatDate(cycle.startDate)} — {formatDate(cycle.endDate)}
             </p>
             {cycle.description && (
-              <p className="mt-2 text-slate-400">{cycle.description}</p>
+              <p className="mt-2 text-gray-400">{cycle.description}</p>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -1374,32 +1374,32 @@ export default function CycleDetailPage() {
         {/* Summary Bar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="card p-5">
-            <div className="text-sm font-medium text-slate-400 mb-1">
+            <div className="text-sm font-medium text-gray-400 mb-1">
               Available Weeks
             </div>
-            <div className="text-3xl font-bold text-slate-100">
+            <div className="text-3xl font-bold text-gray-100">
               {cycle.totalAvailableWeeks.toFixed(1)}
-              <span className="text-lg font-normal text-slate-500 ml-1">
+              <span className="text-lg font-normal text-gray-500 ml-1">
                 weeks
               </span>
             </div>
-            <div className="mt-2 text-sm text-slate-500">
+            <div className="mt-2 text-sm text-gray-500">
               {cycle.engineers.length} engineer
               {cycle.engineers.length !== 1 ? "s" : ""}
             </div>
           </div>
 
           <div className="card p-5">
-            <div className="text-sm font-medium text-slate-400 mb-1">
+            <div className="text-sm font-medium text-gray-400 mb-1">
               Required Weeks
             </div>
-            <div className="text-3xl font-bold text-slate-100">
+            <div className="text-3xl font-bold text-gray-100">
               {cycle.totalRequiredWeeks.toFixed(1)}
-              <span className="text-lg font-normal text-slate-500 ml-1">
+              <span className="text-lg font-normal text-gray-500 ml-1">
                 weeks
               </span>
             </div>
-            <div className="mt-2 text-sm text-slate-500">
+            <div className="mt-2 text-sm text-gray-500">
               {cycle.pitches.length} pitch
               {cycle.pitches.length !== 1 ? "es" : ""}
             </div>
@@ -1411,7 +1411,7 @@ export default function CycleDetailPage() {
               cycle.surplusOrDeficit < 0 && "bg-red-50 border-red-200"
             )}
           >
-            <div className="text-sm font-medium text-slate-400 mb-1">
+            <div className="text-sm font-medium text-gray-400 mb-1">
               Balance
             </div>
             <div
@@ -1442,7 +1442,7 @@ export default function CycleDetailPage() {
           {/* Engineers Panel */}
           <div className="lg:col-span-1 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-100">Engineers</h2>
+              <h2 className="text-lg font-semibold text-gray-100">Engineers</h2>
               <button
                 onClick={() => setIsAddEngineerModalOpen(true)}
                 className="btn-ghost text-sm"
@@ -1466,7 +1466,7 @@ export default function CycleDetailPage() {
 
             {cycle.engineers.length === 0 ? (
               <div className="card p-6 text-center">
-                <p className="text-slate-500 text-sm">
+                <p className="text-gray-500 text-sm">
                   No engineers in this cycle yet
                 </p>
                 <button
@@ -1491,7 +1491,7 @@ export default function CycleDetailPage() {
                   ))}
                 {cycle.engineers.filter((e) => e.remainingWeeks > 0).length === 0 &&
                   cycle.engineers.length > 0 && (
-                    <div className="text-center py-6 text-slate-500 text-sm">
+                    <div className="text-center py-6 text-gray-500 text-sm">
                       All engineers are fully allocated
                     </div>
                   )}
@@ -1502,7 +1502,7 @@ export default function CycleDetailPage() {
           {/* Pitches Panel */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-100">Pitches</h2>
+              <h2 className="text-lg font-semibold text-gray-100">Pitches</h2>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsCreatePodModalOpen(true)}
@@ -1547,7 +1547,7 @@ export default function CycleDetailPage() {
 
             {cycle.pitches.length === 0 ? (
               <div className="card p-8 text-center">
-                <p className="text-slate-500">No pitches in this cycle yet</p>
+                <p className="text-gray-500">No pitches in this cycle yet</p>
                 <button
                   onClick={() => setIsAddPitchModalOpen(true)}
                   className="btn-primary mt-3"
@@ -1566,7 +1566,7 @@ export default function CycleDetailPage() {
                     <div key={pod.id} className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <h3 className="text-md font-semibold text-slate-200">{pod.name}</h3>
+                          <h3 className="text-md font-semibold text-gray-200">{pod.name}</h3>
                           {pod.leaderName && (
                             <span className="text-xs bg-primary-900/30 text-primary-300 px-2 py-0.5 rounded-full border border-primary-700/50">
                               Lead: {pod.leaderName}
@@ -1576,7 +1576,7 @@ export default function CycleDetailPage() {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleOpenEditPod(pod)}
-                            className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded transition-colors"
+                            className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded transition-colors"
                             title="Edit pod"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1585,7 +1585,7 @@ export default function CycleDetailPage() {
                           </button>
                           <button
                             onClick={() => handleDeletePod(pod.id)}
-                            className="p-1 text-slate-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
+                            className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
                             title="Delete pod"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1594,7 +1594,7 @@ export default function CycleDetailPage() {
                           </button>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-primary-600/30">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l border-gray-700">
                         {podPitches.map((pitch) => (
                           <DroppablePitchCard
                             key={pitch.id}
@@ -1615,7 +1615,7 @@ export default function CycleDetailPage() {
                 {cycle.pitches.filter((p) => !p.podId).length > 0 && (
                   <div className="space-y-3">
                     {cycle.pods.length > 0 && (
-                      <h3 className="text-md font-semibold text-slate-400">Ungrouped</h3>
+                      <h3 className="text-md font-semibold text-gray-400">Ungrouped</h3>
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {cycle.pitches
@@ -1716,7 +1716,7 @@ export default function CycleDetailPage() {
                   })
                 }
               />
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-gray-500">
                 How many weeks can this engineer work during this cycle?
               </p>
             </div>
@@ -1775,7 +1775,7 @@ export default function CycleDetailPage() {
                 ))}
               </select>
               {availableEngineers.length === 0 && (
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="mt-2 text-sm text-gray-500">
                   All engineers are already in this cycle.
                 </p>
               )}
@@ -1800,12 +1800,12 @@ export default function CycleDetailPage() {
                   })
                 }
               />
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-gray-500">
                 How many weeks can this engineer work during this cycle?
               </p>
             </div>
 
-            <div className="border-t border-slate-700 pt-4 mt-4">
+            <div className="border-t border-gray-700 pt-4 mt-4">
               <button
                 type="button"
                 onClick={() => setIsCreatingNewEngineer(true)}
@@ -1970,7 +1970,7 @@ export default function CycleDetailPage() {
       >
         {pendingAssignment && (
           <div className="space-y-5">
-            <div className="text-slate-300">
+            <div className="text-gray-300">
               How many weeks should{" "}
               <span className="font-semibold">
                 {pendingAssignment.engineer.name}
@@ -1983,15 +1983,15 @@ export default function CycleDetailPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-slate-700/50 rounded-lg p-3">
-                <div className="text-slate-500">Engineer available</div>
-                <div className="font-semibold text-slate-100">
+              <div className="bg-gray-700/50 rounded-lg p-3">
+                <div className="text-gray-500">Engineer available</div>
+                <div className="font-semibold text-gray-100">
                   {pendingAssignment.engineer.remainingWeeks.toFixed(1)} weeks
                 </div>
               </div>
-              <div className="bg-slate-700/50 rounded-lg p-3">
-                <div className="text-slate-500">Pitch needs</div>
-                <div className="font-semibold text-slate-100">
+              <div className="bg-gray-700/50 rounded-lg p-3">
+                <div className="text-gray-500">Pitch needs</div>
+                <div className="font-semibold text-gray-100">
                   {pendingAssignment.pitch.remainingWeeks.toFixed(1)} weeks
                 </div>
               </div>
@@ -2287,9 +2287,9 @@ export default function CycleDetailPage() {
         title="Delete Engineer"
       >
         <div className="space-y-5">
-          <p className="text-slate-400">
+          <p className="text-gray-400">
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-slate-100">
+            <span className="font-semibold text-gray-100">
               {engineerToDelete?.name}
             </span>
             ? This will remove them from all cycles and delete all their assignments.
@@ -2484,7 +2484,7 @@ export default function CycleDetailPage() {
             />
           </div>
 
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-gray-400">
             You can assign a pod leader after adding pitches and assigning engineers to them.
           </p>
 
@@ -2554,7 +2554,7 @@ export default function CycleDetailPage() {
                 ))}
               </select>
             ) : (
-              <p className="text-sm text-slate-400 py-2">
+              <p className="text-sm text-gray-400 py-2">
                 No engineers assigned to pitches in this pod yet. Add pitches and assign engineers first.
               </p>
             )}

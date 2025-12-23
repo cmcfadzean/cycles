@@ -9,30 +9,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Linear-inspired monochromatic palette
         primary: {
-          50: "#f0f9ff",
-          100: "#e0f2fe",
-          200: "#bae6fd",
-          300: "#7dd3fc",
-          400: "#38bdf8",
-          500: "#0ea5e9",
-          600: "#0284c7",
-          700: "#0369a1",
-          800: "#075985",
-          900: "#0c4a6e",
-          950: "#082f49",
+          50: "#f5f3ff",
+          100: "#ede9fe",
+          200: "#ddd6fe",
+          300: "#c4b5fd",
+          400: "#a78bfa",
+          500: "#8b5cf6",
+          600: "#7c3aed",
+          700: "#6d28d9",
+          800: "#5b21b6",
+          900: "#4c1d95",
+          950: "#2e1065",
         },
-        surface: {
+        // Neutral grays without blue tint
+        gray: {
           50: "#fafafa",
-          100: "#f4f4f5",
-          200: "#e4e4e7",
-          300: "#d4d4d8",
-          400: "#a1a1aa",
-          500: "#71717a",
-          600: "#52525b",
-          700: "#3f3f46",
-          800: "#27272a",
-          900: "#18181b",
+          100: "#f5f5f5",
+          200: "#e5e5e5",
+          300: "#d4d4d4",
+          400: "#a3a3a3",
+          500: "#737373",
+          600: "#525252",
+          700: "#404040",
+          800: "#262626",
+          850: "#1a1a1a",
+          900: "#171717",
+          925: "#121212",
+          950: "#0a0a0a",
         },
       },
       fontFamily: {
@@ -40,8 +45,11 @@ const config: Config = {
         mono: ["var(--font-geist-mono)", "monospace"],
       },
       boxShadow: {
-        soft: "0 2px 15px -3px rgba(0, 0, 0, 0.3), 0 10px 20px -2px rgba(0, 0, 0, 0.2)",
-        glow: "0 0 20px rgba(14, 165, 233, 0.25)",
+        soft: "0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3)",
+        glow: "0 0 20px rgba(139, 92, 246, 0.15)",
+      },
+      borderColor: {
+        DEFAULT: "#262626",
       },
     },
   },
@@ -49,4 +57,3 @@ const config: Config = {
 };
 
 export default config;
-

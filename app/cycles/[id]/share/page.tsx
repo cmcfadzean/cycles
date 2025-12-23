@@ -16,19 +16,19 @@ function formatDate(date: string | Date) {
 const statusConfig: Record<PitchStatus, { label: string; className: string }> = {
   PLANNED: {
     label: "Planned",
-    className: "bg-slate-700 text-slate-300 border border-slate-600",
+    className: "bg-gray-800 text-gray-400 border border-gray-700",
   },
   IN_PROGRESS: {
     label: "In Progress",
-    className: "bg-sky-900/50 text-sky-300 border border-sky-700/50",
+    className: "bg-primary-500/15 text-primary-400 border border-primary-500/20",
   },
   DONE: {
     label: "Done",
-    className: "bg-emerald-900/50 text-emerald-300 border border-emerald-700/50",
+    className: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20",
   },
   DROPPED: {
     label: "Dropped",
-    className: "bg-red-900/50 text-red-300 border border-red-700/50",
+    className: "bg-gray-800 text-gray-500 border border-gray-700 line-through",
   },
 };
 
@@ -37,13 +37,13 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
   const isFullyStaffed = pitch.remainingWeeks <= 0;
 
   return (
-    <div className="bg-slate-800/80 rounded-xl border border-slate-700/60 p-5 backdrop-blur-sm">
+    <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
             {pitch.priority && (
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-700 text-xs font-bold text-slate-300">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-gray-800 text-xs font-medium text-gray-400">
                 {pitch.priority}
               </span>
             )}
@@ -52,11 +52,11 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
                 href={pitch.pitchDocUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold text-slate-100 hover:text-primary-400 transition-colors truncate flex items-center gap-1"
+                className="font-medium text-gray-100 hover:text-white transition-colors truncate flex items-center gap-1"
               >
                 {pitch.title}
                 <svg
-                  className="w-3.5 h-3.5 shrink-0"
+                  className="w-3 h-3 shrink-0 text-gray-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -70,14 +70,14 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
                 </svg>
               </a>
             ) : (
-              <h3 className="font-semibold text-slate-100 truncate">
+              <h3 className="font-medium text-gray-100 truncate">
                 {pitch.title}
               </h3>
             )}
           </div>
           <span
             className={clsx(
-              "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+              "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
               statusInfo.className
             )}
           >
@@ -87,21 +87,21 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
       </div>
 
       {pitch.notes && (
-        <p className="text-sm text-slate-400 mb-4 line-clamp-2">
+        <p className="text-sm text-gray-500 mb-3 line-clamp-2">
           {pitch.notes}
         </p>
       )}
 
       {/* Estimate */}
-      <div className="space-y-3 mb-4">
+      <div className="space-y-2 mb-3">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-400">Estimate</span>
-          <span className="font-medium text-slate-200">
+          <span className="text-gray-500">Estimate</span>
+          <span className="font-medium text-gray-300">
             {pitch.estimateWeeks.toFixed(1)}w
           </span>
         </div>
 
-        <div className="h-2 rounded-full overflow-hidden bg-slate-700">
+        <div className="h-1.5 rounded-full overflow-hidden bg-gray-800">
           <div
             className={clsx(
               "h-full rounded-full transition-all duration-300",
@@ -118,8 +118,8 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-400">Assigned</span>
-          <span className="font-medium text-slate-200">
+          <span className="text-gray-500">Assigned</span>
+          <span className="font-medium text-gray-300">
             {pitch.assignedWeeks.toFixed(1)}w
           </span>
         </div>
@@ -128,12 +128,12 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
       {/* Status indicator */}
       <div
         className={clsx(
-          "text-xs text-center font-medium rounded-lg py-1.5 mb-4",
+          "text-xs text-center font-medium rounded py-1.5 mb-3",
           isFullyStaffed
             ? pitch.remainingWeeks < 0
-              ? "text-red-300 bg-red-900/30 border border-red-800/50"
-              : "text-emerald-300 bg-emerald-900/30 border border-emerald-800/50"
-            : "text-amber-300 bg-amber-900/30 border border-amber-800/50"
+              ? "text-red-400 bg-red-500/10"
+              : "text-emerald-400 bg-emerald-500/10"
+            : "text-amber-400 bg-amber-500/10"
         )}
       >
         {isFullyStaffed
@@ -146,27 +146,27 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
       {/* Assignments */}
       {pitch.assignments.length > 0 && (
         <div className="space-y-2">
-          <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
             Team
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {pitch.assignments.map((assignment) => (
               <div
                 key={assignment.id}
-                className="flex items-center justify-between bg-slate-700/50 rounded-lg px-3 py-2"
+                className="flex items-center justify-between bg-gray-800/50 rounded px-2.5 py-1.5"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-xs font-semibold">
+                  <div className="w-5 h-5 rounded bg-gray-700 flex items-center justify-center text-gray-400 text-xs font-medium">
                     {assignment.engineerName
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}
                   </div>
-                  <span className="text-sm text-slate-200">
+                  <span className="text-sm text-gray-300">
                     {assignment.engineerName}
                   </span>
                 </div>
-                <span className="text-sm font-medium text-primary-400">
+                <span className="text-sm text-gray-400">
                   {assignment.weeksAllocated.toFixed(1)}w
                 </span>
               </div>
@@ -176,8 +176,8 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
       )}
 
       {pitch.assignments.length === 0 && (
-        <div className="text-center py-3 border-2 border-dashed border-slate-600 rounded-lg">
-          <p className="text-sm text-slate-500">No engineers assigned</p>
+        <div className="text-center py-2 border border-dashed border-gray-700 rounded">
+          <p className="text-xs text-gray-500">No engineers assigned</p>
         </div>
       )}
     </div>
@@ -218,19 +218,19 @@ export default function ShareCyclePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="animate-spin w-6 h-6 border-2 border-gray-600 border-t-gray-300 rounded-full" />
       </div>
     );
   }
 
   if (error || !cycle) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-gray-800 flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-slate-500"
+              className="w-6 h-6 text-gray-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -243,7 +243,7 @@ export default function ShareCyclePage() {
               />
             </svg>
           </div>
-          <p className="text-slate-400 text-lg">{error || "Cycle not found"}</p>
+          <p className="text-gray-400">{error || "Cycle not found"}</p>
         </div>
       </div>
     );
@@ -258,14 +258,14 @@ export default function ShareCyclePage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+    <div className="min-h-screen bg-gray-950 text-gray-100">
       {/* Header */}
-      <header className="border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg">
+      <header className="border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-md bg-primary-600 flex items-center justify-center">
               <svg
-                className="w-6 h-6 text-white"
+                className="w-5 h-5 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -279,25 +279,25 @@ export default function ShareCyclePage() {
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-100">{cycle.name}</h1>
-              <p className="text-slate-400 mt-1">
+              <h1 className="text-xl font-semibold text-gray-100">{cycle.name}</h1>
+              <p className="text-sm text-gray-500">
                 {formatDate(cycle.startDate)} — {formatDate(cycle.endDate)}
               </p>
             </div>
           </div>
           {cycle.description && (
-            <p className="text-slate-400 mt-4 max-w-3xl">{cycle.description}</p>
+            <p className="text-sm text-gray-400 mt-3 max-w-3xl">{cycle.description}</p>
           )}
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-6 py-6">
         {sortedPitches.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
+            <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-gray-800 flex items-center justify-center">
               <svg
-                className="w-8 h-8 text-slate-500"
+                className="w-6 h-6 text-gray-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -310,7 +310,7 @@ export default function ShareCyclePage() {
                 />
               </svg>
             </div>
-            <p className="text-slate-400">No pitches in this cycle yet</p>
+            <p className="text-gray-500">No pitches in this cycle yet</p>
           </div>
         ) : (
           <div className="space-y-8">
@@ -322,14 +322,14 @@ export default function ShareCyclePage() {
               return (
                 <div key={pod.id} className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-semibold text-slate-200">{pod.name}</h3>
+                    <h3 className="text-sm font-medium text-gray-300">{pod.name}</h3>
                     {pod.leaderName && (
-                      <span className="text-xs bg-primary-900/30 text-primary-300 px-2 py-0.5 rounded-full border border-primary-700/50">
+                      <span className="text-xs text-gray-500">
                         Lead: {pod.leaderName}
                       </span>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pl-4 border-l-2 border-primary-600/30">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pl-4 border-l border-gray-800">
                     {podPitches.map((pitch) => (
                       <PitchCard key={pitch.id} pitch={pitch} />
                     ))}
@@ -342,9 +342,9 @@ export default function ShareCyclePage() {
             {sortedPitches.filter((p) => !p.podId).length > 0 && (
               <div className="space-y-4">
                 {cycle.pods.length > 0 && (
-                  <h3 className="text-lg font-semibold text-slate-400">Ungrouped</h3>
+                  <h3 className="text-sm font-medium text-gray-500">Ungrouped</h3>
                 )}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {sortedPitches
                     .filter((p) => !p.podId)
                     .map((pitch) => (

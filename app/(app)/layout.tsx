@@ -5,13 +5,13 @@ export default function AppLayout({
 }) {
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-lg border-b border-slate-700/60">
+      <header className="sticky top-0 z-40 bg-gray-950/90 backdrop-blur-md border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <a href="/" className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-md">
+          <div className="flex items-center justify-between h-14">
+            <a href="/" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-md bg-primary-600 flex items-center justify-center">
                 <svg
-                  className="w-5 h-5 text-white"
+                  className="w-4.5 h-4.5 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -24,14 +24,14 @@ export default function AppLayout({
                   />
                 </svg>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
+              <span className="text-lg font-semibold text-gray-100">
                 Cycles
               </span>
             </a>
             <nav className="flex items-center gap-1">
               <a
                 href="/"
-                className="px-3 py-2 text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-sm font-medium text-gray-400 hover:text-gray-100 hover:bg-gray-800 rounded-md transition-colors"
               >
                 All Cycles
               </a>
@@ -45,7 +45,3 @@ export default function AppLayout({
     </div>
   );
 }
-
-
-
-

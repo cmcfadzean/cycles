@@ -9,19 +9,19 @@ const statusConfig: Record<
 > = {
   PLANNED: {
     label: "Planned",
-    className: "bg-slate-700 text-slate-300 border border-slate-600",
+    className: "bg-gray-800 text-gray-400 border border-gray-700",
   },
   IN_PROGRESS: {
     label: "In Progress",
-    className: "bg-sky-900/50 text-sky-300 border border-sky-700/50",
+    className: "bg-primary-500/15 text-primary-400 border border-primary-500/20",
   },
   DONE: {
     label: "Done",
-    className: "bg-emerald-900/50 text-emerald-300 border border-emerald-700/50",
+    className: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20",
   },
   DROPPED: {
     label: "Dropped",
-    className: "bg-red-900/50 text-red-300 border border-red-700/50",
+    className: "bg-gray-800 text-gray-500 border border-gray-700 line-through",
   },
 };
 
@@ -36,7 +36,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={clsx(
-        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+        "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
         config.className,
         className
       )}

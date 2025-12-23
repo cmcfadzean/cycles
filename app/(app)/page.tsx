@@ -75,18 +75,18 @@ export default function CyclesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-6 h-6 border-2 border-gray-600 border-t-gray-300 rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100">Cycles</h1>
-          <p className="mt-1 text-slate-400">
+          <h1 className="text-2xl font-semibold text-gray-100">Cycles</h1>
+          <p className="mt-1 text-sm text-gray-500">
             Plan and manage your engineering cycles
           </p>
         </div>
@@ -95,7 +95,7 @@ export default function CyclesPage() {
           className="btn-primary"
         >
           <svg
-            className="w-5 h-5 mr-2"
+            className="w-4 h-4 mr-2"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -114,9 +114,9 @@ export default function CyclesPage() {
       {/* Cycles Table */}
       {cycles.length === 0 ? (
         <div className="card p-12 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-700 flex items-center justify-center">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-gray-800 flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-slate-400"
+              className="w-6 h-6 text-gray-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -129,8 +129,8 @@ export default function CyclesPage() {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-slate-100">No cycles yet</h3>
-          <p className="mt-1 text-slate-400">
+          <h3 className="text-base font-medium text-gray-100">No cycles yet</h3>
+          <p className="mt-1 text-sm text-gray-500">
             Create your first cycle to get started
           </p>
           <button
@@ -145,88 +145,71 @@ export default function CyclesPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-700 bg-slate-800/50">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <tr className="border-b border-gray-800">
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Cycle
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date Range
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Pitches
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Available
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Required
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Balance
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700">
+              <tbody className="divide-y divide-gray-800">
                 {cycles.map((cycle) => (
                   <tr
                     key={cycle.id}
                     onClick={() => router.push(`/cycles/${cycle.id}`)}
-                    className="hover:bg-slate-700/50 cursor-pointer transition-colors group"
+                    className="hover:bg-gray-800/50 cursor-pointer transition-colors group"
                   >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm group-hover:shadow transition-shadow">
-                          <svg
-                            className="w-5 h-5 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                          </svg>
+                    <td className="px-5 py-4">
+                      <div>
+                        <div className="font-medium text-gray-100 group-hover:text-white transition-colors">
+                          {cycle.name}
                         </div>
-                        <div>
-                          <div className="font-semibold text-slate-100 group-hover:text-primary-400 transition-colors">
-                            {cycle.name}
+                        {cycle.description && (
+                          <div className="text-sm text-gray-500 truncate max-w-xs">
+                            {cycle.description}
                           </div>
-                          {cycle.description && (
-                            <div className="text-sm text-slate-500 truncate max-w-xs">
-                              {cycle.description}
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-400">
+                    <td className="px-5 py-4 text-sm text-gray-400">
                       {formatDate(cycle.startDate)} — {formatDate(cycle.endDate)}
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-700 text-sm font-medium text-slate-300">
+                    <td className="px-5 py-4 text-center">
+                      <span className="text-sm text-gray-400">
                         {cycle.pitchCount}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="text-sm font-medium text-slate-300">
+                    <td className="px-5 py-4 text-center">
+                      <span className="text-sm text-gray-400">
                         {cycle.totalAvailableWeeks.toFixed(1)}w
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="text-sm font-medium text-slate-300">
+                    <td className="px-5 py-4 text-center">
+                      <span className="text-sm text-gray-400">
                         {cycle.totalRequiredWeeks.toFixed(1)}w
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-5 py-4 text-center">
                       <span
                         className={clsx(
-                          "inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold",
+                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
                           cycle.surplusOrDeficit >= 0
-                            ? "bg-emerald-900/50 text-emerald-300 border border-emerald-700/50"
-                            : "bg-red-900/50 text-red-300 border border-red-700/50"
+                            ? "bg-emerald-500/15 text-emerald-400"
+                            : "bg-red-500/15 text-red-400"
                         )}
                       >
                         {cycle.surplusOrDeficit >= 0 ? "+" : ""}
