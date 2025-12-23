@@ -1,40 +1,80 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { CreatePitchRequest } from "@/lib/types";
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status"); // "available" or "funded"
+
+    const where: Record<string, unknown> = {};
+    
+    if (status === "available") {
+      where.cycleId = null;
+    } else if (status === "funded") {
+      where.cycleId = { not: null };
+    }
+
+    const pitches = await prisma.pitch.findMany({
+      where,
+      include: {
+        cycle: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        assignments: {
+          include: {
+            engineer: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: [{ createdAt: "desc" }],
+    });
+
+    return NextResponse.json(pitches);
+  } catch (error) {
+    console.error("Failed to fetch pitches:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch pitches" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body: CreatePitchRequest = await request.json();
+    const body = await request.json();
 
-    if (!body.cycleId || !body.title || body.estimateWeeks === undefined) {
+    if (!body.title) {
       return NextResponse.json(
-        { error: "cycleId, title, and estimateWeeks are required" },
+        { error: "title is required" },
         { status: 400 }
       );
     }
 
-    if (body.estimateWeeks <= 0) {
-      return NextResponse.json(
-        { error: "estimateWeeks must be greater than 0" },
-        { status: 400 }
-      );
-    }
+    // If cycleId is provided, verify cycle exists
+    if (body.cycleId) {
+      const cycle = await prisma.cycle.findUnique({
+        where: { id: body.cycleId },
+      });
 
-    // Verify cycle exists
-    const cycle = await prisma.cycle.findUnique({
-      where: { id: body.cycleId },
-    });
-
-    if (!cycle) {
-      return NextResponse.json({ error: "Cycle not found" }, { status: 404 });
+      if (!cycle) {
+        return NextResponse.json({ error: "Cycle not found" }, { status: 404 });
+      }
     }
 
     const pitch = await prisma.pitch.create({
       data: {
-        cycleId: body.cycleId,
+        cycleId: body.cycleId || null,
         title: body.title,
         pitchDocUrl: body.pitchDocUrl || null,
-        estimateWeeks: body.estimateWeeks,
+        estimateWeeks: body.estimateWeeks || 0,
         priority: body.priority ?? null,
         notes: body.notes || null,
       },
@@ -49,7 +89,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-
-
-

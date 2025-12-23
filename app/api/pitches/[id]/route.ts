@@ -44,6 +44,40 @@ export async function PATCH(
     if (body.priority !== undefined) updateData.priority = body.priority;
     if (body.notes !== undefined) updateData.notes = body.notes;
     if (body.podId !== undefined) updateData.podId = body.podId || null;
+    
+    // Handle cycleId changes
+    if (body.cycleId !== undefined) {
+      const newCycleId = body.cycleId || null;
+      
+      // If removing from cycle, clear pod and delete assignments
+      if (newCycleId === null && existing.cycleId !== null) {
+        updateData.podId = null;
+        // Delete all assignments for this pitch
+        await prisma.assignment.deleteMany({
+          where: { pitchId: params.id },
+        });
+      }
+      
+      // If assigning to a new cycle, verify cycle exists
+      if (newCycleId !== null) {
+        const cycle = await prisma.cycle.findUnique({
+          where: { id: newCycleId },
+        });
+        if (!cycle) {
+          return NextResponse.json({ error: "Cycle not found" }, { status: 404 });
+        }
+        // Clear pod when moving to different cycle
+        if (existing.cycleId !== newCycleId) {
+          updateData.podId = null;
+          // Delete assignments from old cycle
+          await prisma.assignment.deleteMany({
+            where: { pitchId: params.id },
+          });
+        }
+      }
+      
+      updateData.cycleId = newCycleId;
+    }
 
     const pitch = await prisma.pitch.update({
       where: { id: params.id },

@@ -542,6 +542,15 @@ export default function CycleDetailPage() {
     priority: "",
     notes: "",
   });
+  const [isCreatingNewPitch, setIsCreatingNewPitch] = useState(false);
+  const [availablePitches, setAvailablePitches] = useState<Array<{
+    id: string;
+    title: string;
+    estimateWeeks: number;
+    priority: number | null;
+    pitchDocUrl: string | null;
+  }>>([]);
+  const [selectedPitchId, setSelectedPitchId] = useState("");
   const [editPitchForm, setEditPitchForm] = useState({
     title: "",
     pitchDocUrl: "",
@@ -606,10 +615,22 @@ export default function CycleDetailPage() {
     }
   }, []);
 
+  const fetchAvailablePitches = useCallback(async () => {
+    try {
+      const res = await fetch("/api/pitches?status=available");
+      if (!res.ok) throw new Error("Failed to fetch pitches");
+      const data = await res.json();
+      setAvailablePitches(data);
+    } catch {
+      console.error("Failed to load available pitches");
+    }
+  }, []);
+
   useEffect(() => {
     fetchCycle();
     fetchEngineers();
-  }, [fetchCycle, fetchEngineers]);
+    fetchAvailablePitches();
+  }, [fetchCycle, fetchEngineers, fetchAvailablePitches]);
 
   function handleDragStart(event: DragStartEvent) {
     const { active } = event;
@@ -855,6 +876,35 @@ export default function CycleDetailPage() {
     }
   }
 
+  async function handleAssignExistingPitch() {
+    if (!selectedPitchId) {
+      toast.error("Please select a pitch");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/pitches/${selectedPitchId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cycleId }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to assign pitch");
+      }
+
+      toast.success("Pitch added to cycle");
+      setIsAddPitchModalOpen(false);
+      setSelectedPitchId("");
+      setIsCreatingNewPitch(false);
+      fetchCycle();
+      fetchAvailablePitches();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to assign pitch");
+    }
+  }
+
   async function handleAddPitch(e: React.FormEvent) {
     e.preventDefault();
 
@@ -885,8 +935,9 @@ export default function CycleDetailPage() {
         throw new Error(data.error || "Failed to create pitch");
       }
 
-      toast.success("Pitch created");
+      toast.success("Pitch added to cycle");
       setIsAddPitchModalOpen(false);
+      setIsCreatingNewPitch(false);
       setAddPitchForm({
         title: "",
         pitchDocUrl: "",
@@ -895,6 +946,7 @@ export default function CycleDetailPage() {
         notes: "",
       });
       fetchCycle();
+      fetchAvailablePitches();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create pitch");
     }
@@ -1851,112 +1903,198 @@ export default function CycleDetailPage() {
       {/* Add Pitch Modal */}
       <Modal
         isOpen={isAddPitchModalOpen}
-        onClose={() => setIsAddPitchModalOpen(false)}
-        title="Add New Pitch"
+        onClose={() => {
+          setIsAddPitchModalOpen(false);
+          setIsCreatingNewPitch(false);
+          setSelectedPitchId("");
+        }}
+        title={isCreatingNewPitch ? "Create New Pitch" : "Add Pitch to Cycle"}
       >
-        <form onSubmit={handleAddPitch} className="space-y-5">
-          <div>
-            <label htmlFor="title" className="label">
-              Title
-            </label>
-            <input
-              id="title"
-              type="text"
-              required
-              className="input"
-              placeholder="e.g., User Authentication Overhaul"
-              value={addPitchForm.title}
-              onChange={(e) =>
-                setAddPitchForm({ ...addPitchForm, title: e.target.value })
-              }
-            />
-          </div>
+        {!isCreatingNewPitch ? (
+          <div className="space-y-5">
+            {availablePitches.length > 0 ? (
+              <>
+                <div>
+                  <label htmlFor="selectPitch" className="label">
+                    Select from Available Pitches
+                  </label>
+                  <select
+                    id="selectPitch"
+                    className="input"
+                    value={selectedPitchId}
+                    onChange={(e) => setSelectedPitchId(e.target.value)}
+                  >
+                    <option value="">Choose a pitch...</option>
+                    {availablePitches.map((pitch) => (
+                      <option key={pitch.id} value={pitch.id}>
+                        {pitch.priority ? `#${pitch.priority} ` : ""}{pitch.title}
+                        {pitch.estimateWeeks > 0 ? ` (${pitch.estimateWeeks}w)` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          <div>
-            <label htmlFor="pitchDocUrl" className="label">
-              Pitch Doc URL (optional)
-            </label>
-            <input
-              id="pitchDocUrl"
-              type="url"
-              className="input"
-              placeholder="https://docs.example.com/pitch/..."
-              value={addPitchForm.pitchDocUrl}
-              onChange={(e) =>
-                setAddPitchForm({ ...addPitchForm, pitchDocUrl: e.target.value })
-              }
-            />
-          </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 border-t border-gray-700" />
+                  <span className="text-sm text-gray-500">or</span>
+                  <div className="flex-1 border-t border-gray-700" />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-2">
+                No available pitches in backlog
+              </p>
+            )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="estimateWeeks" className="label">
-                Estimate (weeks)
-              </label>
-              <input
-                id="estimateWeeks"
-                type="number"
-                step="0.5"
-                min="0.5"
-                required
-                className="input"
-                placeholder="e.g., 4"
-                value={addPitchForm.estimateWeeks}
-                onChange={(e) =>
-                  setAddPitchForm({
-                    ...addPitchForm,
-                    estimateWeeks: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div>
-              <label htmlFor="priority" className="label">
-                Priority (optional)
-              </label>
-              <input
-                id="priority"
-                type="number"
-                min="1"
-                className="input"
-                placeholder="e.g., 1"
-                value={addPitchForm.priority}
-                onChange={(e) =>
-                  setAddPitchForm({ ...addPitchForm, priority: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="notes" className="label">
-              Notes (optional)
-            </label>
-            <textarea
-              id="notes"
-              rows={3}
-              className="input resize-none"
-              placeholder="Any additional context..."
-              value={addPitchForm.notes}
-              onChange={(e) =>
-                setAddPitchForm({ ...addPitchForm, notes: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
-              onClick={() => setIsAddPitchModalOpen(false)}
-              className="btn-secondary"
+              onClick={() => setIsCreatingNewPitch(true)}
+              className="w-full py-3 border border-dashed border-gray-600 rounded-lg text-gray-400 hover:border-gray-500 hover:text-gray-300 hover:bg-gray-800/50 transition-colors flex items-center justify-center gap-2"
             >
-              Cancel
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create New Pitch
             </button>
-            <button type="submit" className="btn-primary">
-              Add Pitch
-            </button>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddPitchModalOpen(false);
+                  setSelectedPitchId("");
+                }}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAssignExistingPitch}
+                disabled={!selectedPitchId}
+                className="btn-primary"
+              >
+                Add to Cycle
+              </button>
+            </div>
           </div>
-        </form>
+        ) : (
+          <form onSubmit={handleAddPitch} className="space-y-5">
+            <div>
+              <label htmlFor="title" className="label">
+                Title
+              </label>
+              <input
+                id="title"
+                type="text"
+                required
+                className="input"
+                placeholder="e.g., User Authentication Overhaul"
+                value={addPitchForm.title}
+                onChange={(e) =>
+                  setAddPitchForm({ ...addPitchForm, title: e.target.value })
+                }
+              />
+            </div>
+
+            <div>
+              <label htmlFor="pitchDocUrl" className="label">
+                Pitch Doc URL (optional)
+              </label>
+              <input
+                id="pitchDocUrl"
+                type="url"
+                className="input"
+                placeholder="https://docs.example.com/pitch/..."
+                value={addPitchForm.pitchDocUrl}
+                onChange={(e) =>
+                  setAddPitchForm({ ...addPitchForm, pitchDocUrl: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="estimateWeeks" className="label">
+                  Estimate (weeks)
+                </label>
+                <input
+                  id="estimateWeeks"
+                  type="number"
+                  step="0.5"
+                  min="0.5"
+                  required
+                  className="input"
+                  placeholder="e.g., 4"
+                  value={addPitchForm.estimateWeeks}
+                  onChange={(e) =>
+                    setAddPitchForm({
+                      ...addPitchForm,
+                      estimateWeeks: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label htmlFor="priority" className="label">
+                  Priority (optional)
+                </label>
+                <input
+                  id="priority"
+                  type="number"
+                  min="1"
+                  className="input"
+                  placeholder="e.g., 1"
+                  value={addPitchForm.priority}
+                  onChange={(e) =>
+                    setAddPitchForm({ ...addPitchForm, priority: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="notes" className="label">
+                Notes (optional)
+              </label>
+              <textarea
+                id="notes"
+                rows={3}
+                className="input resize-none"
+                placeholder="Any additional context..."
+                value={addPitchForm.notes}
+                onChange={(e) =>
+                  setAddPitchForm({ ...addPitchForm, notes: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="flex justify-between pt-4">
+              <button
+                type="button"
+                onClick={() => setIsCreatingNewPitch(false)}
+                className="text-sm text-gray-400 hover:text-gray-300"
+              >
+                ← Back to selection
+              </button>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddPitchModalOpen(false);
+                    setIsCreatingNewPitch(false);
+                  }}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Create & Add
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
       </Modal>
 
       {/* Assignment Modal */}
