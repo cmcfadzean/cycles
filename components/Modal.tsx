@@ -11,21 +11,23 @@ interface ModalProps {
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+  const [isShowing, setIsShowing] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setIsVisible(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsAnimating(true);
-        });
-      });
+      setShouldRender(true);
+      // Use setTimeout to ensure the initial render happens before animating
+      const showTimer = setTimeout(() => {
+        setIsShowing(true);
+      }, 10);
+      return () => clearTimeout(showTimer);
     } else {
-      setIsAnimating(false);
-      const timer = setTimeout(() => setIsVisible(false), 150);
-      return () => clearTimeout(timer);
+      setIsShowing(false);
+      const hideTimer = setTimeout(() => {
+        setShouldRender(false);
+      }, 200);
+      return () => clearTimeout(hideTimer);
     }
   }, [isOpen]);
 
@@ -45,27 +47,27 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     };
   }, [isOpen, onClose]);
 
-  if (!isVisible) return null;
+  if (!shouldRender) return null;
 
   return (
     <div
       ref={overlayRef}
-      style={{
-        backgroundColor: isAnimating ? "rgba(0, 0, 0, 0.6)" : "rgba(0, 0, 0, 0)",
-        transition: "background-color 150ms ease",
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{
+        backgroundColor: isShowing ? "rgba(0, 0, 0, 0.6)" : "rgba(0, 0, 0, 0)",
+        transition: "background-color 200ms ease-out",
+      }}
     >
       <div
-        style={{
-          opacity: isAnimating ? 1 : 0,
-          transform: isAnimating ? "translateY(0)" : "translateY(8px)",
-          transition: "opacity 150ms ease, transform 150ms ease",
-        }}
         className="bg-gray-900 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden border border-gray-800"
+        style={{
+          opacity: isShowing ? 1 : 0,
+          transform: isShowing ? "translateY(0px) scale(1)" : "translateY(12px) scale(0.98)",
+          transition: "opacity 200ms ease-out, transform 200ms ease-out",
+        }}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <h2 className="text-base font-medium text-gray-100">{title}</h2>
