@@ -17,7 +17,6 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
-      // Small delay to trigger CSS transition
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           setIsAnimating(true);
@@ -25,7 +24,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
       });
     } else {
       setIsAnimating(false);
-      const timer = setTimeout(() => setIsVisible(false), 200);
+      const timer = setTimeout(() => setIsVisible(false), 150);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -51,19 +50,22 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   return (
     <div
       ref={overlayRef}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-200 ${
-        isAnimating ? "bg-black/70" : "bg-black/0"
-      }`}
+      style={{
+        backgroundColor: isAnimating ? "rgba(0, 0, 0, 0.6)" : "rgba(0, 0, 0, 0)",
+        transition: "background-color 150ms ease",
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
     >
       <div
-        className={`bg-gray-900 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden border border-gray-800 transition-all duration-200 ease-out ${
-          isAnimating
-            ? "opacity-100 scale-100 translate-y-0"
-            : "opacity-0 scale-95 translate-y-4"
-        }`}
+        style={{
+          opacity: isAnimating ? 1 : 0,
+          transform: isAnimating ? "translateY(0)" : "translateY(8px)",
+          transition: "opacity 150ms ease, transform 150ms ease",
+        }}
+        className="bg-gray-900 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden border border-gray-800"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <h2 className="text-base font-medium text-gray-100">{title}</h2>
