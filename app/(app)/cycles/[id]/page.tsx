@@ -265,7 +265,14 @@ function DroppablePitchCard({
               </span>
             )}
           </div>
-          <StatusBadge status={pitch.status} />
+          <div className="flex items-center gap-2 mt-1">
+            <StatusBadge status={pitch.status} />
+            {pitch.productManagerName && (
+              <span className="text-xs text-gray-500">
+                PM: {pitch.productManagerName}
+              </span>
+            )}
+          </div>
         </div>
         <button
           onClick={() => onEdit(pitch)}
@@ -495,6 +502,7 @@ export default function CycleDetailPage() {
 
   const [cycle, setCycle] = useState<CycleDetail | null>(null);
   const [allEngineers, setAllEngineers] = useState<Engineer[]>([]);
+  const [allProductManagers, setAllProductManagers] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [activeEngineer, setActiveEngineer] =
@@ -559,6 +567,7 @@ export default function CycleDetailPage() {
     priority: "",
     notes: "",
     podId: "",
+    productManagerId: "",
   });
   const [editEngineerForm, setEditEngineerForm] = useState({
     name: "",
@@ -626,11 +635,23 @@ export default function CycleDetailPage() {
     }
   }, []);
 
+  const fetchProductManagers = useCallback(async () => {
+    try {
+      const res = await fetch("/api/product-managers");
+      if (!res.ok) throw new Error("Failed to fetch product managers");
+      const data = await res.json();
+      setAllProductManagers(data);
+    } catch {
+      console.error("Failed to load product managers");
+    }
+  }, []);
+
   useEffect(() => {
     fetchCycle();
     fetchEngineers();
     fetchAvailablePitches();
-  }, [fetchCycle, fetchEngineers, fetchAvailablePitches]);
+    fetchProductManagers();
+  }, [fetchCycle, fetchEngineers, fetchAvailablePitches, fetchProductManagers]);
 
   function handleDragStart(event: DragStartEvent) {
     const { active } = event;
@@ -962,6 +983,7 @@ export default function CycleDetailPage() {
       priority: pitch.priority?.toString() || "",
       notes: pitch.notes || "",
       podId: pitch.podId || "",
+      productManagerId: pitch.productManagerId || "",
     });
     setIsEditPitchModalOpen(true);
   }
@@ -990,6 +1012,7 @@ export default function CycleDetailPage() {
             : null,
           notes: editPitchForm.notes || null,
           podId: editPitchForm.podId || null,
+          productManagerId: editPitchForm.productManagerId || null,
         }),
       });
 
@@ -2299,6 +2322,30 @@ export default function CycleDetailPage() {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="editProductManager" className="label">
+              Product Manager (optional)
+            </label>
+            <select
+              id="editProductManager"
+              className="input"
+              value={editPitchForm.productManagerId}
+              onChange={(e) =>
+                setEditPitchForm({
+                  ...editPitchForm,
+                  productManagerId: e.target.value,
+                })
+              }
+            >
+              <option value="">No Product Manager</option>
+              {allProductManagers.map((pm) => (
+                <option key={pm.id} value={pm.id}>
+                  {pm.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

@@ -23,6 +23,12 @@ export async function GET(request: NextRequest) {
             name: true,
           },
         },
+        productManager: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         assignments: {
           include: {
             engineer: {
@@ -72,6 +78,7 @@ export async function POST(request: NextRequest) {
     const pitch = await prisma.pitch.create({
       data: {
         cycleId: body.cycleId || null,
+        productManagerId: body.productManagerId || null,
         title: body.title,
         pitchDocUrl: body.pitchDocUrl || null,
         estimateWeeks: body.estimateWeeks || 0,

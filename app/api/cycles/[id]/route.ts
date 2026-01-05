@@ -29,6 +29,7 @@ export async function GET(
                 engineer: true,
               },
             },
+            productManager: true,
           },
           orderBy: [{ priority: "asc" }, { createdAt: "asc" }],
         },
@@ -84,6 +85,8 @@ export async function GET(
         priority: pitch.priority,
         notes: pitch.notes,
         podId: pitch.podId,
+        productManagerId: pitch.productManagerId,
+        productManagerName: pitch.productManager?.name || null,
         assignedWeeks,
         remainingWeeks: estimateWeeks - assignedWeeks,
         assignments: pitch.assignments.map((a) => ({

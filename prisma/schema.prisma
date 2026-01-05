@@ -19,6 +19,16 @@ model Engineer {
   leadingPods Pod[]
 }
 
+model ProductManager {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  email     String?  @unique
+  active    Boolean  @default(true)
+  pitches   Pitch[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Cycle {
   id          String                  @id @default(cuid())
   name        String
@@ -59,20 +69,22 @@ model EngineerCycleCapacity {
 }
 
 model Pitch {
-  id            String       @id @default(cuid())
-  cycle         Cycle?       @relation(fields: [cycleId], references: [id], onDelete: SetNull)
-  cycleId       String?
-  pod           Pod?         @relation(fields: [podId], references: [id], onDelete: SetNull)
-  podId         String?
-  title         String
-  pitchDocUrl   String?
-  estimateWeeks Decimal      @default(0)
-  status        String       @default("PLANNED")
-  priority      Int?
-  notes         String?
-  assignments   Assignment[]
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id               String          @id @default(cuid())
+  cycle            Cycle?          @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+  cycleId          String?
+  pod              Pod?            @relation(fields: [podId], references: [id], onDelete: SetNull)
+  podId            String?
+  productManager   ProductManager? @relation(fields: [productManagerId], references: [id], onDelete: SetNull)
+  productManagerId String?
+  title            String
+  pitchDocUrl      String?
+  estimateWeeks    Decimal         @default(0)
+  status           String          @default("PLANNED")
+  priority         Int?
+  notes            String?
+  assignments      Assignment[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 }
 
 model Assignment {

@@ -30,6 +30,8 @@ export interface PitchWithAssignments {
   priority: number | null;
   notes: string | null;
   podId: string | null;
+  productManagerId: string | null;
+  productManagerName: string | null;
   assignedWeeks: number;
   remainingWeeks: number;
   assignments: {
@@ -92,12 +94,13 @@ export interface SetCapacityRequest {
 }
 
 export interface CreatePitchRequest {
-  cycleId: string;
+  cycleId?: string;
   title: string;
   pitchDocUrl?: string;
   estimateWeeks: number;
   priority?: number;
   notes?: string;
+  productManagerId?: string | null;
 }
 
 export interface UpdatePitchRequest {
@@ -109,6 +112,7 @@ export interface UpdatePitchRequest {
   notes?: string;
   podId?: string | null;
   cycleId?: string | null;
+  productManagerId?: string | null;
 }
 
 export interface CreateAssignmentRequest {

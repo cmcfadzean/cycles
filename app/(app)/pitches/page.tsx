@@ -16,7 +16,12 @@ interface Pitch {
   priority: number | null;
   notes: string | null;
   cycleId: string | null;
+  productManagerId: string | null;
   cycle: {
+    id: string;
+    name: string;
+  } | null;
+  productManager: {
     id: string;
     name: string;
   } | null;
@@ -31,10 +36,16 @@ interface Pitch {
   createdAt: string;
 }
 
+interface ProductManager {
+  id: string;
+  name: string;
+}
+
 type Tab = "available" | "funded";
 
 export default function PitchesPage() {
   const [pitches, setPitches] = useState<Pitch[]>([]);
+  const [productManagers, setProductManagers] = useState<ProductManager[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("available");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -49,10 +60,12 @@ export default function PitchesPage() {
     priority: "",
     notes: "",
     status: "PLANNED" as PitchStatus,
+    productManagerId: "",
   });
 
   useEffect(() => {
     fetchPitches();
+    fetchProductManagers();
   }, []);
 
   async function fetchPitches() {
@@ -65,6 +78,17 @@ export default function PitchesPage() {
       toast.error("Failed to load pitches");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchProductManagers() {
+    try {
+      const res = await fetch("/api/product-managers");
+      if (!res.ok) throw new Error("Failed to fetch product managers");
+      const data = await res.json();
+      setProductManagers(data);
+    } catch {
+      console.error("Failed to load product managers");
     }
   }
 
@@ -89,6 +113,7 @@ export default function PitchesPage() {
           estimateWeeks: formData.estimateWeeks ? parseFloat(formData.estimateWeeks) : 0,
           priority: formData.priority ? parseInt(formData.priority) : null,
           notes: formData.notes.trim() || null,
+          productManagerId: formData.productManagerId || null,
         }),
       });
 
@@ -124,6 +149,7 @@ export default function PitchesPage() {
           priority: formData.priority ? parseInt(formData.priority) : null,
           notes: formData.notes.trim() || null,
           status: formData.status,
+          productManagerId: formData.productManagerId || null,
         }),
       });
 
@@ -196,6 +222,7 @@ export default function PitchesPage() {
       priority: "",
       notes: "",
       status: "PLANNED",
+      productManagerId: "",
     });
   }
 
@@ -208,6 +235,7 @@ export default function PitchesPage() {
       priority: pitch.priority?.toString() || "",
       notes: pitch.notes || "",
       status: pitch.status,
+      productManagerId: pitch.productManagerId || "",
     });
     setIsEditModalOpen(true);
   }
@@ -343,6 +371,9 @@ export default function PitchesPage() {
                 <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  PM
+                </th>
                 {activeTab === "funded" && (
                   <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Cycle
@@ -390,6 +421,13 @@ export default function PitchesPage() {
                   </td>
                   <td className="px-5 py-4">
                     <StatusBadge status={pitch.status} />
+                  </td>
+                  <td className="px-5 py-4">
+                    {pitch.productManager ? (
+                      <span className="text-sm text-gray-300">{pitch.productManager.name}</span>
+                    ) : (
+                      <span className="text-sm text-gray-600">—</span>
+                    )}
                   </td>
                   {activeTab === "funded" && (
                     <td className="px-5 py-4">
@@ -518,6 +556,25 @@ export default function PitchesPage() {
             />
           </div>
 
+          <div>
+            <label htmlFor="productManagerId" className="label">
+              Product Manager (optional)
+            </label>
+            <select
+              id="productManagerId"
+              className="input"
+              value={formData.productManagerId}
+              onChange={(e) => setFormData({ ...formData, productManagerId: e.target.value })}
+            >
+              <option value="">No Product Manager</option>
+              {productManagers.map((pm) => (
+                <option key={pm.id} value={pm.id}>
+                  {pm.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
@@ -628,6 +685,25 @@ export default function PitchesPage() {
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             />
+          </div>
+
+          <div>
+            <label htmlFor="editProductManagerId" className="label">
+              Product Manager (optional)
+            </label>
+            <select
+              id="editProductManagerId"
+              className="input"
+              value={formData.productManagerId}
+              onChange={(e) => setFormData({ ...formData, productManagerId: e.target.value })}
+            >
+              <option value="">No Product Manager</option>
+              {productManagers.map((pm) => (
+                <option key={pm.id} value={pm.id}>
+                  {pm.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
