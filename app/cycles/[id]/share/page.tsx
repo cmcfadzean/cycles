@@ -234,7 +234,8 @@ export default function ShareCyclePage() {
 
   const fetchCycle = useCallback(async () => {
     try {
-      const res = await fetch(`/api/cycles/${cycleId}`);
+      // Use the public share endpoint (no auth required)
+      const res = await fetch(`/api/cycles/${cycleId}/share`);
       if (!res.ok) {
         if (res.status === 404) {
           setError("Cycle not found");
