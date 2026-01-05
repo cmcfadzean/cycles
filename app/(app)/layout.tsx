@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import clsx from "clsx";
+import { UserButton } from "@clerk/nextjs";
 
 const navigation = [
   {
@@ -162,6 +163,17 @@ export default function AppLayout({
               <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-800" />
             </div>
           </button>
+
+          {/* User Profile */}
+          <div className="mt-2">
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "w-9 h-9",
+                },
+              }}
+            />
+          </div>
         </div>
       </aside>
 

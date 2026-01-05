@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrganization } from "@/lib/auth";
 import { toNumber, CycleSummary, CreateCycleRequest } from "@/lib/types";
 
 export async function GET() {
   try {
+    const organization = await requireOrganization();
+
     const cycles = await prisma.cycle.findMany({
+      where: {
+        organizationId: organization.id,
+      },
       include: {
         pitches: {
           select: {
@@ -48,6 +54,9 @@ export async function GET() {
     return NextResponse.json(summaries);
   } catch (error) {
     console.error("Failed to fetch cycles:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to fetch cycles" },
       { status: 500 }
@@ -57,6 +66,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const organization = await requireOrganization();
     const body: CreateCycleRequest = await request.json();
 
     if (!body.name || !body.startDate || !body.endDate) {
@@ -68,6 +78,7 @@ export async function POST(request: NextRequest) {
 
     const cycle = await prisma.cycle.create({
       data: {
+        organizationId: organization.id,
         name: body.name,
         startDate: new Date(body.startDate),
         endDate: new Date(body.endDate),
@@ -78,13 +89,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(cycle, { status: 201 });
   } catch (error) {
     console.error("Failed to create cycle:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to create cycle" },
       { status: 500 }
     );
   }
 }
-
-
-
-

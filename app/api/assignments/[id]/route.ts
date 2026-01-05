@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrganization } from "@/lib/auth";
 import { UpdateAssignmentRequest, toNumber } from "@/lib/types";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const organization = await requireOrganization();
+    const { id } = await params;
     const body: UpdateAssignmentRequest = await request.json();
 
     if (body.weeksAllocated === undefined) {
@@ -23,9 +26,14 @@ export async function PATCH(
       );
     }
 
-    // Get the existing assignment
-    const existing = await prisma.assignment.findUnique({
-      where: { id: params.id },
+    // Get the existing assignment and verify it belongs to org through cycle
+    const existing = await prisma.assignment.findFirst({
+      where: {
+        id,
+        cycle: {
+          organizationId: organization.id,
+        },
+      },
       include: {
         pitch: true,
       },
@@ -65,7 +73,7 @@ export async function PATCH(
 
     // Calculate current assigned weeks (excluding this assignment)
     const currentAssignedWeeks = engineerAssignments
-      .filter((a) => a.id !== params.id)
+      .filter((a) => a.id !== id)
       .reduce((sum, a) => sum + toNumber(a.weeksAllocated), 0);
 
     const availableWeeks = toNumber(capacity.availableWeeks);
@@ -90,7 +98,7 @@ export async function PATCH(
 
     // Calculate current assigned weeks for the pitch (excluding this assignment)
     const currentPitchAssignedWeeks = pitchAssignments
-      .filter((a) => a.id !== params.id)
+      .filter((a) => a.id !== id)
       .reduce((sum, a) => sum + toNumber(a.weeksAllocated), 0);
 
     const estimateWeeks = toNumber(existing.pitch.estimateWeeks);
@@ -107,7 +115,7 @@ export async function PATCH(
     }
 
     const assignment = await prisma.assignment.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         weeksAllocated: body.weeksAllocated,
       },
@@ -120,6 +128,9 @@ export async function PATCH(
     return NextResponse.json(assignment);
   } catch (error) {
     console.error("Failed to update assignment:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to update assignment" },
       { status: 500 }
@@ -129,23 +140,42 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const organization = await requireOrganization();
+    const { id } = await params;
+
+    // Verify assignment belongs to org through cycle
+    const existing = await prisma.assignment.findFirst({
+      where: {
+        id,
+        cycle: {
+          organizationId: organization.id,
+        },
+      },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Assignment not found" },
+        { status: 404 }
+      );
+    }
+
     await prisma.assignment.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete assignment:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to delete assignment" },
       { status: 500 }
     );
   }
 }
-
-
-
-

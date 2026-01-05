@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrganization } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productDesigner = await prisma.productDesigner.findUnique({
-      where: { id: params.id },
+    const organization = await requireOrganization();
+    const { id } = await params;
+
+    const productDesigner = await prisma.productDesigner.findFirst({
+      where: {
+        id,
+        organizationId: organization.id,
+      },
       include: {
         pitches: {
           select: {
@@ -29,6 +36,9 @@ export async function GET(
     return NextResponse.json(productDesigner);
   } catch (error) {
     console.error("Failed to fetch product designer:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to fetch product designer" },
       { status: 500 }
@@ -38,13 +48,18 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const organization = await requireOrganization();
+    const { id } = await params;
     const body = await request.json();
 
-    const existing = await prisma.productDesigner.findUnique({
-      where: { id: params.id },
+    const existing = await prisma.productDesigner.findFirst({
+      where: {
+        id,
+        organizationId: organization.id,
+      },
     });
 
     if (!existing) {
@@ -63,11 +78,12 @@ export async function PATCH(
           { status: 400 }
         );
       }
-      // Check for duplicate name
+      // Check for duplicate name within organization
       const nameExists = await prisma.productDesigner.findFirst({
         where: {
+          organizationId: organization.id,
           name: body.name.trim(),
-          id: { not: params.id },
+          id: { not: id },
         },
       });
       if (nameExists) {
@@ -81,11 +97,12 @@ export async function PATCH(
 
     if (body.email !== undefined) {
       if (body.email) {
-        // Check for duplicate email
+        // Check for duplicate email within organization
         const emailExists = await prisma.productDesigner.findFirst({
           where: {
+            organizationId: organization.id,
             email: body.email.trim(),
-            id: { not: params.id },
+            id: { not: id },
           },
         });
         if (emailExists) {
@@ -105,13 +122,16 @@ export async function PATCH(
     }
 
     const productDesigner = await prisma.productDesigner.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
     });
 
     return NextResponse.json(productDesigner);
   } catch (error) {
     console.error("Failed to update product designer:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to update product designer" },
       { status: 500 }
@@ -121,26 +141,46 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const organization = await requireOrganization();
+    const { id } = await params;
+
+    // Verify designer belongs to organization
+    const existing = await prisma.productDesigner.findFirst({
+      where: {
+        id,
+        organizationId: organization.id,
+      },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Product designer not found" },
+        { status: 404 }
+      );
+    }
+
     // Clear productDesignerId from associated pitches first
     await prisma.pitch.updateMany({
-      where: { productDesignerId: params.id },
+      where: { productDesignerId: id },
       data: { productDesignerId: null },
     });
 
     await prisma.productDesigner.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete product designer:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to delete product designer" },
       { status: 500 }
     );
   }
 }
-

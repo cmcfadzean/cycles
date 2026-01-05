@@ -1,16 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrganization } from "@/lib/auth";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const organization = await requireOrganization();
+    const { id } = await params;
     const body = await request.json();
 
-    // Verify pod exists
-    const existing = await prisma.pod.findUnique({
-      where: { id: params.id },
+    // Verify pod exists and belongs to org through cycle
+    const existing = await prisma.pod.findFirst({
+      where: {
+        id,
+        cycle: {
+          organizationId: organization.id,
+        },
+      },
     });
 
     if (!existing) {
@@ -25,8 +33,11 @@ export async function PATCH(
 
     if (body.leaderId !== undefined) {
       if (body.leaderId) {
-        const engineer = await prisma.engineer.findUnique({
-          where: { id: body.leaderId },
+        const engineer = await prisma.engineer.findFirst({
+          where: {
+            id: body.leaderId,
+            organizationId: organization.id,
+          },
         });
         if (!engineer) {
           return NextResponse.json(
@@ -39,7 +50,7 @@ export async function PATCH(
     }
 
     const pod = await prisma.pod.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         leader: true,
@@ -49,6 +60,9 @@ export async function PATCH(
     return NextResponse.json(pod);
   } catch (error) {
     console.error("Failed to update pod:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to update pod" },
       { status: 500 }
@@ -58,12 +72,20 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Verify pod exists
-    const existing = await prisma.pod.findUnique({
-      where: { id: params.id },
+    const organization = await requireOrganization();
+    const { id } = await params;
+
+    // Verify pod exists and belongs to org through cycle
+    const existing = await prisma.pod.findFirst({
+      where: {
+        id,
+        cycle: {
+          organizationId: organization.id,
+        },
+      },
     });
 
     if (!existing) {
@@ -72,25 +94,24 @@ export async function DELETE(
 
     // Remove pod from all pitches first (set podId to null)
     await prisma.pitch.updateMany({
-      where: { podId: params.id },
+      where: { podId: id },
       data: { podId: null },
     });
 
     // Delete the pod
     await prisma.pod.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete pod:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to delete pod" },
       { status: 500 }
     );
   }
 }
-
-
-
-

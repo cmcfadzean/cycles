@@ -7,62 +7,92 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Organization {
+  id               String            @id @default(cuid())
+  clerkUserId      String            @unique
+  name             String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  engineers        Engineer[]
+  productManagers  ProductManager[]
+  productDesigners ProductDesigner[]
+  cycles           Cycle[]
+  pitches          Pitch[]
+}
+
 model Engineer {
-  id          String                  @id @default(cuid())
-  name        String                  @unique
-  email       String?                 @unique
-  active      Boolean                 @default(true)
-  createdAt   DateTime                @default(now())
-  updatedAt   DateTime                @updatedAt
-  capacities  EngineerCycleCapacity[]
-  assignments Assignment[]
-  leadingPods Pod[]
+  id             String                  @id @default(cuid())
+  organization   Organization?           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String?
+  name           String
+  email          String?
+  active         Boolean                 @default(true)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  capacities     EngineerCycleCapacity[]
+  assignments    Assignment[]
+  leadingPods    Pod[]
+
+  @@unique([organizationId, name])
+  @@unique([organizationId, email])
 }
 
 model ProductManager {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  email     String?  @unique
-  active    Boolean  @default(true)
-  pitches   Pitch[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String        @id @default(cuid())
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String?
+  name           String
+  email          String?
+  active         Boolean       @default(true)
+  pitches        Pitch[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([organizationId, name])
+  @@unique([organizationId, email])
 }
 
 model ProductDesigner {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  email     String?  @unique
-  active    Boolean  @default(true)
-  pitches   Pitch[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String        @id @default(cuid())
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String?
+  name           String
+  email          String?
+  active         Boolean       @default(true)
+  pitches        Pitch[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([organizationId, name])
+  @@unique([organizationId, email])
 }
 
 model Cycle {
-  id          String                  @id @default(cuid())
-  name        String
-  startDate   DateTime
-  endDate     DateTime
-  description String?
-  createdAt   DateTime                @default(now())
-  updatedAt   DateTime                @updatedAt
-  pitches     Pitch[]
-  pods        Pod[]
-  capacities  EngineerCycleCapacity[]
-  assignments Assignment[]
+  id             String                  @id @default(cuid())
+  organization   Organization?           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String?
+  name           String
+  startDate      DateTime
+  endDate        DateTime
+  description    String?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  pitches        Pitch[]
+  pods           Pod[]
+  capacities     EngineerCycleCapacity[]
+  assignments    Assignment[]
 }
 
 model Pod {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
-  cycle     Cycle    @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  cycle     Cycle     @relation(fields: [cycleId], references: [id], onDelete: Cascade)
   cycleId   String
   leader    Engineer? @relation(fields: [leaderId], references: [id], onDelete: SetNull)
   leaderId  String?
   pitches   Pitch[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model EngineerCycleCapacity {
@@ -80,6 +110,8 @@ model EngineerCycleCapacity {
 
 model Pitch {
   id                String           @id @default(cuid())
+  organization      Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId    String?
   cycle             Cycle?           @relation(fields: [cycleId], references: [id], onDelete: SetNull)
   cycleId           String?
   pod               Pod?             @relation(fields: [podId], references: [id], onDelete: SetNull)

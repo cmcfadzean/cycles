@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrganization } from "@/lib/auth";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; cycleId: string } }
+  { params }: { params: Promise<{ id: string; cycleId: string }> }
 ) {
   try {
+    const organization = await requireOrganization();
+    const { id: engineerId, cycleId } = await params;
     const body = await request.json();
-    const { id: engineerId, cycleId } = params;
 
     if (body.availableWeeks === undefined) {
       return NextResponse.json(
@@ -23,12 +25,16 @@ export async function PATCH(
       );
     }
 
-    // Verify capacity exists
-    const existing = await prisma.engineerCycleCapacity.findUnique({
+    // Verify capacity exists and belongs to org through engineer and cycle
+    const existing = await prisma.engineerCycleCapacity.findFirst({
       where: {
-        engineerId_cycleId: {
-          engineerId,
-          cycleId,
+        engineerId,
+        cycleId,
+        engineer: {
+          organizationId: organization.id,
+        },
+        cycle: {
+          organizationId: organization.id,
         },
       },
     });
@@ -55,6 +61,9 @@ export async function PATCH(
     return NextResponse.json(capacity);
   } catch (error) {
     console.error("Failed to update capacity:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to update capacity" },
       { status: 500 }
@@ -64,17 +73,22 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; cycleId: string } }
+  { params }: { params: Promise<{ id: string; cycleId: string }> }
 ) {
   try {
-    const { id: engineerId, cycleId } = params;
+    const organization = await requireOrganization();
+    const { id: engineerId, cycleId } = await params;
 
-    // Verify capacity exists
-    const existing = await prisma.engineerCycleCapacity.findUnique({
+    // Verify capacity exists and belongs to org
+    const existing = await prisma.engineerCycleCapacity.findFirst({
       where: {
-        engineerId_cycleId: {
-          engineerId,
-          cycleId,
+        engineerId,
+        cycleId,
+        engineer: {
+          organizationId: organization.id,
+        },
+        cycle: {
+          organizationId: organization.id,
         },
       },
     });
@@ -109,13 +123,12 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete capacity:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to delete capacity" },
       { status: 500 }
     );
   }
 }
-
-
-
-

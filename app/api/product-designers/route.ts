@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrganization } from "@/lib/auth";
 
 export async function GET() {
   try {
+    const organization = await requireOrganization();
+
     const productDesigners = await prisma.productDesigner.findMany({
+      where: {
+        organizationId: organization.id,
+      },
       include: {
         _count: {
           select: { pitches: true },
@@ -15,6 +21,9 @@ export async function GET() {
     return NextResponse.json(productDesigners);
   } catch (error) {
     console.error("Failed to fetch product designers:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to fetch product designers" },
       { status: 500 }
@@ -24,6 +33,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const organization = await requireOrganization();
     const body = await request.json();
 
     if (!body.name) {
@@ -33,9 +43,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for duplicate name
-    const existingName = await prisma.productDesigner.findUnique({
-      where: { name: body.name.trim() },
+    // Check for duplicate name within organization
+    const existingName = await prisma.productDesigner.findFirst({
+      where: {
+        organizationId: organization.id,
+        name: body.name.trim(),
+      },
     });
 
     if (existingName) {
@@ -47,8 +60,11 @@ export async function POST(request: NextRequest) {
 
     // Check for duplicate email if provided
     if (body.email) {
-      const existingEmail = await prisma.productDesigner.findUnique({
-        where: { email: body.email.trim() },
+      const existingEmail = await prisma.productDesigner.findFirst({
+        where: {
+          organizationId: organization.id,
+          email: body.email.trim(),
+        },
       });
 
       if (existingEmail) {
@@ -61,6 +77,7 @@ export async function POST(request: NextRequest) {
 
     const productDesigner = await prisma.productDesigner.create({
       data: {
+        organizationId: organization.id,
         name: body.name.trim(),
         email: body.email?.trim() || null,
       },
@@ -69,10 +86,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(productDesigner, { status: 201 });
   } catch (error) {
     console.error("Failed to create product designer:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to create product designer" },
       { status: 500 }
     );
   }
 }
-

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrganization } from "@/lib/auth";
 import { CreateAssignmentRequest, toNumber } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
   try {
+    const organization = await requireOrganization();
     const body: CreateAssignmentRequest = await request.json();
 
     if (
@@ -27,21 +29,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify cycle exists
-    const cycle = await prisma.cycle.findUnique({
-      where: { id: body.cycleId },
+    // Verify cycle exists and belongs to organization
+    const cycle = await prisma.cycle.findFirst({
+      where: {
+        id: body.cycleId,
+        organizationId: organization.id,
+      },
     });
 
     if (!cycle) {
       return NextResponse.json({ error: "Cycle not found" }, { status: 404 });
     }
 
-    // Verify engineer exists and get their capacity
-    const capacity = await prisma.engineerCycleCapacity.findUnique({
+    // Verify engineer exists and belongs to organization, and get their capacity
+    const capacity = await prisma.engineerCycleCapacity.findFirst({
       where: {
-        engineerId_cycleId: {
-          engineerId: body.engineerId,
-          cycleId: body.cycleId,
+        engineerId: body.engineerId,
+        cycleId: body.cycleId,
+        engineer: {
+          organizationId: organization.id,
         },
       },
     });
@@ -53,9 +59,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify pitch exists and is in the same cycle
-    const pitch = await prisma.pitch.findUnique({
-      where: { id: body.pitchId },
+    // Verify pitch exists, belongs to org, and is in the same cycle
+    const pitch = await prisma.pitch.findFirst({
+      where: {
+        id: body.pitchId,
+        organizationId: organization.id,
+      },
     });
 
     if (!pitch) {
@@ -158,13 +167,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(assignment, { status: 201 });
   } catch (error) {
     console.error("Failed to create assignment:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to create assignment" },
       { status: 500 }
     );
   }
 }
-
-
-
-

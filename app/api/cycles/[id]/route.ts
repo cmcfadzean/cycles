@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrganization } from "@/lib/auth";
 import {
   toNumber,
   CycleDetail,
@@ -11,11 +12,17 @@ import {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const cycle = await prisma.cycle.findUnique({
-      where: { id: params.id },
+    const organization = await requireOrganization();
+    const { id } = await params;
+
+    const cycle = await prisma.cycle.findFirst({
+      where: {
+        id,
+        organizationId: organization.id,
+      },
       include: {
         capacities: {
           include: {
@@ -135,6 +142,9 @@ export async function GET(
     return NextResponse.json(cycleDetail);
   } catch (error) {
     console.error("Failed to fetch cycle:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to fetch cycle" },
       { status: 500 }
@@ -144,10 +154,24 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const organization = await requireOrganization();
+    const { id } = await params;
     const body = await request.json();
+
+    // Verify cycle belongs to organization
+    const existing = await prisma.cycle.findFirst({
+      where: {
+        id,
+        organizationId: organization.id,
+      },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Cycle not found" }, { status: 404 });
+    }
 
     const updateData: Record<string, unknown> = {};
     if (body.name !== undefined) updateData.name = body.name;
@@ -157,13 +181,16 @@ export async function PATCH(
     if (body.description !== undefined) updateData.description = body.description;
 
     const cycle = await prisma.cycle.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
     });
 
     return NextResponse.json(cycle);
   } catch (error) {
     console.error("Failed to update cycle:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to update cycle" },
       { status: 500 }
@@ -173,20 +200,37 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const organization = await requireOrganization();
+    const { id } = await params;
+
+    // Verify cycle belongs to organization
+    const existing = await prisma.cycle.findFirst({
+      where: {
+        id,
+        organizationId: organization.id,
+      },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Cycle not found" }, { status: 404 });
+    }
+
     await prisma.cycle.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete cycle:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to delete cycle" },
       { status: 500 }
     );
   }
 }
-

@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireOrganization } from "@/lib/auth";
 import { SetCapacityRequest } from "@/lib/types";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const organization = await requireOrganization();
+    const { id: engineerId } = await params;
     const body: SetCapacityRequest = await request.json();
-    const engineerId = params.id;
 
     if (!body.cycleId || body.availableWeeks === undefined) {
       return NextResponse.json(
@@ -24,9 +26,12 @@ export async function POST(
       );
     }
 
-    // Verify engineer exists
-    const engineer = await prisma.engineer.findUnique({
-      where: { id: engineerId },
+    // Verify engineer exists and belongs to organization
+    const engineer = await prisma.engineer.findFirst({
+      where: {
+        id: engineerId,
+        organizationId: organization.id,
+      },
     });
 
     if (!engineer) {
@@ -36,9 +41,12 @@ export async function POST(
       );
     }
 
-    // Verify cycle exists
-    const cycle = await prisma.cycle.findUnique({
-      where: { id: body.cycleId },
+    // Verify cycle exists and belongs to organization
+    const cycle = await prisma.cycle.findFirst({
+      where: {
+        id: body.cycleId,
+        organizationId: organization.id,
+      },
     });
 
     if (!cycle) {
@@ -66,13 +74,12 @@ export async function POST(
     return NextResponse.json(capacity, { status: 201 });
   } catch (error) {
     console.error("Failed to set capacity:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: "Failed to set capacity" },
       { status: 500 }
     );
   }
 }
-
-
-
-

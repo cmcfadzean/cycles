@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
@@ -13,9 +15,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
-        {children}
+    <ClerkProvider
+      appearance={{
+        baseTheme: dark,
+        variables: {
+          colorPrimary: "#7c3aed",
+          colorBackground: "#111827",
+          colorInputBackground: "#1f2937",
+          colorInputText: "#f3f4f6",
+        },
+      }}
+    >
+      <html lang="en">
+        <body className="antialiased">
+          {children}
         <Toaster
           position="top-right"
           toastOptions={{
@@ -43,7 +56,8 @@ export default function RootLayout({
             },
           }}
         />
-      </body>
-    </html>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
