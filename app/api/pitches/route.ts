@@ -29,6 +29,12 @@ export async function GET(request: NextRequest) {
             name: true,
           },
         },
+        productDesigner: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         assignments: {
           include: {
             engineer: {
@@ -79,6 +85,7 @@ export async function POST(request: NextRequest) {
       data: {
         cycleId: body.cycleId || null,
         productManagerId: body.productManagerId || null,
+        productDesignerId: body.productDesignerId || null,
         title: body.title,
         pitchDocUrl: body.pitchDocUrl || null,
         estimateWeeks: body.estimateWeeks || 0,

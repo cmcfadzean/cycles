@@ -198,6 +198,28 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
           <p className="text-sm text-gray-500 italic">No product support</p>
         )}
       </div>
+
+      {/* Design Support Section */}
+      <div className="space-y-2 mt-3">
+        <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Design Support
+        </div>
+        {pitch.productDesignerName ? (
+          <div className="flex items-center gap-2 bg-gray-800/50 rounded px-2.5 py-1.5">
+            <div className="w-5 h-5 rounded bg-pink-600/30 flex items-center justify-center text-pink-400 text-xs font-medium">
+              {pitch.productDesignerName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)}
+            </div>
+            <span className="text-sm text-gray-300">{pitch.productDesignerName}</span>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 italic">No design support</p>
+        )}
+      </div>
     </div>
   );
 }

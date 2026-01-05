@@ -17,11 +17,16 @@ interface Pitch {
   notes: string | null;
   cycleId: string | null;
   productManagerId: string | null;
+  productDesignerId: string | null;
   cycle: {
     id: string;
     name: string;
   } | null;
   productManager: {
+    id: string;
+    name: string;
+  } | null;
+  productDesigner: {
     id: string;
     name: string;
   } | null;
@@ -41,11 +46,17 @@ interface ProductManager {
   name: string;
 }
 
+interface ProductDesigner {
+  id: string;
+  name: string;
+}
+
 type Tab = "available" | "funded";
 
 export default function PitchesPage() {
   const [pitches, setPitches] = useState<Pitch[]>([]);
   const [productManagers, setProductManagers] = useState<ProductManager[]>([]);
+  const [productDesigners, setProductDesigners] = useState<ProductDesigner[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("available");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -61,11 +72,13 @@ export default function PitchesPage() {
     notes: "",
     status: "PLANNED" as PitchStatus,
     productManagerId: "",
+    productDesignerId: "",
   });
 
   useEffect(() => {
     fetchPitches();
     fetchProductManagers();
+    fetchProductDesigners();
   }, []);
 
   async function fetchPitches() {
@@ -92,6 +105,17 @@ export default function PitchesPage() {
     }
   }
 
+  async function fetchProductDesigners() {
+    try {
+      const res = await fetch("/api/product-designers");
+      if (!res.ok) throw new Error("Failed to fetch product designers");
+      const data = await res.json();
+      setProductDesigners(data);
+    } catch {
+      console.error("Failed to load product designers");
+    }
+  }
+
   const availablePitches = pitches.filter((p) => p.cycleId === null);
   const fundedPitches = pitches.filter((p) => p.cycleId !== null);
   const displayedPitches = activeTab === "available" ? availablePitches : fundedPitches;
@@ -114,6 +138,7 @@ export default function PitchesPage() {
           priority: formData.priority ? parseInt(formData.priority) : null,
           notes: formData.notes.trim() || null,
           productManagerId: formData.productManagerId || null,
+          productDesignerId: formData.productDesignerId || null,
         }),
       });
 
@@ -150,6 +175,7 @@ export default function PitchesPage() {
           notes: formData.notes.trim() || null,
           status: formData.status,
           productManagerId: formData.productManagerId || null,
+          productDesignerId: formData.productDesignerId || null,
         }),
       });
 
@@ -223,6 +249,7 @@ export default function PitchesPage() {
       notes: "",
       status: "PLANNED",
       productManagerId: "",
+      productDesignerId: "",
     });
   }
 
@@ -236,6 +263,7 @@ export default function PitchesPage() {
       notes: pitch.notes || "",
       status: pitch.status,
       productManagerId: pitch.productManagerId || "",
+      productDesignerId: pitch.productDesignerId || "",
     });
     setIsEditModalOpen(true);
   }
@@ -556,23 +584,43 @@ export default function PitchesPage() {
             />
           </div>
 
-          <div>
-            <label htmlFor="productManagerId" className="label">
-              Product Manager (optional)
-            </label>
-            <select
-              id="productManagerId"
-              className="input"
-              value={formData.productManagerId}
-              onChange={(e) => setFormData({ ...formData, productManagerId: e.target.value })}
-            >
-              <option value="">No Product Manager</option>
-              {productManagers.map((pm) => (
-                <option key={pm.id} value={pm.id}>
-                  {pm.name}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="productManagerId" className="label">
+                Product Manager (optional)
+              </label>
+              <select
+                id="productManagerId"
+                className="input"
+                value={formData.productManagerId}
+                onChange={(e) => setFormData({ ...formData, productManagerId: e.target.value })}
+              >
+                <option value="">No Product Manager</option>
+                {productManagers.map((pm) => (
+                  <option key={pm.id} value={pm.id}>
+                    {pm.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="productDesignerId" className="label">
+                Product Designer (optional)
+              </label>
+              <select
+                id="productDesignerId"
+                className="input"
+                value={formData.productDesignerId}
+                onChange={(e) => setFormData({ ...formData, productDesignerId: e.target.value })}
+              >
+                <option value="">No Product Designer</option>
+                {productDesigners.map((pd) => (
+                  <option key={pd.id} value={pd.id}>
+                    {pd.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
@@ -687,23 +735,43 @@ export default function PitchesPage() {
             />
           </div>
 
-          <div>
-            <label htmlFor="editProductManagerId" className="label">
-              Product Manager (optional)
-            </label>
-            <select
-              id="editProductManagerId"
-              className="input"
-              value={formData.productManagerId}
-              onChange={(e) => setFormData({ ...formData, productManagerId: e.target.value })}
-            >
-              <option value="">No Product Manager</option>
-              {productManagers.map((pm) => (
-                <option key={pm.id} value={pm.id}>
-                  {pm.name}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="editProductManagerId" className="label">
+                Product Manager (optional)
+              </label>
+              <select
+                id="editProductManagerId"
+                className="input"
+                value={formData.productManagerId}
+                onChange={(e) => setFormData({ ...formData, productManagerId: e.target.value })}
+              >
+                <option value="">No Product Manager</option>
+                {productManagers.map((pm) => (
+                  <option key={pm.id} value={pm.id}>
+                    {pm.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="editProductDesignerId" className="label">
+                Product Designer (optional)
+              </label>
+              <select
+                id="editProductDesignerId"
+                className="input"
+                value={formData.productDesignerId}
+                onChange={(e) => setFormData({ ...formData, productDesignerId: e.target.value })}
+              >
+                <option value="">No Product Designer</option>
+                {productDesigners.map((pd) => (
+                  <option key={pd.id} value={pd.id}>
+                    {pd.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

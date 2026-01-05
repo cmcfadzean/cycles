@@ -385,6 +385,28 @@ function DroppablePitchCard({
           <p className="text-sm text-gray-500 italic">No product support</p>
         )}
       </div>
+
+      {/* Design Support Section */}
+      <div className="space-y-2 mt-4">
+        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+          Design Support
+        </div>
+        {pitch.productDesignerName ? (
+          <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-3 py-2">
+            <div className="w-6 h-6 rounded-md bg-pink-600/20 flex items-center justify-center text-pink-400 text-xs font-medium">
+              {pitch.productDesignerName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)}
+            </div>
+            <span className="text-sm text-gray-200">{pitch.productDesignerName}</span>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 italic">No design support</p>
+        )}
+      </div>
     </div>
   );
 }
@@ -516,6 +538,7 @@ export default function CycleDetailPage() {
   const [cycle, setCycle] = useState<CycleDetail | null>(null);
   const [allEngineers, setAllEngineers] = useState<Engineer[]>([]);
   const [allProductManagers, setAllProductManagers] = useState<{ id: string; name: string }[]>([]);
+  const [allProductDesigners, setAllProductDesigners] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [activeEngineer, setActiveEngineer] =
@@ -581,6 +604,7 @@ export default function CycleDetailPage() {
     notes: "",
     podId: "",
     productManagerId: "",
+    productDesignerId: "",
   });
   const [editEngineerForm, setEditEngineerForm] = useState({
     name: "",
@@ -659,12 +683,24 @@ export default function CycleDetailPage() {
     }
   }, []);
 
+  const fetchProductDesigners = useCallback(async () => {
+    try {
+      const res = await fetch("/api/product-designers");
+      if (!res.ok) throw new Error("Failed to fetch product designers");
+      const data = await res.json();
+      setAllProductDesigners(data);
+    } catch {
+      console.error("Failed to load product designers");
+    }
+  }, []);
+
   useEffect(() => {
     fetchCycle();
     fetchEngineers();
     fetchAvailablePitches();
     fetchProductManagers();
-  }, [fetchCycle, fetchEngineers, fetchAvailablePitches, fetchProductManagers]);
+    fetchProductDesigners();
+  }, [fetchCycle, fetchEngineers, fetchAvailablePitches, fetchProductManagers, fetchProductDesigners]);
 
   function handleDragStart(event: DragStartEvent) {
     const { active } = event;
@@ -997,6 +1033,7 @@ export default function CycleDetailPage() {
       notes: pitch.notes || "",
       podId: pitch.podId || "",
       productManagerId: pitch.productManagerId || "",
+      productDesignerId: pitch.productDesignerId || "",
     });
     setIsEditPitchModalOpen(true);
   }
@@ -1026,6 +1063,7 @@ export default function CycleDetailPage() {
           notes: editPitchForm.notes || null,
           podId: editPitchForm.podId || null,
           productManagerId: editPitchForm.productManagerId || null,
+          productDesignerId: editPitchForm.productDesignerId || null,
         }),
       });
 
@@ -2337,28 +2375,53 @@ export default function CycleDetailPage() {
             </div>
           </div>
 
-          <div>
-            <label htmlFor="editProductManager" className="label">
-              Product Manager (optional)
-            </label>
-            <select
-              id="editProductManager"
-              className="input"
-              value={editPitchForm.productManagerId}
-              onChange={(e) =>
-                setEditPitchForm({
-                  ...editPitchForm,
-                  productManagerId: e.target.value,
-                })
-              }
-            >
-              <option value="">No Product Manager</option>
-              {allProductManagers.map((pm) => (
-                <option key={pm.id} value={pm.id}>
-                  {pm.name}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="editProductManager" className="label">
+                Product Manager (optional)
+              </label>
+              <select
+                id="editProductManager"
+                className="input"
+                value={editPitchForm.productManagerId}
+                onChange={(e) =>
+                  setEditPitchForm({
+                    ...editPitchForm,
+                    productManagerId: e.target.value,
+                  })
+                }
+              >
+                <option value="">No Product Manager</option>
+                {allProductManagers.map((pm) => (
+                  <option key={pm.id} value={pm.id}>
+                    {pm.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="editProductDesigner" className="label">
+                Product Designer (optional)
+              </label>
+              <select
+                id="editProductDesigner"
+                className="input"
+                value={editPitchForm.productDesignerId}
+                onChange={(e) =>
+                  setEditPitchForm({
+                    ...editPitchForm,
+                    productDesignerId: e.target.value,
+                  })
+                }
+              >
+                <option value="">No Product Designer</option>
+                {allProductDesigners.map((pd) => (
+                  <option key={pd.id} value={pd.id}>
+                    {pd.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>

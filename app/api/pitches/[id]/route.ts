@@ -45,6 +45,7 @@ export async function PATCH(
     if (body.notes !== undefined) updateData.notes = body.notes;
     if (body.podId !== undefined) updateData.podId = body.podId || null;
     if (body.productManagerId !== undefined) updateData.productManagerId = body.productManagerId || null;
+    if (body.productDesignerId !== undefined) updateData.productDesignerId = body.productDesignerId || null;
     
     // Handle cycleId changes
     if (body.cycleId !== undefined) {
