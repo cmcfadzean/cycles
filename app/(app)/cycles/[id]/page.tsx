@@ -265,14 +265,7 @@ function DroppablePitchCard({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <StatusBadge status={pitch.status} />
-            {pitch.productManagerName && (
-              <span className="text-xs text-gray-500">
-                PM: {pitch.productManagerName}
-              </span>
-            )}
-          </div>
+          <StatusBadge status={pitch.status} />
         </div>
         <button
           onClick={() => onEdit(pitch)}
@@ -333,12 +326,12 @@ function DroppablePitchCard({
         </div>
       )}
 
-      {/* Assigned Engineers */}
-      {pitch.assignments.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-            Team
-          </div>
+      {/* Engineers Section */}
+      <div className="space-y-2">
+        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+          Engineers
+        </div>
+        {pitch.assignments.length > 0 ? (
           <div className="space-y-2">
             {pitch.assignments.map((assignment) => (
               <AssignmentPill
@@ -349,29 +342,49 @@ function DroppablePitchCard({
               />
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-center py-4 border-2 border-dashed border-gray-600 rounded-lg">
+            <svg
+              className="w-6 h-6 mx-auto text-gray-500 mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            <p className="text-sm text-gray-500">
+              Drag an engineer here to assign
+            </p>
+          </div>
+        )}
+      </div>
 
-      {pitch.assignments.length === 0 && (
-        <div className="text-center py-4 border-2 border-dashed border-gray-600 rounded-lg">
-          <svg
-            className="w-6 h-6 mx-auto text-gray-500 mb-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          <p className="text-sm text-gray-500">
-            Drag an engineer here to assign
-          </p>
+      {/* Product Support Section */}
+      <div className="space-y-2 mt-4">
+        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+          Product Support
         </div>
-      )}
+        {pitch.productManagerName ? (
+          <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-3 py-2">
+            <div className="w-6 h-6 rounded-md bg-violet-600/20 flex items-center justify-center text-violet-400 text-xs font-medium">
+              {pitch.productManagerName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)}
+            </div>
+            <span className="text-sm text-gray-200">{pitch.productManagerName}</span>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 italic">No product support</p>
+        )}
+      </div>
     </div>
   );
 }

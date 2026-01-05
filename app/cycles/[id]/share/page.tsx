@@ -143,12 +143,12 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
           : `${pitch.remainingWeeks.toFixed(1)}w unassigned`}
       </div>
 
-      {/* Assignments */}
-      {pitch.assignments.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Team
-          </div>
+      {/* Engineers Section */}
+      <div className="space-y-2">
+        <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Engineers
+        </div>
+        {pitch.assignments.length > 0 ? (
           <div className="space-y-1.5">
             {pitch.assignments.map((assignment) => (
               <div
@@ -172,14 +172,32 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-gray-500 italic">No engineers assigned</p>
+        )}
+      </div>
 
-      {pitch.assignments.length === 0 && (
-        <div className="text-center py-2 border border-dashed border-gray-700 rounded">
-          <p className="text-xs text-gray-500">No engineers assigned</p>
+      {/* Product Support Section */}
+      <div className="space-y-2 mt-3">
+        <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Product Support
         </div>
-      )}
+        {pitch.productManagerName ? (
+          <div className="flex items-center gap-2 bg-gray-800/50 rounded px-2.5 py-1.5">
+            <div className="w-5 h-5 rounded bg-violet-600/30 flex items-center justify-center text-violet-400 text-xs font-medium">
+              {pitch.productManagerName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)}
+            </div>
+            <span className="text-sm text-gray-300">{pitch.productManagerName}</span>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 italic">No product support</p>
+        )}
+      </div>
     </div>
   );
 }
