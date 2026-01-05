@@ -364,7 +364,7 @@ export default function ShareCyclePage() {
                   <div className="flex items-center gap-3">
                     <h3 className="text-sm font-medium text-gray-300">{pod.name}</h3>
                     {pod.leaderName && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs bg-violet-900/30 text-violet-300 px-2 py-0.5 rounded-full border border-violet-700/50">
                         Lead: {pod.leaderName}
                       </span>
                     )}
