@@ -287,7 +287,7 @@ function DroppablePitchCard({
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-400">Estimate</span>
           <span className="font-medium text-gray-200">
-            {pitch.estimateWeeks.toFixed(1)}w
+            {Number(pitch.estimateWeeks).toFixed(1)}w
           </span>
         </div>
 
@@ -1490,7 +1490,7 @@ export default function CycleDetailPage() {
           </div>
 
           <div className="text-sm text-gray-400 flex-shrink-0">
-            {pitch.estimateWeeks.toFixed(1)}w
+            {Number(pitch.estimateWeeks).toFixed(1)}w
           </div>
         </div>
 
@@ -3145,7 +3145,7 @@ export default function CycleDetailPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-gray-100">{pitch.title}</span>
-                      <span className="text-sm text-gray-400">{pitch.estimateWeeks.toFixed(1)}w</span>
+                      <span className="text-sm text-gray-400">{Number(pitch.estimateWeeks).toFixed(1)}w</span>
                     </div>
                   </button>
                 ))}
