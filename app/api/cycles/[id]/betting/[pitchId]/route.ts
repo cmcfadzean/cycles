@@ -105,6 +105,29 @@ export async function PATCH(
         });
         break;
 
+      case "unapprove":
+        // Remove pitch from cycle, put back on betting table as pending
+        await prisma.$transaction(async (tx) => {
+          // Delete assignments for this pitch in this cycle
+          await tx.assignment.deleteMany({
+            where: {
+              cycleId: cycleId,
+              pitchId: pitchId,
+            },
+          });
+          
+          await tx.pitch.update({
+            where: { id: pitchId },
+            data: {
+              cycleId: null,
+              podId: null,
+              bettingCycleId: cycleId,
+              bettingRejected: false,
+            },
+          });
+        });
+        break;
+
       case "reject":
         // If pitch is in cycle, remove it
         // Mark as rejected in betting table
@@ -128,6 +151,17 @@ export async function PATCH(
               bettingRejected: true,
             },
           });
+        });
+        break;
+
+      case "unreject":
+        // Un-reject: put back to pending state on betting table
+        await prisma.pitch.update({
+          where: { id: pitchId },
+          data: {
+            bettingCycleId: cycleId,
+            bettingRejected: false,
+          },
         });
         break;
 

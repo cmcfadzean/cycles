@@ -820,7 +820,7 @@ export default function CycleDetailPage() {
     }
   }
 
-  async function handleBettingAction(pitchId: string, action: "approve" | "reject" | "remove") {
+  async function handleBettingAction(pitchId: string, action: "approve" | "unapprove" | "reject" | "unreject" | "remove") {
     try {
       const res = await fetch(`/api/cycles/${cycleId}/betting/${pitchId}`, {
         method: "PATCH",
@@ -833,13 +833,16 @@ export default function CycleDetailPage() {
         throw new Error(data.error || "Failed to perform action");
       }
 
-      const messages = {
+      const messages: Record<string, string> = {
         approve: "Pitch added to cycle",
+        unapprove: "Pitch removed from cycle",
         reject: "Pitch rejected",
+        unreject: "Pitch moved back to pending",
         remove: "Pitch removed from betting table",
       };
       toast.success(messages[action]);
       fetchCycle();
+      fetchAvailablePitches();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to perform action");
     }
@@ -1496,30 +1499,28 @@ export default function CycleDetailPage() {
 
         <div className="flex items-center gap-1 ml-4">
           <button
-            onClick={() => handleBettingAction(pitch.id, "approve")}
-            disabled={pitch.isApproved}
+            onClick={() => handleBettingAction(pitch.id, pitch.isApproved ? "unapprove" : "approve")}
             className={clsx(
               "p-2 rounded-lg transition-colors",
               pitch.isApproved
-                ? "text-emerald-400 bg-emerald-500/20 cursor-default"
+                ? "text-emerald-400 bg-emerald-500/20 hover:bg-emerald-500/30"
                 : "text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10"
             )}
-            title="Approve - Add to cycle"
+            title={pitch.isApproved ? "Remove from cycle" : "Approve - Add to cycle"}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
             </svg>
           </button>
           <button
-            onClick={() => handleBettingAction(pitch.id, "reject")}
-            disabled={pitch.isRejected}
+            onClick={() => handleBettingAction(pitch.id, pitch.isRejected ? "unreject" : "reject")}
             className={clsx(
               "p-2 rounded-lg transition-colors",
               pitch.isRejected
-                ? "text-gray-500 bg-gray-700 cursor-default"
+                ? "text-red-400 bg-red-500/20 hover:bg-red-500/30"
                 : "text-gray-400 hover:text-red-400 hover:bg-red-500/10"
             )}
-            title="Reject - Remove from cycle"
+            title={pitch.isRejected ? "Unreject - Move back to pending" : "Reject"}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />

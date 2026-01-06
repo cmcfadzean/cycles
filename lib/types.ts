@@ -140,7 +140,7 @@ export interface UpdateAssignmentRequest {
   weeksAllocated: number;
 }
 
-export type BettingAction = "approve" | "reject" | "remove";
+export type BettingAction = "approve" | "unapprove" | "reject" | "unreject" | "remove";
 
 export interface BettingActionRequest {
   action: BettingAction;
