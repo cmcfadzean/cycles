@@ -1718,7 +1718,7 @@ export default function CycleDetailPage() {
           <div
             className={clsx(
               "card p-5",
-              cycle.surplusOrDeficit < 0 && "bg-red-50 border-red-200"
+              cycle.surplusOrDeficit < 0 && "bg-red-500/10 border-red-500/30"
             )}
           >
             <div className="text-sm font-medium text-gray-400 mb-1">
