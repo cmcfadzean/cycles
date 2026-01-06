@@ -1973,6 +1973,10 @@ export default function CycleDetailPage() {
                   {cycle.totalAvailableWeeks.toFixed(1)}
                   <span className="text-lg font-normal text-gray-500 ml-1">weeks</span>
                 </div>
+                <div className="mt-2 text-sm text-gray-500">
+                  {cycle.engineers.length} engineer
+                  {cycle.engineers.length !== 1 ? "s" : ""}
+                </div>
               </div>
 
               <div className="card p-5">
@@ -1983,9 +1987,18 @@ export default function CycleDetailPage() {
                   {cycle.totalRequiredWeeks.toFixed(1)}
                   <span className="text-lg font-normal text-gray-500 ml-1">weeks</span>
                 </div>
+                <div className="mt-2 text-sm text-gray-500">
+                  {cycle.pitches.length} pitch
+                  {cycle.pitches.length !== 1 ? "es" : ""}
+                </div>
               </div>
 
-              <div className="card p-5">
+              <div
+                className={clsx(
+                  "card p-5",
+                  cycle.surplusOrDeficit < 0 && "bg-red-500/10 border-red-500/30"
+                )}
+              >
                 <div className="text-sm font-medium text-gray-400 mb-1">Balance</div>
                 <div
                   className={clsx(
@@ -1997,6 +2010,16 @@ export default function CycleDetailPage() {
                   {cycle.surplusOrDeficit.toFixed(1)}
                   <span className="text-lg font-normal ml-1">weeks</span>
                 </div>
+                {cycle.surplusOrDeficit < 0 ? (
+                  <div className="mt-2 text-sm text-red-400 font-medium">
+                    ⚠️ Over capacity by{" "}
+                    {Math.abs(cycle.surplusOrDeficit).toFixed(1)} weeks
+                  </div>
+                ) : (
+                  <div className="mt-2 text-sm text-emerald-400">
+                    ✓ Capacity available
+                  </div>
+                )}
               </div>
             </div>
 
