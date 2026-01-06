@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   DndContext,
@@ -1446,6 +1446,63 @@ export default function CycleDetailPage() {
 
   // Betting Pitch Row Component
   function BettingPitchRow({ pitch }: { pitch: BettingPitch }) {
+    const [isEditingWeeks, setIsEditingWeeks] = useState(false);
+    const [weeksValue, setWeeksValue] = useState(Number(pitch.estimateWeeks).toString());
+    const [isSaving, setIsSaving] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+      if (isEditingWeeks && inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.select();
+      }
+    }, [isEditingWeeks]);
+
+    async function handleSaveWeeks() {
+      const newWeeks = parseFloat(weeksValue);
+      if (isNaN(newWeeks) || newWeeks < 0) {
+        setWeeksValue(Number(pitch.estimateWeeks).toString());
+        setIsEditingWeeks(false);
+        return;
+      }
+
+      if (newWeeks === Number(pitch.estimateWeeks)) {
+        setIsEditingWeeks(false);
+        return;
+      }
+
+      setIsSaving(true);
+      try {
+        const res = await fetch(`/api/pitches/${pitch.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ estimateWeeks: newWeeks }),
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to update");
+        }
+
+        toast.success("Estimate updated");
+        fetchCycle();
+      } catch {
+        toast.error("Failed to update estimate");
+        setWeeksValue(Number(pitch.estimateWeeks).toString());
+      } finally {
+        setIsSaving(false);
+        setIsEditingWeeks(false);
+      }
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent) {
+      if (e.key === "Enter") {
+        handleSaveWeeks();
+      } else if (e.key === "Escape") {
+        setWeeksValue(Number(pitch.estimateWeeks).toString());
+        setIsEditingWeeks(false);
+      }
+    }
+
     return (
       <div
         className={clsx(
@@ -1492,9 +1549,31 @@ export default function CycleDetailPage() {
             )}
           </div>
 
-          <div className="text-sm text-gray-400 flex-shrink-0">
-            {Number(pitch.estimateWeeks).toFixed(1)}w
-          </div>
+          {isEditingWeeks ? (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <input
+                ref={inputRef}
+                type="number"
+                step="0.5"
+                min="0"
+                className="w-16 px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-violet-500"
+                value={weeksValue}
+                onChange={(e) => setWeeksValue(e.target.value)}
+                onBlur={handleSaveWeeks}
+                onKeyDown={handleKeyDown}
+                disabled={isSaving}
+              />
+              <span className="text-sm text-gray-400">w</span>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsEditingWeeks(true)}
+              className="text-sm text-gray-400 hover:text-gray-200 hover:bg-gray-700 px-2 py-1 rounded transition-colors flex-shrink-0"
+              title="Click to edit estimate"
+            >
+              {Number(pitch.estimateWeeks).toFixed(1)}w
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-1 ml-4">
