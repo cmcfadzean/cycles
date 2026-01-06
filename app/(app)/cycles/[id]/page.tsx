@@ -1667,9 +1667,9 @@ export default function CycleDetailPage() {
               )}
             >
               Betting Table
-              {cycle.bettingPitches.filter((p) => !p.isApproved && !p.isRejected).length > 0 && (
+              {(cycle.bettingPitches || []).filter((p) => !p.isApproved && !p.isRejected).length > 0 && (
                 <span className="px-1.5 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-400">
-                  {cycle.bettingPitches.filter((p) => !p.isApproved && !p.isRejected).length}
+                  {(cycle.bettingPitches || []).filter((p) => !p.isApproved && !p.isRejected).length}
                 </span>
               )}
             </button>
@@ -2009,7 +2009,7 @@ export default function CycleDetailPage() {
                 </button>
               </div>
 
-              {cycle.bettingPitches.length === 0 ? (
+              {(cycle.bettingPitches || []).length === 0 ? (
                 <div className="p-8 text-center">
                   <p className="text-gray-500">No pitches in the betting table</p>
                   <p className="text-sm text-gray-600 mt-1">
@@ -2019,26 +2019,26 @@ export default function CycleDetailPage() {
               ) : (
                 <div className="divide-y divide-gray-800">
                   {/* Approved pitches */}
-                  {cycle.bettingPitches
+                  {(cycle.bettingPitches || [])
                     .filter((p) => p.isApproved)
                     .map((pitch) => (
                       <BettingPitchRow key={pitch.id} pitch={pitch} />
                     ))}
 
                   {/* Pending pitches */}
-                  {cycle.bettingPitches
+                  {(cycle.bettingPitches || [])
                     .filter((p) => !p.isApproved && !p.isRejected)
                     .map((pitch) => (
                       <BettingPitchRow key={pitch.id} pitch={pitch} />
                     ))}
 
                   {/* Rejected pitches */}
-                  {cycle.bettingPitches.filter((p) => p.isRejected).length > 0 && (
+                  {(cycle.bettingPitches || []).filter((p) => p.isRejected).length > 0 && (
                     <>
                       <div className="px-4 py-2 bg-gray-800/50 text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Rejected
                       </div>
-                      {cycle.bettingPitches
+                      {(cycle.bettingPitches || [])
                         .filter((p) => p.isRejected)
                         .map((pitch) => (
                           <BettingPitchRow key={pitch.id} pitch={pitch} />
@@ -3136,7 +3136,7 @@ export default function CycleDetailPage() {
           {availablePitches.length > 0 ? (
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {availablePitches
-                .filter((p) => !cycle?.bettingPitches.some((bp) => bp.id === p.id))
+                .filter((p) => !(cycle?.bettingPitches || []).some((bp) => bp.id === p.id))
                 .map((pitch) => (
                   <button
                     key={pitch.id}
