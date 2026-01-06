@@ -49,13 +49,6 @@ export interface BettingPitch {
   title: string;
   pitchDocUrl: string | null;
   estimateWeeks: number;
-  priority: number | null;
-  status: PitchStatus;
-  notes: string | null;
-  assignedWeeks: number;
-  remainingWeeks: number;
-  productManagerName: string | null;
-  productDesignerName: string | null;
   isApproved: boolean; // true if pitch is already in the cycle (cycleId set)
   isRejected: boolean; // thumbs down
 }

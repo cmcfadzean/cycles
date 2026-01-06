@@ -1446,179 +1446,98 @@ export default function CycleDetailPage() {
 
   // Betting Pitch Row Component
   function BettingPitchRow({ pitch }: { pitch: BettingPitch }) {
-    const filledPercentage =
-      pitch.estimateWeeks > 0
-        ? (pitch.assignedWeeks / pitch.estimateWeeks) * 100
-        : 0;
-
-    const getStatusColor = () => {
-      if (pitch.remainingWeeks < 0) return "bg-red-500";
-      if (pitch.remainingWeeks === 0) return "bg-emerald-500";
-      return "bg-amber-500";
-    };
-
     return (
       <div
         className={clsx(
-          "card p-4 transition-all duration-200",
+          "flex items-center justify-between px-4 py-3",
           pitch.isRejected && "opacity-50"
         )}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              {pitch.priority && (
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-700 text-xs font-semibold text-gray-300">
-                  {pitch.priority}
-                </span>
-              )}
-              {pitch.pitchDocUrl ? (
-                <a
-                  href={pitch.pitchDocUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-gray-100 hover:text-primary-400 transition-colors truncate"
-                >
-                  {pitch.title}
-                  <svg
-                    className="w-3.5 h-3.5 inline ml-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                </a>
-              ) : (
-                <span className="font-semibold text-gray-100 truncate">
-                  {pitch.title}
-                </span>
-              )}
-            </div>
-            <StatusBadge status={pitch.status} />
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center gap-1 ml-3">
-            <button
-              onClick={() => handleBettingAction(pitch.id, pitch.isApproved ? "unapprove" : "approve")}
-              className={clsx(
-                "p-2 rounded-lg transition-colors",
-                pitch.isApproved
-                  ? "text-emerald-400 bg-emerald-500/20 hover:bg-emerald-500/30"
-                  : "text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10"
-              )}
-              title={pitch.isApproved ? "Remove from cycle" : "Approve - Add to cycle"}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-              </svg>
-            </button>
-            <button
-              onClick={() => handleBettingAction(pitch.id, pitch.isRejected ? "unreject" : "reject")}
-              className={clsx(
-                "p-2 rounded-lg transition-colors",
-                pitch.isRejected
-                  ? "text-red-400 bg-red-500/20 hover:bg-red-500/30"
-                  : "text-gray-400 hover:text-red-400 hover:bg-red-500/10"
-              )}
-              title={pitch.isRejected ? "Unreject - Move back to pending" : "Reject"}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
-              </svg>
-            </button>
-            {!pitch.isApproved && (
-              <button
-                onClick={() => handleBettingAction(pitch.id, "remove")}
-                className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors"
-                title="Remove from betting table"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {pitch.notes && (
-          <p className="text-sm text-gray-400 mb-3 line-clamp-2">{pitch.notes}</p>
-        )}
-
-        {/* Progress */}
-        <div className="space-y-2 mb-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-400">Estimate</span>
-            <span className="font-medium text-gray-200">
-              {Number(pitch.estimateWeeks).toFixed(1)}w
-            </span>
-          </div>
-
-          <div className="progress-bar h-2">
-            <div
-              className={clsx("progress-bar-fill", getStatusColor())}
-              style={{ width: `${Math.min(filledPercentage, 100)}%` }}
-            />
-          </div>
-
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-400">Assigned</span>
-            <span className="font-medium text-gray-200">
-              {pitch.assignedWeeks.toFixed(1)}w
-            </span>
-          </div>
-        </div>
-
-        {/* Staffing status */}
-        {pitch.remainingWeeks !== 0 && (
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <div
             className={clsx(
-              "text-xs text-center font-medium rounded-lg py-1.5 mb-3",
-              pitch.remainingWeeks > 0
-                ? "text-amber-400 bg-amber-500/20"
-                : "text-red-400 bg-red-500/20"
+              "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0",
+              pitch.isApproved
+                ? "bg-emerald-500/20 text-emerald-400"
+                : pitch.isRejected
+                  ? "bg-gray-700 text-gray-500"
+                  : "bg-gray-700 text-gray-400"
             )}
           >
-            {pitch.remainingWeeks > 0
-              ? `${pitch.remainingWeeks.toFixed(1)}w unassigned`
-              : `Over by ${Math.abs(pitch.remainingWeeks).toFixed(1)}w`}
-          </div>
-        )}
-
-        {pitch.remainingWeeks === 0 && (
-          <div className="text-xs text-center font-semibold rounded py-1.5 mb-3 text-emerald-400 bg-emerald-500/20">
-            Fully staffed
-          </div>
-        )}
-
-        {/* Product Support */}
-        {(pitch.productManagerName || pitch.productDesignerName) && (
-          <div className="flex items-center gap-3 text-xs text-gray-400">
-            {pitch.productManagerName && (
-              <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded bg-violet-600/30 flex items-center justify-center text-violet-400 text-[10px] font-medium">
-                  {pitch.productManagerName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                </div>
-                <span>{pitch.productManagerName}</span>
-              </div>
-            )}
-            {pitch.productDesignerName && (
-              <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded bg-pink-600/30 flex items-center justify-center text-pink-400 text-[10px] font-medium">
-                  {pitch.productDesignerName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                </div>
-                <span>{pitch.productDesignerName}</span>
-              </div>
+            {pitch.isApproved ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : pitch.isRejected ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <span className="w-2 h-2 rounded-full bg-gray-500" />
             )}
           </div>
-        )}
+
+          <div className="flex-1 min-w-0">
+            {pitch.pitchDocUrl ? (
+              <a
+                href={pitch.pitchDocUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-gray-100 hover:text-white truncate"
+              >
+                {pitch.title}
+              </a>
+            ) : (
+              <span className="font-medium text-gray-100 truncate">{pitch.title}</span>
+            )}
+          </div>
+
+          <div className="text-sm text-gray-400 flex-shrink-0">
+            {Number(pitch.estimateWeeks).toFixed(1)}w
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 ml-4">
+          <button
+            onClick={() => handleBettingAction(pitch.id, pitch.isApproved ? "unapprove" : "approve")}
+            className={clsx(
+              "p-2 rounded-lg transition-colors",
+              pitch.isApproved
+                ? "text-emerald-400 bg-emerald-500/20 hover:bg-emerald-500/30"
+                : "text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10"
+            )}
+            title={pitch.isApproved ? "Remove from cycle" : "Approve - Add to cycle"}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+            </svg>
+          </button>
+          <button
+            onClick={() => handleBettingAction(pitch.id, pitch.isRejected ? "unreject" : "reject")}
+            className={clsx(
+              "p-2 rounded-lg transition-colors",
+              pitch.isRejected
+                ? "text-red-400 bg-red-500/20 hover:bg-red-500/30"
+                : "text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+            )}
+            title={pitch.isRejected ? "Unreject - Move back to pending" : "Reject"}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+            </svg>
+          </button>
+          {!pitch.isApproved && (
+            <button
+              onClick={() => handleBettingAction(pitch.id, "remove")}
+              className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors"
+              title="Remove from betting table"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -2101,53 +2020,33 @@ export default function CycleDetailPage() {
                   </p>
                 </div>
               ) : (
-                <div className="p-4 space-y-6">
+                <div className="divide-y divide-gray-800">
                   {/* Approved pitches */}
-                  {(cycle.bettingPitches || []).filter((p) => p.isApproved).length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-medium text-emerald-400 uppercase tracking-wider">
-                        Approved ({(cycle.bettingPitches || []).filter((p) => p.isApproved).length})
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {(cycle.bettingPitches || [])
-                          .filter((p) => p.isApproved)
-                          .map((pitch) => (
-                            <BettingPitchRow key={pitch.id} pitch={pitch} />
-                          ))}
-                      </div>
-                    </div>
-                  )}
+                  {(cycle.bettingPitches || [])
+                    .filter((p) => p.isApproved)
+                    .map((pitch) => (
+                      <BettingPitchRow key={pitch.id} pitch={pitch} />
+                    ))}
 
                   {/* Pending pitches */}
-                  {(cycle.bettingPitches || []).filter((p) => !p.isApproved && !p.isRejected).length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-medium text-amber-400 uppercase tracking-wider">
-                        Pending ({(cycle.bettingPitches || []).filter((p) => !p.isApproved && !p.isRejected).length})
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {(cycle.bettingPitches || [])
-                          .filter((p) => !p.isApproved && !p.isRejected)
-                          .map((pitch) => (
-                            <BettingPitchRow key={pitch.id} pitch={pitch} />
-                          ))}
-                      </div>
-                    </div>
-                  )}
+                  {(cycle.bettingPitches || [])
+                    .filter((p) => !p.isApproved && !p.isRejected)
+                    .map((pitch) => (
+                      <BettingPitchRow key={pitch.id} pitch={pitch} />
+                    ))}
 
                   {/* Rejected pitches */}
                   {(cycle.bettingPitches || []).filter((p) => p.isRejected).length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Rejected ({(cycle.bettingPitches || []).filter((p) => p.isRejected).length})
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {(cycle.bettingPitches || [])
-                          .filter((p) => p.isRejected)
-                          .map((pitch) => (
-                            <BettingPitchRow key={pitch.id} pitch={pitch} />
-                          ))}
+                    <>
+                      <div className="px-4 py-2 bg-gray-800/50 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Rejected
                       </div>
-                    </div>
+                      {(cycle.bettingPitches || [])
+                        .filter((p) => p.isRejected)
+                        .map((pitch) => (
+                          <BettingPitchRow key={pitch.id} pitch={pitch} />
+                        ))}
+                    </>
                   )}
                 </div>
               )}

@@ -43,15 +43,6 @@ export async function GET(
           orderBy: [{ priority: "asc" }, { createdAt: "asc" }],
         },
         bettingPitches: {
-          include: {
-            assignments: {
-              include: {
-                engineer: true,
-              },
-            },
-            productManager: true,
-            productDesigner: true,
-          },
           orderBy: [{ bettingRejected: "asc" }, { createdAt: "asc" }],
         },
         pods: {
@@ -135,53 +126,25 @@ export async function GET(
     
     const bettingPitches: BettingPitch[] = [
       // Pitches already in the cycle (approved)
-      ...cycle.pitches.map((pitch) => {
-        const estimateWeeks = toNumber(pitch.estimateWeeks);
-        const assignedWeeks = pitch.assignments.reduce(
-          (sum, a) => sum + toNumber(a.weeksAllocated),
-          0
-        );
-        return {
-          id: pitch.id,
-          title: pitch.title,
-          pitchDocUrl: pitch.pitchDocUrl,
-          estimateWeeks,
-          priority: pitch.priority,
-          status: pitch.status as PitchStatus,
-          notes: pitch.notes,
-          assignedWeeks,
-          remainingWeeks: estimateWeeks - assignedWeeks,
-          productManagerName: pitch.productManager?.name || null,
-          productDesignerName: pitch.productDesigner?.name || null,
-          isApproved: true,
-          isRejected: false,
-        };
-      }),
+      ...cycle.pitches.map((pitch) => ({
+        id: pitch.id,
+        title: pitch.title,
+        pitchDocUrl: pitch.pitchDocUrl,
+        estimateWeeks: toNumber(pitch.estimateWeeks),
+        isApproved: true,
+        isRejected: false,
+      })),
       // Pitches on the betting table (not yet approved)
       ...cycle.bettingPitches
         .filter((p) => !approvedPitchIds.has(p.id)) // Exclude if somehow also in cycle
-        .map((pitch) => {
-          const estimateWeeks = toNumber(pitch.estimateWeeks);
-          const assignedWeeks = pitch.assignments.reduce(
-            (sum, a) => sum + toNumber(a.weeksAllocated),
-            0
-          );
-          return {
-            id: pitch.id,
-            title: pitch.title,
-            pitchDocUrl: pitch.pitchDocUrl,
-            estimateWeeks,
-            priority: pitch.priority,
-            status: pitch.status as PitchStatus,
-            notes: pitch.notes,
-            assignedWeeks,
-            remainingWeeks: estimateWeeks - assignedWeeks,
-            productManagerName: pitch.productManager?.name || null,
-            productDesignerName: pitch.productDesigner?.name || null,
-            isApproved: false,
-            isRejected: pitch.bettingRejected,
-          };
-        }),
+        .map((pitch) => ({
+          id: pitch.id,
+          title: pitch.title,
+          pitchDocUrl: pitch.pitchDocUrl,
+          estimateWeeks: toNumber(pitch.estimateWeeks),
+          isApproved: false,
+          isRejected: pitch.bettingRejected,
+        })),
     ].sort((a, b) => {
       // Sort: approved first, then pending, then rejected at bottom
       if (a.isApproved !== b.isApproved) return a.isApproved ? -1 : 1;
