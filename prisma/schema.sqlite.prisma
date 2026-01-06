@@ -77,7 +77,8 @@ model Cycle {
   description    String?
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
-  pitches        Pitch[]
+  pitches        Pitch[]                 @relation("CyclePitches")
+  bettingPitches Pitch[]                 @relation("BettingPitches")
   pods           Pod[]
   capacities     EngineerCycleCapacity[]
   assignments    Assignment[]
@@ -112,8 +113,11 @@ model Pitch {
   id                String           @id @default(cuid())
   organization      Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId    String?
-  cycle             Cycle?           @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+  cycle             Cycle?           @relation("CyclePitches", fields: [cycleId], references: [id], onDelete: SetNull)
   cycleId           String?
+  bettingCycle      Cycle?           @relation("BettingPitches", fields: [bettingCycleId], references: [id], onDelete: SetNull)
+  bettingCycleId    String?
+  bettingRejected   Boolean          @default(false)
   pod               Pod?             @relation(fields: [podId], references: [id], onDelete: SetNull)
   podId             String?
   productManager    ProductManager?  @relation(fields: [productManagerId], references: [id], onDelete: SetNull)

@@ -135,6 +135,7 @@ export async function GET(
       engineers,
       pitches,
       pods,
+      bettingPitches: [], // Betting table not shown on share page
     };
 
     return NextResponse.json(cycleDetail);

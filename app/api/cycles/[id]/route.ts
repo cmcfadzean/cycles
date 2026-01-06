@@ -8,6 +8,7 @@ import {
   PitchWithAssignments,
   PitchStatus,
   Pod,
+  BettingPitch,
 } from "@/lib/types";
 
 export async function GET(
@@ -40,6 +41,9 @@ export async function GET(
             productDesigner: true,
           },
           orderBy: [{ priority: "asc" }, { createdAt: "asc" }],
+        },
+        bettingPitches: {
+          orderBy: [{ bettingRejected: "asc" }, { createdAt: "asc" }],
         },
         pods: {
           include: {
@@ -116,6 +120,38 @@ export async function GET(
       leaderName: pod.leader?.name || null,
     }));
 
+    // Build betting pitches list
+    // Include: pitches on betting table + pitches already in cycle (as approved)
+    const approvedPitchIds = new Set(cycle.pitches.map((p) => p.id));
+    
+    const bettingPitches: BettingPitch[] = [
+      // Pitches already in the cycle (approved)
+      ...cycle.pitches.map((pitch) => ({
+        id: pitch.id,
+        title: pitch.title,
+        pitchDocUrl: pitch.pitchDocUrl,
+        estimateWeeks: toNumber(pitch.estimateWeeks),
+        isApproved: true,
+        isRejected: false,
+      })),
+      // Pitches on the betting table (not yet approved)
+      ...cycle.bettingPitches
+        .filter((p) => !approvedPitchIds.has(p.id)) // Exclude if somehow also in cycle
+        .map((pitch) => ({
+          id: pitch.id,
+          title: pitch.title,
+          pitchDocUrl: pitch.pitchDocUrl,
+          estimateWeeks: toNumber(pitch.estimateWeeks),
+          isApproved: false,
+          isRejected: pitch.bettingRejected,
+        })),
+    ].sort((a, b) => {
+      // Sort: approved first, then pending, then rejected at bottom
+      if (a.isApproved !== b.isApproved) return a.isApproved ? -1 : 1;
+      if (a.isRejected !== b.isRejected) return a.isRejected ? 1 : -1;
+      return 0;
+    });
+
     const totalAvailableWeeks = engineers.reduce(
       (sum, e) => sum + e.availableWeeks,
       0
@@ -137,6 +173,7 @@ export async function GET(
       engineers,
       pitches,
       pods,
+      bettingPitches,
     };
 
     return NextResponse.json(cycleDetail);

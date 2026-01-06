@@ -44,6 +44,15 @@ export interface PitchWithAssignments {
   }[];
 }
 
+export interface BettingPitch {
+  id: string;
+  title: string;
+  pitchDocUrl: string | null;
+  estimateWeeks: number;
+  isApproved: boolean; // true if pitch is already in the cycle (cycleId set)
+  isRejected: boolean; // thumbs down
+}
+
 export interface Pod {
   id: string;
   name: string;
@@ -63,6 +72,7 @@ export interface CycleDetail {
   engineers: EngineerWithCapacity[];
   pitches: PitchWithAssignments[];
   pods: Pod[];
+  bettingPitches: BettingPitch[];
 }
 
 export interface CycleSummary {
@@ -128,5 +138,11 @@ export interface CreateAssignmentRequest {
 
 export interface UpdateAssignmentRequest {
   weeksAllocated: number;
+}
+
+export type BettingAction = "approve" | "reject" | "remove";
+
+export interface BettingActionRequest {
+  action: BettingAction;
 }
 

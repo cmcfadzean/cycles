@@ -21,6 +21,7 @@ import {
   PitchWithAssignments,
   PitchStatus,
   Pod,
+  BettingPitch,
 } from "@/lib/types";
 import toast from "react-hot-toast";
 import clsx from "clsx";
@@ -540,6 +541,7 @@ export default function CycleDetailPage() {
   const [allProductManagers, setAllProductManagers] = useState<{ id: string; name: string }[]>([]);
   const [allProductDesigners, setAllProductDesigners] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"main" | "betting">("main");
 
   const [activeEngineer, setActiveEngineer] =
     useState<EngineerWithCapacity | null>(null);
@@ -566,6 +568,7 @@ export default function CycleDetailPage() {
   } | null>(null);
   const [assignmentWeeks, setAssignmentWeeks] = useState("");
   const [editingPitch, setEditingPitch] = useState<PitchWithAssignments | null>(null);
+  const [isAddToBettingModalOpen, setIsAddToBettingModalOpen] = useState(false);
   const [editingEngineer, setEditingEngineer] = useState<EngineerWithCapacity | null>(null);
   const [engineerToDelete, setEngineerToDelete] = useState<EngineerWithCapacity | null>(null);
 
@@ -814,6 +817,50 @@ export default function CycleDetailPage() {
       fetchCycle();
     } catch {
       toast.error("Failed to remove assignment");
+    }
+  }
+
+  async function handleBettingAction(pitchId: string, action: "approve" | "reject" | "remove") {
+    try {
+      const res = await fetch(`/api/cycles/${cycleId}/betting/${pitchId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to perform action");
+      }
+
+      const messages = {
+        approve: "Pitch added to cycle",
+        reject: "Pitch rejected",
+        remove: "Pitch removed from betting table",
+      };
+      toast.success(messages[action]);
+      fetchCycle();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to perform action");
+    }
+  }
+
+  async function handleAddToBetting(pitchId: string) {
+    try {
+      const res = await fetch(`/api/cycles/${cycleId}/betting/${pitchId}`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to add to betting table");
+      }
+
+      toast.success("Pitch added to betting table");
+      setIsAddToBettingModalOpen(false);
+      fetchCycle();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add to betting table");
     }
   }
 
@@ -1394,7 +1441,106 @@ export default function CycleDetailPage() {
     );
   }
 
+  // Betting Pitch Row Component
+  function BettingPitchRow({ pitch }: { pitch: BettingPitch }) {
+    return (
+      <div
+        className={clsx(
+          "flex items-center justify-between px-4 py-3",
+          pitch.isRejected && "opacity-50"
+        )}
+      >
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div
+            className={clsx(
+              "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0",
+              pitch.isApproved
+                ? "bg-emerald-500/20 text-emerald-400"
+                : pitch.isRejected
+                  ? "bg-gray-700 text-gray-500"
+                  : "bg-gray-700 text-gray-400"
+            )}
+          >
+            {pitch.isApproved ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : pitch.isRejected ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <span className="w-2 h-2 rounded-full bg-gray-500" />
+            )}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            {pitch.pitchDocUrl ? (
+              <a
+                href={pitch.pitchDocUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-gray-100 hover:text-white truncate"
+              >
+                {pitch.title}
+              </a>
+            ) : (
+              <span className="font-medium text-gray-100 truncate">{pitch.title}</span>
+            )}
+          </div>
+
+          <div className="text-sm text-gray-400 flex-shrink-0">
+            {pitch.estimateWeeks.toFixed(1)}w
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 ml-4">
+          <button
+            onClick={() => handleBettingAction(pitch.id, "approve")}
+            disabled={pitch.isApproved}
+            className={clsx(
+              "p-2 rounded-lg transition-colors",
+              pitch.isApproved
+                ? "text-emerald-400 bg-emerald-500/20 cursor-default"
+                : "text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10"
+            )}
+            title="Approve - Add to cycle"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+            </svg>
+          </button>
+          <button
+            onClick={() => handleBettingAction(pitch.id, "reject")}
+            disabled={pitch.isRejected}
+            className={clsx(
+              "p-2 rounded-lg transition-colors",
+              pitch.isRejected
+                ? "text-gray-500 bg-gray-700 cursor-default"
+                : "text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+            )}
+            title="Reject - Remove from cycle"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+            </svg>
+          </button>
+          <button
+            onClick={() => handleBettingAction(pitch.id, "remove")}
+            className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors"
+            title="Remove from betting table"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
+    <>
     <DndContext
       sensors={sensors}
       onDragStart={handleDragStart}
@@ -1497,6 +1643,41 @@ export default function CycleDetailPage() {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="border-b border-gray-800">
+          <nav className="flex gap-6">
+            <button
+              onClick={() => setActiveTab("main")}
+              className={clsx(
+                "py-3 text-sm font-medium border-b-2 transition-colors",
+                activeTab === "main"
+                  ? "border-violet-500 text-gray-100"
+                  : "border-transparent text-gray-500 hover:text-gray-300"
+              )}
+            >
+              Cycle View
+            </button>
+            <button
+              onClick={() => setActiveTab("betting")}
+              className={clsx(
+                "py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+                activeTab === "betting"
+                  ? "border-violet-500 text-gray-100"
+                  : "border-transparent text-gray-500 hover:text-gray-300"
+              )}
+            >
+              Betting Table
+              {cycle.bettingPitches.filter((p) => !p.isApproved && !p.isRejected).length > 0 && (
+                <span className="px-1.5 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-400">
+                  {cycle.bettingPitches.filter((p) => !p.isApproved && !p.isRejected).length}
+                </span>
+              )}
+            </button>
+          </nav>
+        </div>
+
+        {activeTab === "main" ? (
+          <>
         {/* Summary Bar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="card p-5">
@@ -1770,12 +1951,107 @@ export default function CycleDetailPage() {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Drag Overlay */}
-      <DragOverlay>
-        <EngineerDragOverlay engineer={activeEngineer} />
-      </DragOverlay>
+        {/* Drag Overlay */}
+        <DragOverlay>
+          <EngineerDragOverlay engineer={activeEngineer} />
+        </DragOverlay>
+        </>
+        ) : (
+          /* Betting Table View */
+          <div className="space-y-6">
+            {/* Summary Bar - same as main view */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="card p-5">
+                <div className="text-sm font-medium text-gray-400 mb-1">
+                  Available Weeks
+                </div>
+                <div className="text-3xl font-bold text-gray-100">
+                  {cycle.totalAvailableWeeks.toFixed(1)}
+                  <span className="text-lg font-normal text-gray-500 ml-1">weeks</span>
+                </div>
+              </div>
+
+              <div className="card p-5">
+                <div className="text-sm font-medium text-gray-400 mb-1">
+                  Required Weeks
+                </div>
+                <div className="text-3xl font-bold text-gray-100">
+                  {cycle.totalRequiredWeeks.toFixed(1)}
+                  <span className="text-lg font-normal text-gray-500 ml-1">weeks</span>
+                </div>
+              </div>
+
+              <div className="card p-5">
+                <div className="text-sm font-medium text-gray-400 mb-1">Balance</div>
+                <div
+                  className={clsx(
+                    "text-3xl font-bold",
+                    cycle.surplusOrDeficit >= 0 ? "text-emerald-400" : "text-red-400"
+                  )}
+                >
+                  {cycle.surplusOrDeficit >= 0 ? "+" : ""}
+                  {cycle.surplusOrDeficit.toFixed(1)}
+                  <span className="text-lg font-normal ml-1">weeks</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Betting Table */}
+            <div className="card">
+              <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-100">Betting Table</h2>
+                <button onClick={() => setIsAddToBettingModalOpen(true)} className="btn-primary text-sm">
+                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Pitch
+                </button>
+              </div>
+
+              {cycle.bettingPitches.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-gray-500">No pitches in the betting table</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Add pitches to evaluate them before committing to the cycle
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-800">
+                  {/* Approved pitches */}
+                  {cycle.bettingPitches
+                    .filter((p) => p.isApproved)
+                    .map((pitch) => (
+                      <BettingPitchRow key={pitch.id} pitch={pitch} />
+                    ))}
+
+                  {/* Pending pitches */}
+                  {cycle.bettingPitches
+                    .filter((p) => !p.isApproved && !p.isRejected)
+                    .map((pitch) => (
+                      <BettingPitchRow key={pitch.id} pitch={pitch} />
+                    ))}
+
+                  {/* Rejected pitches */}
+                  {cycle.bettingPitches.filter((p) => p.isRejected).length > 0 && (
+                    <>
+                      <div className="px-4 py-2 bg-gray-800/50 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Rejected
+                      </div>
+                      {cycle.bettingPitches
+                        .filter((p) => p.isRejected)
+                        .map((pitch) => (
+                          <BettingPitchRow key={pitch.id} pitch={pitch} />
+                        ))}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </DndContext>
 
       {/* Add Engineer Modal */}
       <Modal
@@ -2845,7 +3121,52 @@ export default function CycleDetailPage() {
           </div>
         </form>
       </Modal>
-    </DndContext>
+
+      {/* Add to Betting Table Modal */}
+      <Modal
+        isOpen={isAddToBettingModalOpen}
+        onClose={() => setIsAddToBettingModalOpen(false)}
+        title="Add Pitch to Betting Table"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-400">
+            Select a pitch to add to the betting table for evaluation.
+          </p>
+          
+          {availablePitches.length > 0 ? (
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {availablePitches
+                .filter((p) => !cycle?.bettingPitches.some((bp) => bp.id === p.id))
+                .map((pitch) => (
+                  <button
+                    key={pitch.id}
+                    onClick={() => handleAddToBetting(pitch.id)}
+                    className="w-full text-left p-3 rounded-lg border border-gray-700 hover:border-gray-600 hover:bg-gray-800/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-gray-100">{pitch.title}</span>
+                      <span className="text-sm text-gray-400">{pitch.estimateWeeks.toFixed(1)}w</span>
+                    </div>
+                  </button>
+                ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">
+              No available pitches to add. Create new pitches on the Pitches page first.
+            </p>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={() => setIsAddToBettingModalOpen(false)}
+              className="btn-secondary"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }
 
