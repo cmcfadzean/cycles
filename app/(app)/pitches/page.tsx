@@ -316,35 +316,47 @@ export default function PitchesPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-gray-800 rounded-lg w-fit">
-        <button
-          onClick={() => setActiveTab("available")}
-          className={clsx(
-            "px-4 py-2 text-sm font-medium rounded-md transition-colors",
-            activeTab === "available"
-              ? "bg-gray-700 text-white"
-              : "text-gray-400 hover:text-gray-200"
-          )}
-        >
-          Available
-          <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gray-600 text-gray-300">
-            {availablePitches.length}
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveTab("funded")}
-          className={clsx(
-            "px-4 py-2 text-sm font-medium rounded-md transition-colors",
-            activeTab === "funded"
-              ? "bg-gray-700 text-white"
-              : "text-gray-400 hover:text-gray-200"
-          )}
-        >
-          Funded
-          <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gray-600 text-gray-300">
-            {fundedPitches.length}
-          </span>
-        </button>
+      <div className="border-b border-gray-800">
+        <nav className="flex gap-6">
+          <button
+            onClick={() => setActiveTab("available")}
+            className={clsx(
+              "py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+              activeTab === "available"
+                ? "border-violet-500 text-gray-100"
+                : "border-transparent text-gray-500 hover:text-gray-300"
+            )}
+          >
+            Available
+            <span className={clsx(
+              "px-1.5 py-0.5 text-xs rounded-full",
+              activeTab === "available"
+                ? "bg-violet-500/20 text-violet-400"
+                : "bg-gray-700 text-gray-400"
+            )}>
+              {availablePitches.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab("funded")}
+            className={clsx(
+              "py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+              activeTab === "funded"
+                ? "border-violet-500 text-gray-100"
+                : "border-transparent text-gray-500 hover:text-gray-300"
+            )}
+          >
+            Funded
+            <span className={clsx(
+              "px-1.5 py-0.5 text-xs rounded-full",
+              activeTab === "funded"
+                ? "bg-emerald-500/20 text-emerald-400"
+                : "bg-gray-700 text-gray-400"
+            )}>
+              {fundedPitches.length}
+            </span>
+          </button>
+        </nav>
       </div>
 
       {/* Pitches List */}
