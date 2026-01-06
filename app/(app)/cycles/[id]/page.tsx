@@ -569,6 +569,7 @@ export default function CycleDetailPage() {
   const [assignmentWeeks, setAssignmentWeeks] = useState("");
   const [editingPitch, setEditingPitch] = useState<PitchWithAssignments | null>(null);
   const [isAddToBettingModalOpen, setIsAddToBettingModalOpen] = useState(false);
+  const [selectedBettingPitches, setSelectedBettingPitches] = useState<Set<string>>(new Set());
   const [editingEngineer, setEditingEngineer] = useState<EngineerWithCapacity | null>(null);
   const [engineerToDelete, setEngineerToDelete] = useState<EngineerWithCapacity | null>(null);
 
@@ -848,20 +849,33 @@ export default function CycleDetailPage() {
     }
   }
 
-  async function handleAddToBetting(pitchId: string) {
-    try {
-      const res = await fetch(`/api/cycles/${cycleId}/betting/${pitchId}`, {
-        method: "POST",
-      });
+  async function handleAddToBetting(pitchIds: string[]) {
+    if (pitchIds.length === 0) return;
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to add to betting table");
+    try {
+      // Add all selected pitches in parallel
+      const results = await Promise.all(
+        pitchIds.map((pitchId) =>
+          fetch(`/api/cycles/${cycleId}/betting/${pitchId}`, {
+            method: "POST",
+          })
+        )
+      );
+
+      const failedCount = results.filter((r) => !r.ok).length;
+      if (failedCount > 0) {
+        throw new Error(`Failed to add ${failedCount} pitch(es)`);
       }
 
-      toast.success("Pitch added to betting table");
+      toast.success(
+        pitchIds.length === 1
+          ? "Pitch added to betting table"
+          : `${pitchIds.length} pitches added to betting table`
+      );
       setIsAddToBettingModalOpen(false);
+      setSelectedBettingPitches(new Set());
       fetchCycle();
+      fetchAvailablePitches();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to add to betting table");
     }
@@ -3230,45 +3244,115 @@ export default function CycleDetailPage() {
       {/* Add to Betting Table Modal */}
       <Modal
         isOpen={isAddToBettingModalOpen}
-        onClose={() => setIsAddToBettingModalOpen(false)}
-        title="Add Pitch to Betting Table"
+        onClose={() => {
+          setIsAddToBettingModalOpen(false);
+          setSelectedBettingPitches(new Set());
+        }}
+        title="Add Pitches to Betting Table"
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-400">
-            Select a pitch to add to the betting table for evaluation.
+            Select pitches to add to the betting table for evaluation.
           </p>
           
-          {availablePitches.length > 0 ? (
-            <div className="space-y-2 max-h-80 overflow-y-auto">
-              {availablePitches
-                .filter((p) => !(cycle?.bettingPitches || []).some((bp) => bp.id === p.id))
-                .map((pitch) => (
-                  <button
-                    key={pitch.id}
-                    onClick={() => handleAddToBetting(pitch.id)}
-                    className="w-full text-left p-3 rounded-lg border border-gray-700 hover:border-gray-600 hover:bg-gray-800/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-100">{pitch.title}</span>
-                      <span className="text-sm text-gray-400">{Number(pitch.estimateWeeks).toFixed(1)}w</span>
-                    </div>
-                  </button>
-                ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center py-4">
-              No available pitches to add. Create new pitches on the Pitches page first.
-            </p>
-          )}
+          {(() => {
+            const filteredPitches = availablePitches.filter(
+              (p) => !(cycle?.bettingPitches || []).some((bp) => bp.id === p.id)
+            );
+            
+            return filteredPitches.length > 0 ? (
+              <>
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {filteredPitches.map((pitch) => {
+                    const isSelected = selectedBettingPitches.has(pitch.id);
+                    return (
+                      <button
+                        key={pitch.id}
+                        onClick={() => {
+                          setSelectedBettingPitches((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(pitch.id)) {
+                              next.delete(pitch.id);
+                            } else {
+                              next.add(pitch.id);
+                            }
+                            return next;
+                          });
+                        }}
+                        className={clsx(
+                          "w-full text-left p-3 rounded-lg border transition-colors",
+                          isSelected
+                            ? "border-violet-500 bg-violet-500/10"
+                            : "border-gray-700 hover:border-gray-600 hover:bg-gray-800/50"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={clsx(
+                              "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors",
+                              isSelected
+                                ? "border-violet-500 bg-violet-500"
+                                : "border-gray-600"
+                            )}
+                          >
+                            {isSelected && (
+                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="flex-1 flex items-center justify-between min-w-0">
+                            <span className="font-medium text-gray-100 truncate">{pitch.title}</span>
+                            <span className="text-sm text-gray-400 flex-shrink-0 ml-2">
+                              {Number(pitch.estimateWeeks).toFixed(1)}w
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
 
-          <div className="flex justify-end pt-2">
-            <button
-              onClick={() => setIsAddToBettingModalOpen(false)}
-              className="btn-secondary"
-            >
-              Close
-            </button>
-          </div>
+                <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+                  <span className="text-sm text-gray-400">
+                    {selectedBettingPitches.size} selected
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setIsAddToBettingModalOpen(false);
+                        setSelectedBettingPitches(new Set());
+                      }}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleAddToBetting(Array.from(selectedBettingPitches))}
+                      disabled={selectedBettingPitches.size === 0}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Add {selectedBettingPitches.size > 0 ? `(${selectedBettingPitches.size})` : ""}
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-500 text-center py-4">
+                  No available pitches to add. Create new pitches on the Pitches page first.
+                </p>
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={() => setIsAddToBettingModalOpen(false)}
+                    className="btn-secondary"
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            );
+          })()}
         </div>
       </Modal>
     </>
