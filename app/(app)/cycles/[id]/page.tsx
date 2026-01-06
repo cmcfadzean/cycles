@@ -1591,13 +1591,13 @@ export default function CycleDetailPage() {
             </div>
 
             {cycle.engineers.length === 0 ? (
-              <div className="card p-6 text-center">
-                <p className="text-gray-500 text-sm">
+              <div className="card p-8 text-center">
+                <p className="text-gray-500">
                   No engineers in this cycle yet
                 </p>
                 <button
                   onClick={() => setIsAddEngineerModalOpen(true)}
-                  className="btn-primary mt-3 text-sm"
+                  className="btn-primary mt-3"
                 >
                   Add Engineer
                 </button>
