@@ -61,12 +61,6 @@ export async function GET() {
                 state
                 canceledAt
                 completedAt
-                roadmaps {
-                  nodes {
-                    id
-                    name
-                  }
-                }
               }
             }
           }

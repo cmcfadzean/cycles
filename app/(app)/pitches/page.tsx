@@ -162,6 +162,27 @@ export default function PitchesPage() {
     }
   }
 
+  async function fetchLinearProjects() {
+    if (!linearConnected) return;
+    
+    setLoadingLinear(true);
+    setShowingProjects(true);
+    
+    try {
+      const res = await fetch("/api/linear/projects");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to fetch Linear projects");
+      }
+      const data = await res.json();
+      setLinearProjects(data);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to fetch Linear projects");
+    } finally {
+      setLoadingLinear(false);
+    }
+  }
+
   async function fetchLinearInitiatives(parentId?: string) {
     if (!linearConnected) return;
     
@@ -729,7 +750,7 @@ export default function PitchesPage() {
               onClick={() => {
                 setCreateMode("linear");
                 resetLinearNavigation();
-                fetchLinearInitiatives();
+                fetchLinearProjects();
               }}
               className={clsx(
                 "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2",
@@ -876,249 +897,150 @@ export default function PitchesPage() {
             </div>
           </form>
         ) : (
-          /* Linear Import Mode - Drill-down navigation */
+          /* Linear Import Mode - Simple project list */
           <div className="space-y-4">
-            {/* Breadcrumb Navigation */}
-            {linearBreadcrumb.length > 0 && (
-              <div className="flex items-center gap-2 text-sm">
-                <button
-                  onClick={() => handleBreadcrumbClick(-1)}
-                  className="text-gray-400 hover:text-gray-200 flex items-center gap-1"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Initiatives
-                </button>
-                {linearBreadcrumb.map((item, index) => (
-                  <div key={item.id} className="flex items-center gap-2">
-                    <span className="text-gray-600">/</span>
-                    {index === linearBreadcrumb.length - 1 ? (
-                      <span className="text-gray-200 font-medium">{item.name}</span>
-                    ) : (
-                      <button
-                        onClick={() => handleBreadcrumbClick(index)}
-                        className="text-gray-400 hover:text-gray-200"
-                      >
-                        {item.name}
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
             {/* Loading State */}
             {loadingLinear ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin w-6 h-6 border-2 border-gray-600 border-t-gray-300 rounded-full" />
               </div>
-            ) : showingProjects ? (
-              /* Projects View */
-              linearProjects.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-400">No active projects in this initiative</p>
-                  <button
-                    onClick={() => handleBreadcrumbClick(linearBreadcrumb.length - 2)}
-                    className="mt-4 text-violet-400 hover:text-violet-300 text-sm"
-                  >
-                    ← Go back
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {/* Search */}
-                  <div className="relative">
-                    <svg
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                    <input
-                      type="text"
-                      placeholder="Search projects..."
-                      className="input pl-10"
-                      value={linearSearchQuery}
-                      onChange={(e) => setLinearSearchQuery(e.target.value)}
-                    />
-                  </div>
-
-                  {/* Project List */}
-                  <div className="max-h-72 overflow-y-auto space-y-2">
-                    {linearProjects
-                      .filter((p) =>
-                        p.name.toLowerCase().includes(linearSearchQuery.toLowerCase())
-                      )
-                      .map((project) => {
-                        const isSelected = selectedLinearProjects.has(project.id);
-                        return (
-                          <button
-                            key={project.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedLinearProjects((prev) => {
-                                const next = new Set(prev);
-                                if (next.has(project.id)) {
-                                  next.delete(project.id);
-                                } else {
-                                  next.add(project.id);
-                                }
-                                return next;
-                              });
-                            }}
-                            className={clsx(
-                              "w-full text-left p-3 rounded-lg border transition-colors",
-                              isSelected
-                                ? "border-violet-500 bg-violet-500/10"
-                                : "border-gray-700 hover:border-gray-600 hover:bg-gray-800/50"
-                            )}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div
-                                className={clsx(
-                                  "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors",
-                                  isSelected
-                                    ? "border-violet-500 bg-violet-500"
-                                    : "border-gray-600"
-                                )}
-                              >
-                                {isSelected && (
-                                  <svg
-                                    className="w-3 h-3 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={3}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium text-gray-100">
-                                  {project.name}
-                                </div>
-                                {project.description && (
-                                  <p className="text-sm text-gray-400 line-clamp-2 mt-0.5">
-                                    {project.description}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                  </div>
-
-                  {/* Footer with import button */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-800">
-                    <span className="text-sm text-gray-400">
-                      {selectedLinearProjects.size} selected
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsCreateModalOpen(false);
-                          resetLinearNavigation();
-                          setCreateMode("manual");
-                        }}
-                        className="btn-secondary"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleImportFromLinear}
-                        disabled={selectedLinearProjects.size === 0 || importingLinear}
-                        className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {importingLinear
-                          ? "Importing..."
-                          : `Import${selectedLinearProjects.size > 0 ? ` (${selectedLinearProjects.size})` : ""}`}
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )
-            ) : (
-              /* Initiatives View */
-              linearInitiatives.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-400">
-                    {linearBreadcrumb.length > 0 
-                      ? "No sub-initiatives found" 
-                      : "No initiatives found in Linear"}
-                  </p>
-                  <button
-                    onClick={() => fetchLinearInitiatives()}
-                    className="mt-4 text-violet-400 hover:text-violet-300 text-sm"
-                  >
-                    Refresh
-                  </button>
-                </div>
-              ) : (
-                <div className="max-h-80 overflow-y-auto space-y-2">
-                  {linearInitiatives.map((initiative) => (
-                    <button
-                      key={initiative.id}
-                      type="button"
-                      onClick={() => handleInitiativeClick(initiative)}
-                      className="w-full text-left p-3 rounded-lg border border-gray-700 hover:border-gray-600 hover:bg-gray-800/50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-violet-600/20 flex items-center justify-center">
-                            <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-100">{initiative.name}</div>
-                            {initiative.description && (
-                              <p className="text-sm text-gray-400 line-clamp-1">{initiative.description}</p>
-                            )}
-                          </div>
-                        </div>
-                        {(initiative.hasChildren || initiative.hasProjects) && (
-                          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )
-            )}
-
-            {/* Cancel button when viewing initiatives */}
-            {!showingProjects && !loadingLinear && (
-              <div className="flex justify-end pt-4 border-t border-gray-800">
+            ) : linearProjects.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400">No active projects found in Linear</p>
                 <button
-                  type="button"
-                  onClick={() => {
-                    setIsCreateModalOpen(false);
-                    resetLinearNavigation();
-                    setCreateMode("manual");
-                  }}
-                  className="btn-secondary"
+                  onClick={() => fetchLinearProjects()}
+                  className="mt-4 text-violet-400 hover:text-violet-300 text-sm"
                 >
-                  Cancel
+                  Refresh
                 </button>
               </div>
+            ) : (
+              <>
+                {/* Search */}
+                <div className="relative">
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search projects..."
+                    className="input pl-10"
+                    value={linearSearchQuery}
+                    onChange={(e) => setLinearSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                {/* Project List */}
+                <div className="max-h-72 overflow-y-auto space-y-2">
+                  {linearProjects
+                    .filter((p) =>
+                      p.name.toLowerCase().includes(linearSearchQuery.toLowerCase())
+                    )
+                    .map((project) => {
+                      const isSelected = selectedLinearProjects.has(project.id);
+                      return (
+                        <button
+                          key={project.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedLinearProjects((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(project.id)) {
+                                next.delete(project.id);
+                              } else {
+                                next.add(project.id);
+                              }
+                              return next;
+                            });
+                          }}
+                          className={clsx(
+                            "w-full text-left p-3 rounded-lg border transition-colors",
+                            isSelected
+                              ? "border-violet-500 bg-violet-500/10"
+                              : "border-gray-700 hover:border-gray-600 hover:bg-gray-800/50"
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={clsx(
+                                "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors",
+                                isSelected
+                                  ? "border-violet-500 bg-violet-500"
+                                  : "border-gray-600"
+                              )}
+                            >
+                              {isSelected && (
+                                <svg
+                                  className="w-3 h-3 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={3}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-gray-100">
+                                {project.name}
+                              </div>
+                              {project.description && (
+                                <p className="text-sm text-gray-400 line-clamp-2 mt-0.5">
+                                  {project.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+
+                {/* Footer with import button */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-800">
+                  <span className="text-sm text-gray-400">
+                    {selectedLinearProjects.size} selected
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCreateModalOpen(false);
+                        resetLinearNavigation();
+                        setCreateMode("manual");
+                      }}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleImportFromLinear}
+                      disabled={selectedLinearProjects.size === 0 || importingLinear}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {importingLinear
+                        ? "Importing..."
+                        : `Import${selectedLinearProjects.size > 0 ? ` (${selectedLinearProjects.size})` : ""}`}
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         )}
