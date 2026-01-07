@@ -52,7 +52,7 @@ export async function GET() {
       body: JSON.stringify({
         query: `
           query {
-            projects(first: 100) {
+            projects(first: 250) {
               nodes {
                 id
                 name
