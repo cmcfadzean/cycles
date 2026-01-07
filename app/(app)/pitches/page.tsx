@@ -57,7 +57,7 @@ interface LinearProject {
   name: string;
   description: string | null;
   url: string;
-  state: string;
+  initiativePath: string | null;
 }
 
 type Tab = "available" | "funded";
@@ -892,6 +892,11 @@ export default function PitchesPage() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
+                              {project.initiativePath && (
+                                <div className="text-xs text-violet-400 mb-0.5">
+                                  {project.initiativePath}
+                                </div>
+                              )}
                               <div className="font-medium text-gray-100">
                                 {project.name}
                               </div>
