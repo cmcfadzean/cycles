@@ -9,33 +9,13 @@ interface LinearProject {
   url: string;
 }
 
-interface LinearProjectNode {
-  id: string;
-  name: string;
-  description: string | null;
-  url: string;
-  canceledAt: string | null;
-  completedAt: string | null;
-}
-
-interface LinearResponse {
-  data?: {
-    initiative?: {
-      projects: {
-        nodes: LinearProjectNode[];
-      };
-    };
-  };
-  errors?: Array<{ message: string }>;
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const organization = await requireOrganization();
-    const { id: initiativeId } = await params;
+    const { id: roadmapId } = await params;
 
     if (!organization.linearApiKeyEncrypted) {
       return NextResponse.json(
@@ -46,6 +26,8 @@ export async function GET(
 
     const apiKey = decrypt(organization.linearApiKeyEncrypted);
 
+    // Fetch all projects and filter by roadmap client-side
+    // Linear's GraphQL doesn't have a direct filter for projects by roadmap
     const response = await fetch("https://api.linear.app/graphql", {
       method: "POST",
       headers: {
@@ -55,15 +37,18 @@ export async function GET(
       body: JSON.stringify({
         query: `
           query {
-            initiative(id: "${initiativeId}") {
-              projects {
-                nodes {
-                  id
-                  name
-                  description
-                  url
-                  canceledAt
-                  completedAt
+            projects(first: 100) {
+              nodes {
+                id
+                name
+                description
+                url
+                canceledAt
+                completedAt
+                roadmaps {
+                  nodes {
+                    id
+                  }
                 }
               }
             }
@@ -81,7 +66,7 @@ export async function GET(
       );
     }
 
-    const data: LinearResponse = await response.json();
+    const data = await response.json();
 
     if (data.errors) {
       console.error("Linear GraphQL errors:", data.errors);
@@ -91,12 +76,20 @@ export async function GET(
       );
     }
 
-    const allProjects = data.data?.initiative?.projects?.nodes || [];
+    const allProjects = data.data?.projects?.nodes || [];
     
-    // Filter out completed and canceled projects
+    // Filter projects that belong to this roadmap and are not completed/canceled
     const projects: LinearProject[] = allProjects
-      .filter((p) => !p.completedAt && !p.canceledAt)
-      .map((p) => ({
+      .filter((p: { 
+        completedAt: string | null; 
+        canceledAt: string | null; 
+        roadmaps?: { nodes: Array<{ id: string }> } 
+      }) => {
+        if (p.completedAt || p.canceledAt) return false;
+        const projectRoadmaps = p.roadmaps?.nodes || [];
+        return projectRoadmaps.some((rm: { id: string }) => rm.id === roadmapId);
+      })
+      .map((p: { id: string; name: string; description: string | null; url: string }) => ({
         id: p.id,
         name: p.name,
         description: p.description,
@@ -105,14 +98,13 @@ export async function GET(
 
     return NextResponse.json(projects);
   } catch (error) {
-    console.error("Failed to fetch initiative projects:", error);
+    console.error("Failed to fetch roadmap projects:", error);
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     return NextResponse.json(
-      { error: "Failed to fetch initiative projects" },
+      { error: "Failed to fetch roadmap projects" },
       { status: 500 }
     );
   }
 }
-

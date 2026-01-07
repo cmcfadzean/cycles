@@ -10,28 +10,6 @@ interface LinearInitiative {
   hasProjects: boolean;
 }
 
-interface LinearInitiativeNode {
-  id: string;
-  name: string;
-  description: string | null;
-  parent?: { id: string } | null;
-  children: {
-    nodes: Array<{ id: string }>;
-  };
-  projects: {
-    nodes: Array<{ id: string }>;
-  };
-}
-
-interface LinearResponse {
-  data?: {
-    initiatives: {
-      nodes: LinearInitiativeNode[];
-    };
-  };
-  errors?: Array<{ message: string }>;
-}
-
 export async function GET(request: Request) {
   try {
     const organization = await requireOrganization();
@@ -43,69 +21,36 @@ export async function GET(request: Request) {
       );
     }
 
-    // Check for parentId query param to get child initiatives
     const { searchParams } = new URL(request.url);
     const parentId = searchParams.get("parentId");
-
     const apiKey = decrypt(organization.linearApiKeyEncrypted);
 
-    // Build the query based on whether we're getting root initiatives or children
-    const query = parentId
-      ? `
-          query {
-            initiative(id: "${parentId}") {
-              children {
-                nodes {
-                  id
-                  name
-                  description
-                  children {
-                    nodes {
-                      id
-                    }
-                  }
-                  projects {
-                    nodes {
-                      id
-                    }
-                  }
-                }
-              }
-            }
-          }
-        `
-      : `
-          query {
-            initiatives(first: 100) {
-              nodes {
-                id
-                name
-                description
-                parent {
-                  id
-                }
-                children {
-                  nodes {
-                    id
-                  }
-                }
-                projects {
-                  nodes {
-                    id
-                  }
-                }
-              }
-            }
-          }
-        `;
-
+    // For now, we'll use projects grouped by roadmap as our "initiatives"
+    // since Linear's roadmap API structure varies
     const response = await fetch("https://api.linear.app/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: apiKey,
       },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({
+        query: `
+          query {
+            projects(first: 100) {
+              nodes {
+                id
+                name
+                roadmaps {
+                  nodes {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          }
+        `,
+      }),
     });
 
     if (!response.ok) {
@@ -127,23 +72,41 @@ export async function GET(request: Request) {
       );
     }
 
-    // Extract nodes based on query type
-    let nodes: LinearInitiativeNode[] = [];
-    if (parentId) {
-      nodes = data.data?.initiative?.children?.nodes || [];
-    } else {
-      // For root initiatives, filter to only show top-level ones (those without parents)
-      const allNodes = data.data?.initiatives?.nodes || [];
-      nodes = allNodes.filter((node: LinearInitiativeNode) => !node.parent);
+    // Extract unique roadmaps from projects
+    const projects = data.data?.projects?.nodes || [];
+    const roadmapMap = new Map<string, { id: string; name: string; projectCount: number }>();
+    
+    for (const project of projects) {
+      const roadmaps = project.roadmaps?.nodes || [];
+      for (const roadmap of roadmaps) {
+        if (!roadmapMap.has(roadmap.id)) {
+          roadmapMap.set(roadmap.id, {
+            id: roadmap.id,
+            name: roadmap.name,
+            projectCount: 1,
+          });
+        } else {
+          roadmapMap.get(roadmap.id)!.projectCount++;
+        }
+      }
     }
 
-    const initiatives: LinearInitiative[] = nodes.map((node) => ({
-      id: node.id,
-      name: node.name,
-      description: node.description,
-      hasChildren: (node.children?.nodes?.length || 0) > 0,
-      hasProjects: (node.projects?.nodes?.length || 0) > 0,
+    // If parentId is provided, return empty (we'll handle this in projects route)
+    if (parentId) {
+      return NextResponse.json([]);
+    }
+
+    // Convert to initiatives array
+    const initiatives: LinearInitiative[] = Array.from(roadmapMap.values()).map((rm) => ({
+      id: rm.id,
+      name: rm.name,
+      description: `${rm.projectCount} project${rm.projectCount !== 1 ? 's' : ''}`,
+      hasChildren: false,
+      hasProjects: true,
     }));
+
+    // Sort by name
+    initiatives.sort((a, b) => a.name.localeCompare(b.name));
 
     return NextResponse.json(initiatives);
   } catch (error) {
@@ -157,4 +120,3 @@ export async function GET(request: Request) {
     );
   }
 }
-
