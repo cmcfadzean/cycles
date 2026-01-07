@@ -2,18 +2,12 @@ import { NextResponse } from "next/server";
 import { requireOrganization } from "@/lib/auth";
 import { decrypt } from "@/lib/encryption";
 
-interface LinearInitiative {
-  id: string;
-  name: string;
-  parent?: LinearInitiative | null;
-}
-
 interface LinearProject {
   id: string;
   name: string;
   description: string | null;
   url: string;
-  initiativePath: string | null; // e.g., "Parent Initiative > Child Initiative"
+  initiativePath: string | null;
 }
 
 interface LinearProjectNode {
@@ -24,24 +18,6 @@ interface LinearProjectNode {
   state: string;
   canceledAt: string | null;
   completedAt: string | null;
-  initiatives: {
-    nodes: Array<{
-      id: string;
-      name: string;
-      parent?: {
-        id: string;
-        name: string;
-        parent?: {
-          id: string;
-          name: string;
-          parent?: {
-            id: string;
-            name: string;
-          } | null;
-        } | null;
-      } | null;
-    }>;
-  };
 }
 
 interface LinearResponse {
@@ -51,25 +27,6 @@ interface LinearResponse {
     };
   };
   errors?: Array<{ message: string }>;
-}
-
-// Build initiative path from nested structure
-function buildInitiativePath(initiative: LinearProjectNode["initiatives"]["nodes"][0]): string {
-  const parts: string[] = [];
-  
-  // Build path from top-level parent down
-  if (initiative.parent?.parent?.parent) {
-    parts.push(initiative.parent.parent.parent.name);
-  }
-  if (initiative.parent?.parent) {
-    parts.push(initiative.parent.parent.name);
-  }
-  if (initiative.parent) {
-    parts.push(initiative.parent.name);
-  }
-  parts.push(initiative.name);
-  
-  return parts.join(" → ");
 }
 
 export async function GET() {
@@ -104,24 +61,6 @@ export async function GET() {
                 state
                 canceledAt
                 completedAt
-                initiatives {
-                  nodes {
-                    id
-                    name
-                    parent {
-                      id
-                      name
-                      parent {
-                        id
-                        name
-                        parent {
-                          id
-                          name
-                        }
-                      }
-                    }
-                  }
-                }
               }
             }
           }
@@ -152,19 +91,13 @@ export async function GET() {
     const allProjects = data.data?.projects.nodes || [];
     const projects: LinearProject[] = allProjects
       .filter((p) => !p.completedAt && !p.canceledAt)
-      .map((p) => {
-        // Get the first initiative's path (projects can have multiple initiatives)
-        const firstInitiative = p.initiatives?.nodes?.[0];
-        const initiativePath = firstInitiative ? buildInitiativePath(firstInitiative) : null;
-        
-        return {
-          id: p.id,
-          name: p.name,
-          description: p.description,
-          url: p.url,
-          initiativePath,
-        };
-      });
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        url: p.url,
+        initiativePath: null, // TODO: Add initiative support once we figure out correct API schema
+      }));
 
     return NextResponse.json(projects);
   } catch (error) {
