@@ -7,19 +7,22 @@ interface LinearProject {
   name: string;
   description: string | null;
   url: string;
+}
+
+interface LinearProjectNode {
+  id: string;
+  name: string;
+  description: string | null;
+  url: string;
   state: string;
+  canceledAt: string | null;
+  completedAt: string | null;
 }
 
 interface LinearResponse {
   data?: {
     projects: {
-      nodes: Array<{
-        id: string;
-        name: string;
-        description: string | null;
-        url: string;
-        state: string;
-      }>;
+      nodes: LinearProjectNode[];
     };
   };
   errors?: Array<{ message: string }>;
@@ -48,19 +51,15 @@ export async function GET() {
       body: JSON.stringify({
         query: `
           query {
-            projects(
-              first: 100
-              filter: { 
-                state: { type: { nin: ["completed", "canceled"] } }
-              }
-              orderBy: updatedAt
-            ) {
+            projects(first: 100) {
               nodes {
                 id
                 name
                 description
                 url
                 state
+                canceledAt
+                completedAt
               }
             }
           }
@@ -69,9 +68,10 @@ export async function GET() {
     });
 
     if (!response.ok) {
-      console.error("Linear API error:", response.status, response.statusText);
+      const errorText = await response.text();
+      console.error("Linear API error:", response.status, response.statusText, errorText);
       return NextResponse.json(
-        { error: "Failed to fetch from Linear" },
+        { error: `Linear API error: ${response.status} ${response.statusText}` },
         { status: 500 }
       );
     }
@@ -86,7 +86,16 @@ export async function GET() {
       );
     }
 
-    const projects: LinearProject[] = data.data?.projects.nodes || [];
+    // Filter out completed and canceled projects client-side
+    const allProjects = data.data?.projects.nodes || [];
+    const projects: LinearProject[] = allProjects
+      .filter((p) => !p.completedAt && !p.canceledAt)
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        url: p.url,
+      }));
 
     return NextResponse.json(projects);
   } catch (error) {
