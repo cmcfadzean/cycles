@@ -1050,8 +1050,10 @@ export default function PitchesPage() {
           <div className="mt-6 p-4 rounded-lg bg-gray-800/50 border border-gray-700">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-[#5E6AD2] flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-white" viewBox="0 0 100 100" fill="currentColor">
-                  <path d="M1.22541 61.5228c-.2225-.9485.90748-1.5459 1.59638-.857L39.3342 97.1782c.6889.6889.0915 1.8189-.857 1.5765C20.0515 94.4522 5.54779 79.9485 1.22541 61.5228ZM.00189135 46.8891c-.01764375.2833.25003025.5006.5356468.4359C8.95236 45.3858 16.6514 40.0263 22.1846 32.8185c6.0451-7.8716 9.6963-17.6573 10.2664-28.3872.0322-.6048-.5206-1.06878-1.086-.90177C11.5092 8.91622.0406298 27.0213.00189135 46.8891Z" />
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                  <path d="M3.5 21.5L21.5 3.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                  <path d="M21.5 21.5C21.5 21.5 21.5 12 21.5 8.5C21.5 5 18.5 3.5 18.5 3.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                  <path d="M3.5 3.5C3.5 3.5 3.5 12 3.5 15.5C3.5 19 6.5 21.5 6.5 21.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
                 </svg>
               </div>
               <div className="flex-1">
