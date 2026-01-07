@@ -8,16 +8,17 @@ datasource db {
 }
 
 model Organization {
-  id               String            @id @default(cuid())
-  clerkUserId      String            @unique
-  name             String
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  engineers        Engineer[]
-  productManagers  ProductManager[]
-  productDesigners ProductDesigner[]
-  cycles           Cycle[]
-  pitches          Pitch[]
+  id                    String            @id @default(cuid())
+  clerkUserId           String            @unique
+  name                  String
+  linearApiKeyEncrypted String?           // Encrypted Linear API key
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  engineers             Engineer[]
+  productManagers       ProductManager[]
+  productDesigners      ProductDesigner[]
+  cycles                Cycle[]
+  pitches               Pitch[]
 }
 
 model Engineer {

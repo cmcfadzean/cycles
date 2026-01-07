@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { PitchStatus } from "@/lib/types";
 import toast from "react-hot-toast";
 import clsx from "clsx";
+import Link from "next/link";
 
 interface Pitch {
   id: string;
@@ -51,7 +52,16 @@ interface ProductDesigner {
   name: string;
 }
 
+interface LinearProject {
+  id: string;
+  name: string;
+  description: string | null;
+  url: string;
+  state: string;
+}
+
 type Tab = "available" | "funded";
+type CreateMode = "manual" | "linear";
 
 export default function PitchesPage() {
   const [pitches, setPitches] = useState<Pitch[]>([]);
@@ -75,10 +85,20 @@ export default function PitchesPage() {
     productDesignerId: "",
   });
 
+  // Linear integration state
+  const [createMode, setCreateMode] = useState<CreateMode>("manual");
+  const [linearConnected, setLinearConnected] = useState(false);
+  const [linearProjects, setLinearProjects] = useState<LinearProject[]>([]);
+  const [loadingLinearProjects, setLoadingLinearProjects] = useState(false);
+  const [linearSearchQuery, setLinearSearchQuery] = useState("");
+  const [selectedLinearProjects, setSelectedLinearProjects] = useState<Set<string>>(new Set());
+  const [importingLinear, setImportingLinear] = useState(false);
+
   useEffect(() => {
     fetchPitches();
     fetchProductManagers();
     fetchProductDesigners();
+    checkLinearConnection();
   }, []);
 
   async function fetchPitches() {
@@ -113,6 +133,84 @@ export default function PitchesPage() {
       setProductDesigners(data);
     } catch {
       console.error("Failed to load product designers");
+    }
+  }
+
+  async function checkLinearConnection() {
+    try {
+      const res = await fetch("/api/settings/linear");
+      if (!res.ok) return;
+      const data = await res.json();
+      setLinearConnected(data.connected);
+    } catch {
+      // Silently fail - Linear integration is optional
+    }
+  }
+
+  async function fetchLinearProjects() {
+    if (!linearConnected) return;
+    
+    setLoadingLinearProjects(true);
+    try {
+      const res = await fetch("/api/linear/projects");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to fetch Linear projects");
+      }
+      const data = await res.json();
+      setLinearProjects(data);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to fetch Linear projects");
+    } finally {
+      setLoadingLinearProjects(false);
+    }
+  }
+
+  async function handleImportFromLinear() {
+    if (selectedLinearProjects.size === 0) {
+      toast.error("Please select at least one project to import");
+      return;
+    }
+
+    setImportingLinear(true);
+    try {
+      const projectsToImport = linearProjects.filter((p) => selectedLinearProjects.has(p.id));
+      
+      // Create pitches for each selected project
+      const results = await Promise.all(
+        projectsToImport.map((project) =>
+          fetch("/api/pitches", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: project.name,
+              pitchDocUrl: project.url,
+              notes: project.description || "",
+              estimateWeeks: 0, // Default, user can edit later
+            }),
+          })
+        )
+      );
+
+      const failedCount = results.filter((r) => !r.ok).length;
+      if (failedCount > 0) {
+        toast.error(`Failed to import ${failedCount} project(s)`);
+      } else {
+        toast.success(
+          selectedLinearProjects.size === 1
+            ? "Project imported successfully"
+            : `${selectedLinearProjects.size} projects imported successfully`
+        );
+      }
+
+      setIsCreateModalOpen(false);
+      setSelectedLinearProjects(new Set());
+      setCreateMode("manual");
+      fetchPitches();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to import projects");
+    } finally {
+      setImportingLinear(false);
     }
   }
 
@@ -520,137 +618,352 @@ export default function PitchesPage() {
       {/* Create Modal */}
       <Modal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setCreateMode("manual");
+          setSelectedLinearProjects(new Set());
+          setLinearSearchQuery("");
+        }}
         title="New Pitch"
       >
-        <form onSubmit={handleCreate} className="space-y-5">
-          <div>
-            <label htmlFor="title" className="label">
-              Title
-            </label>
-            <input
-              id="title"
-              type="text"
-              required
-              className="input"
-              placeholder="e.g., User Dashboard Redesign"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="pitchDocUrl" className="label">
-              Pitch Doc URL (optional)
-            </label>
-            <input
-              id="pitchDocUrl"
-              type="url"
-              className="input"
-              placeholder="https://..."
-              value={formData.pitchDocUrl}
-              onChange={(e) => setFormData({ ...formData, pitchDocUrl: e.target.value })}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="estimateWeeks" className="label">
-                Estimate (weeks)
-              </label>
-              <input
-                id="estimateWeeks"
-                type="number"
-                step="0.5"
-                min="0"
-                className="input"
-                placeholder="e.g., 2"
-                value={formData.estimateWeeks}
-                onChange={(e) => setFormData({ ...formData, estimateWeeks: e.target.value })}
-              />
-            </div>
-            <div>
-              <label htmlFor="priority" className="label">
-                Priority (optional)
-              </label>
-              <input
-                id="priority"
-                type="number"
-                min="1"
-                className="input"
-                placeholder="e.g., 1"
-                value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="notes" className="label">
-              Notes (optional)
-            </label>
-            <textarea
-              id="notes"
-              rows={3}
-              className="input resize-none"
-              placeholder="Additional context..."
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="productManagerId" className="label">
-                Product Manager (optional)
-              </label>
-              <select
-                id="productManagerId"
-                className="input"
-                value={formData.productManagerId}
-                onChange={(e) => setFormData({ ...formData, productManagerId: e.target.value })}
-              >
-                <option value="">No Product Manager</option>
-                {productManagers.map((pm) => (
-                  <option key={pm.id} value={pm.id}>
-                    {pm.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="productDesignerId" className="label">
-                Product Designer (optional)
-              </label>
-              <select
-                id="productDesignerId"
-                className="input"
-                value={formData.productDesignerId}
-                onChange={(e) => setFormData({ ...formData, productDesignerId: e.target.value })}
-              >
-                <option value="">No Product Designer</option>
-                {productDesigners.map((pd) => (
-                  <option key={pd.id} value={pd.id}>
-                    {pd.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
+        {/* Mode Toggle */}
+        {linearConnected && (
+          <div className="flex gap-2 mb-6">
             <button
               type="button"
-              onClick={() => setIsCreateModalOpen(false)}
-              className="btn-secondary"
+              onClick={() => setCreateMode("manual")}
+              className={clsx(
+                "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors",
+                createMode === "manual"
+                  ? "bg-violet-600 text-white"
+                  : "bg-gray-800 text-gray-400 hover:text-gray-200"
+              )}
             >
-              Cancel
+              Create Manually
             </button>
-            <button type="submit" className="btn-primary">
-              Create Pitch
+            <button
+              type="button"
+              onClick={() => {
+                setCreateMode("linear");
+                if (linearProjects.length === 0) {
+                  fetchLinearProjects();
+                }
+              }}
+              className={clsx(
+                "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2",
+                createMode === "linear"
+                  ? "bg-violet-600 text-white"
+                  : "bg-gray-800 text-gray-400 hover:text-gray-200"
+              )}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 100 100" fill="currentColor">
+                <path d="M1.22541 61.5228c-.2225-.9485.90748-1.5459 1.59638-.857L39.3342 97.1782c.6889.6889.0915 1.8189-.857 1.5765C20.0515 94.4522 5.54779 79.9485 1.22541 61.5228ZM.00189135 46.8891c-.01764375.2833.25003025.5006.5356468.4359C8.95236 45.3858 16.6514 40.0263 22.1846 32.8185c6.0451-7.8716 9.6963-17.6573 10.2664-28.3872.0322-.6048-.5206-1.06878-1.086-.90177C11.5092 8.91622.0406298 27.0213.00189135 46.8891Z" />
+              </svg>
+              Import from Linear
             </button>
           </div>
-        </form>
+        )}
+
+        {createMode === "manual" ? (
+          <form onSubmit={handleCreate} className="space-y-5">
+            <div>
+              <label htmlFor="title" className="label">
+                Title
+              </label>
+              <input
+                id="title"
+                type="text"
+                required
+                className="input"
+                placeholder="e.g., User Dashboard Redesign"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="pitchDocUrl" className="label">
+                Pitch Doc URL (optional)
+              </label>
+              <input
+                id="pitchDocUrl"
+                type="url"
+                className="input"
+                placeholder="https://..."
+                value={formData.pitchDocUrl}
+                onChange={(e) => setFormData({ ...formData, pitchDocUrl: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="estimateWeeks" className="label">
+                  Estimate (weeks)
+                </label>
+                <input
+                  id="estimateWeeks"
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  className="input"
+                  placeholder="e.g., 2"
+                  value={formData.estimateWeeks}
+                  onChange={(e) => setFormData({ ...formData, estimateWeeks: e.target.value })}
+                />
+              </div>
+              <div>
+                <label htmlFor="priority" className="label">
+                  Priority (optional)
+                </label>
+                <input
+                  id="priority"
+                  type="number"
+                  min="1"
+                  className="input"
+                  placeholder="e.g., 1"
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="notes" className="label">
+                Notes (optional)
+              </label>
+              <textarea
+                id="notes"
+                rows={3}
+                className="input resize-none"
+                placeholder="Additional context..."
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="productManagerId" className="label">
+                  Product Manager (optional)
+                </label>
+                <select
+                  id="productManagerId"
+                  className="input"
+                  value={formData.productManagerId}
+                  onChange={(e) => setFormData({ ...formData, productManagerId: e.target.value })}
+                >
+                  <option value="">No Product Manager</option>
+                  {productManagers.map((pm) => (
+                    <option key={pm.id} value={pm.id}>
+                      {pm.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="productDesignerId" className="label">
+                  Product Designer (optional)
+                </label>
+                <select
+                  id="productDesignerId"
+                  className="input"
+                  value={formData.productDesignerId}
+                  onChange={(e) => setFormData({ ...formData, productDesignerId: e.target.value })}
+                >
+                  <option value="">No Product Designer</option>
+                  {productDesigners.map((pd) => (
+                    <option key={pd.id} value={pd.id}>
+                      {pd.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary">
+                Create Pitch
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* Linear Import Mode */
+          <div className="space-y-4">
+            {loadingLinearProjects ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin w-6 h-6 border-2 border-gray-600 border-t-gray-300 rounded-full" />
+              </div>
+            ) : linearProjects.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400">No active projects found in Linear</p>
+                <button
+                  onClick={fetchLinearProjects}
+                  className="mt-4 text-violet-400 hover:text-violet-300 text-sm"
+                >
+                  Refresh
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Search */}
+                <div className="relative">
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search projects..."
+                    className="input pl-10"
+                    value={linearSearchQuery}
+                    onChange={(e) => setLinearSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                {/* Project List */}
+                <div className="max-h-80 overflow-y-auto space-y-2">
+                  {linearProjects
+                    .filter((p) =>
+                      p.name.toLowerCase().includes(linearSearchQuery.toLowerCase())
+                    )
+                    .map((project) => {
+                      const isSelected = selectedLinearProjects.has(project.id);
+                      return (
+                        <button
+                          key={project.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedLinearProjects((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(project.id)) {
+                                next.delete(project.id);
+                              } else {
+                                next.add(project.id);
+                              }
+                              return next;
+                            });
+                          }}
+                          className={clsx(
+                            "w-full text-left p-3 rounded-lg border transition-colors",
+                            isSelected
+                              ? "border-violet-500 bg-violet-500/10"
+                              : "border-gray-700 hover:border-gray-600 hover:bg-gray-800/50"
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={clsx(
+                                "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors",
+                                isSelected
+                                  ? "border-violet-500 bg-violet-500"
+                                  : "border-gray-600"
+                              )}
+                            >
+                              {isSelected && (
+                                <svg
+                                  className="w-3 h-3 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={3}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-gray-100">
+                                {project.name}
+                              </div>
+                              {project.description && (
+                                <p className="text-sm text-gray-400 line-clamp-2 mt-0.5">
+                                  {project.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-800">
+                  <span className="text-sm text-gray-400">
+                    {selectedLinearProjects.size} selected
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCreateModalOpen(false);
+                        setCreateMode("manual");
+                        setSelectedLinearProjects(new Set());
+                      }}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleImportFromLinear}
+                      disabled={selectedLinearProjects.size === 0 || importingLinear}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {importingLinear
+                        ? "Importing..."
+                        : `Import${selectedLinearProjects.size > 0 ? ` (${selectedLinearProjects.size})` : ""}`}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Show Linear connection prompt if not connected */}
+        {!linearConnected && createMode === "manual" && (
+          <div className="mt-6 p-4 rounded-lg bg-gray-800/50 border border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-[#5E6AD2] flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 100 100" fill="currentColor">
+                  <path d="M1.22541 61.5228c-.2225-.9485.90748-1.5459 1.59638-.857L39.3342 97.1782c.6889.6889.0915 1.8189-.857 1.5765C20.0515 94.4522 5.54779 79.9485 1.22541 61.5228ZM.00189135 46.8891c-.01764375.2833.25003025.5006.5356468.4359C8.95236 45.3858 16.6514 40.0263 22.1846 32.8185c6.0451-7.8716 9.6963-17.6573 10.2664-28.3872.0322-.6048-.5206-1.06878-1.086-.90177C11.5092 8.91622.0406298 27.0213.00189135 46.8891Z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-300">
+                  Connect Linear to import projects as pitches
+                </p>
+                <Link
+                  href="/settings"
+                  className="text-sm text-violet-400 hover:text-violet-300"
+                >
+                  Go to Settings →
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Edit Modal */}
