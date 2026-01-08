@@ -94,19 +94,20 @@ export async function PATCH(
 
     switch (body.action) {
       case "approve":
-        // Add pitch to cycle, clear from betting table
+        // Add pitch to cycle, clear from betting table, update status to Ready for Dev
         await prisma.pitch.update({
           where: { id: pitchId },
           data: {
             cycleId: cycleId,
             bettingCycleId: null,
             bettingRejected: false,
+            status: "READY_FOR_DEV",
           },
         });
         break;
 
       case "unapprove":
-        // Remove pitch from cycle, put back on betting table as pending
+        // Remove pitch from cycle, put back on betting table as pending, reset status to Backlog
         await prisma.$transaction(async (tx) => {
           // Delete assignments for this pitch in this cycle
           await tx.assignment.deleteMany({
@@ -123,6 +124,7 @@ export async function PATCH(
               podId: null,
               bettingCycleId: cycleId,
               bettingRejected: false,
+              status: "BACKLOG",
             },
           });
         });
@@ -166,12 +168,13 @@ export async function PATCH(
         break;
 
       case "remove":
-        // Remove from betting table entirely
+        // Remove from betting table entirely, reset status to Backlog
         await prisma.pitch.update({
           where: { id: pitchId },
           data: {
             bettingCycleId: null,
             bettingRejected: false,
+            status: "BACKLOG",
           },
         });
         break;
