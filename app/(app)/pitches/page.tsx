@@ -92,7 +92,7 @@ export default function PitchesPage() {
     estimateWeeks: "",
     priority: "",
     notes: "",
-    status: "PLANNED" as PitchStatus,
+    status: "BACKLOG" as PitchStatus,
     productManagerId: "",
     productDesignerId: "",
   });
@@ -449,7 +449,7 @@ export default function PitchesPage() {
       estimateWeeks: "",
       priority: "",
       notes: "",
-      status: "PLANNED",
+      status: "BACKLOG",
       productManagerId: "",
       productDesignerId: "",
     });
@@ -1147,10 +1147,11 @@ export default function PitchesPage() {
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value as PitchStatus })}
             >
-              <option value="PLANNED">Planned</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="DONE">Done</option>
-              <option value="DROPPED">Dropped</option>
+              <option value="BACKLOG">Backlog</option>
+              <option value="PLANNING">Planning</option>
+              <option value="READY_FOR_DEV">Ready for Dev</option>
+              <option value="COMPLETE">Complete</option>
+              <option value="CANCELED">Canceled</option>
             </select>
           </div>
 

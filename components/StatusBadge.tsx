@@ -7,20 +7,24 @@ const statusConfig: Record<
   PitchStatus,
   { label: string; className: string }
 > = {
-  PLANNED: {
-    label: "Planned",
+  BACKLOG: {
+    label: "Backlog",
     className: "bg-gray-700 text-gray-300",
   },
-  IN_PROGRESS: {
-    label: "In Progress",
+  PLANNING: {
+    label: "Planning",
+    className: "bg-blue-500/20 text-blue-400",
+  },
+  READY_FOR_DEV: {
+    label: "Ready for Dev",
     className: "bg-violet-500/20 text-violet-400",
   },
-  DONE: {
-    label: "Done",
+  COMPLETE: {
+    label: "Complete",
     className: "bg-emerald-500/20 text-emerald-400",
   },
-  DROPPED: {
-    label: "Dropped",
+  CANCELED: {
+    label: "Canceled",
     className: "bg-gray-700 text-gray-500 line-through",
   },
 };

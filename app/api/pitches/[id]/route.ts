@@ -38,7 +38,7 @@ export async function PATCH(
       updateData.estimateWeeks = body.estimateWeeks;
     }
     if (body.status !== undefined) {
-      const validStatuses: PitchStatus[] = ["PLANNED", "IN_PROGRESS", "DONE", "DROPPED"];
+      const validStatuses: PitchStatus[] = ["BACKLOG", "PLANNING", "READY_FOR_DEV", "COMPLETE", "CANCELED"];
       if (!validStatuses.includes(body.status)) {
         return NextResponse.json(
           { error: "Invalid status value" },

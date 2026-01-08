@@ -603,7 +603,7 @@ export default function CycleDetailPage() {
     title: "",
     pitchDocUrl: "",
     estimateWeeks: "",
-    status: "PLANNED" as PitchStatus,
+    status: "BACKLOG" as PitchStatus,
     priority: "",
     notes: "",
     podId: "",
@@ -2745,10 +2745,11 @@ export default function CycleDetailPage() {
                   })
                 }
               >
-                <option value="PLANNED">Planned</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="DONE">Done</option>
-                <option value="DROPPED">Dropped</option>
+                <option value="BACKLOG">Backlog</option>
+                <option value="PLANNING">Planning</option>
+                <option value="READY_FOR_DEV">Ready for Dev</option>
+                <option value="COMPLETE">Complete</option>
+                <option value="CANCELED">Canceled</option>
               </select>
             </div>
             <div>

@@ -1,6 +1,6 @@
 import { Decimal } from "@prisma/client/runtime/library";
 
-export type PitchStatus = "PLANNED" | "IN_PROGRESS" | "DONE" | "DROPPED";
+export type PitchStatus = "BACKLOG" | "PLANNING" | "READY_FOR_DEV" | "COMPLETE" | "CANCELED";
 
 // Helper to convert Decimal to number
 export function toNumber(val: Decimal | number | string): number {
