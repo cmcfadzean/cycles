@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/Modal";
 import { StatusBadge } from "@/components/StatusBadge";
+import { InlineWeeksEditor } from "@/components/InlineWeeksEditor";
 import { PitchStatus } from "@/lib/types";
 import toast from "react-hot-toast";
 import clsx from "clsx";
@@ -695,7 +696,11 @@ export default function PitchesPage() {
                     </div>
                   </td>
                   <td className="px-5 py-4 text-sm text-gray-400">
-                    {pitch.estimateWeeks > 0 ? `${pitch.estimateWeeks}w` : "—"}
+                    <InlineWeeksEditor
+                      pitchId={pitch.id}
+                      estimateWeeks={pitch.estimateWeeks}
+                      onUpdate={fetchPitches}
+                    />
                   </td>
                   <td className="px-5 py-4">
                     <StatusBadge 
