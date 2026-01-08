@@ -299,6 +299,7 @@ function DroppablePitchCard({
             estimateWeeks={Number(pitch.estimateWeeks)}
             onUpdate={onWeeksUpdate}
             className="font-medium text-gray-200"
+            compact
           />
         </div>
 

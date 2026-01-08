@@ -9,6 +9,7 @@ interface InlineWeeksEditorProps {
   onUpdate?: () => void;
   disabled?: boolean;
   className?: string;
+  compact?: boolean;
 }
 
 export function InlineWeeksEditor({
@@ -17,6 +18,7 @@ export function InlineWeeksEditor({
   onUpdate,
   disabled,
   className,
+  compact,
 }: InlineWeeksEditorProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [weeksValue, setWeeksValue] = useState(estimateWeeks.toString());
@@ -113,7 +115,11 @@ export function InlineWeeksEditor({
   return (
     <button
       onClick={() => setIsEditing(true)}
-      className="text-sm text-gray-400 hover:text-gray-200 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
+      className={
+        compact
+          ? `hover:text-gray-100 hover:underline transition-colors cursor-pointer ${className || ""}`
+          : "text-sm text-gray-400 hover:text-gray-200 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
+      }
       title="Click to edit estimate"
     >
       {estimateWeeks > 0 ? `${Number(estimateWeeks).toFixed(1)}w` : "—"}
