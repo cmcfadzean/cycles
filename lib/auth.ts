@@ -1,31 +1,28 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "./prisma";
 
 export async function getOrganization() {
-  const { userId } = await auth();
+  const { userId, orgId, orgSlug } = await auth();
 
   if (!userId) {
     return null;
   }
 
-  // Find or create organization for this user
+  // Require a Clerk organization to be selected
+  if (!orgId) {
+    return null;
+  }
+
+  // Find or create organization for this Clerk org
   let organization = await prisma.organization.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkOrganizationId: orgId },
   });
 
   if (!organization) {
-    // Get user info from Clerk
-    const user = await currentUser();
-    const name =
-      user?.firstName && user?.lastName
-        ? `${user.firstName} ${user.lastName}'s Team`
-        : user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] + "'s Team" ||
-          "My Team";
-
     organization = await prisma.organization.create({
       data: {
-        clerkUserId: userId,
-        name,
+        clerkOrganizationId: orgId,
+        name: orgSlug || "Team",
       },
     });
   }
@@ -42,4 +39,3 @@ export async function requireOrganization() {
 
   return organization;
 }
-

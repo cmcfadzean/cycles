@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import clsx from "clsx";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, OrganizationSwitcher } from "@clerk/nextjs";
 import { Modal } from "@/components/Modal";
 import toast from "react-hot-toast";
 
@@ -245,6 +245,22 @@ export default function AppLayout({
               <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-800" />
             </div>
           </Link>
+
+          {/* Organization Switcher */}
+          <div className="mt-2">
+            <OrganizationSwitcher
+              hidePersonal
+              appearance={{
+                elements: {
+                  rootBox: "w-full flex justify-center",
+                  organizationSwitcherTrigger: "w-10 h-10 rounded-lg border-0 bg-gray-800 hover:bg-gray-700 p-0 flex items-center justify-center",
+                  organizationPreviewAvatarBox: "w-6 h-6",
+                  organizationSwitcherTriggerIcon: "hidden",
+                  organizationPreviewTextContainer: "hidden",
+                },
+              }}
+            />
+          </div>
 
           {/* User Profile */}
           <div className="mt-2">

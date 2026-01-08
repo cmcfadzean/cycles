@@ -9,7 +9,7 @@ datasource db {
 
 model Organization {
   id                    String            @id @default(cuid())
-  clerkUserId           String            @unique
+  clerkOrganizationId   String            @unique
   name                  String
   linearApiKeyEncrypted String?           // Encrypted Linear API key
   createdAt             DateTime          @default(now())
