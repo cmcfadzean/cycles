@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOrganization } from "@/lib/auth";
 import { CreateAssignmentRequest, toNumber } from "@/lib/types";
+import { updatePitchStatusBasedOnStaffing } from "@/lib/pitch-status";
 
 export async function POST(request: NextRequest) {
   try {
@@ -163,6 +164,9 @@ export async function POST(request: NextRequest) {
         pitch: true,
       },
     });
+
+    // Update pitch status based on staffing level
+    await updatePitchStatusBasedOnStaffing(body.pitchId);
 
     return NextResponse.json(assignment, { status: 201 });
   } catch (error) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOrganization } from "@/lib/auth";
 import { UpdateAssignmentRequest, toNumber } from "@/lib/types";
+import { updatePitchStatusBasedOnStaffing } from "@/lib/pitch-status";
 
 export async function PATCH(
   request: NextRequest,
@@ -125,6 +126,9 @@ export async function PATCH(
       },
     });
 
+    // Update pitch status based on staffing level
+    await updatePitchStatusBasedOnStaffing(existing.pitchId);
+
     return NextResponse.json(assignment);
   } catch (error) {
     console.error("Failed to update assignment:", error);
@@ -163,9 +167,14 @@ export async function DELETE(
       );
     }
 
+    const pitchId = existing.pitchId;
+
     await prisma.assignment.delete({
       where: { id },
     });
+
+    // Update pitch status based on staffing level
+    await updatePitchStatusBasedOnStaffing(pitchId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
