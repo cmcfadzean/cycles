@@ -72,15 +72,24 @@ interface BreadcrumbItem {
   name: string;
 }
 
-type Tab = "available" | "funded";
+type Tab = PitchStatus | "all";
 type CreateMode = "manual" | "linear";
+
+const tabConfig: Record<Tab, { label: string; color: string }> = {
+  all: { label: "All", color: "gray" },
+  BACKLOG: { label: "Backlog", color: "gray" },
+  PLANNING: { label: "Planning", color: "blue" },
+  READY_FOR_DEV: { label: "Ready for Dev", color: "violet" },
+  COMPLETE: { label: "Complete", color: "emerald" },
+  CANCELED: { label: "Canceled", color: "gray" },
+};
 
 export default function PitchesPage() {
   const [pitches, setPitches] = useState<Pitch[]>([]);
   const [productManagers, setProductManagers] = useState<ProductManager[]>([]);
   const [productDesigners, setProductDesigners] = useState<ProductDesigner[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<Tab>("available");
+  const [activeTab, setActiveTab] = useState<Tab>("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -318,9 +327,19 @@ export default function PitchesPage() {
     }
   }
 
-  const availablePitches = pitches.filter((p) => p.cycleId === null);
-  const fundedPitches = pitches.filter((p) => p.cycleId !== null);
-  const displayedPitches = activeTab === "available" ? availablePitches : fundedPitches;
+  // Count pitches by status
+  const statusCounts: Record<Tab, number> = {
+    all: pitches.length,
+    BACKLOG: pitches.filter((p) => p.status === "BACKLOG").length,
+    PLANNING: pitches.filter((p) => p.status === "PLANNING").length,
+    READY_FOR_DEV: pitches.filter((p) => p.status === "READY_FOR_DEV").length,
+    COMPLETE: pitches.filter((p) => p.status === "COMPLETE").length,
+    CANCELED: pitches.filter((p) => p.status === "CANCELED").length,
+  };
+  
+  const displayedPitches = activeTab === "all" 
+    ? pitches 
+    : pitches.filter((p) => p.status === activeTab);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -519,45 +538,41 @@ export default function PitchesPage() {
 
       {/* Tabs */}
       <div className="border-b border-gray-800">
-        <nav className="flex gap-6">
-          <button
-            onClick={() => setActiveTab("available")}
-            className={clsx(
-              "py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
-              activeTab === "available"
-                ? "border-violet-500 text-gray-100"
-                : "border-transparent text-gray-500 hover:text-gray-300"
-            )}
-          >
-            Available
-            <span className={clsx(
-              "px-1.5 py-0.5 text-xs rounded-full",
-              activeTab === "available"
-                ? "bg-violet-500/20 text-violet-400"
-                : "bg-gray-700 text-gray-400"
-            )}>
-              {availablePitches.length}
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab("funded")}
-            className={clsx(
-              "py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
-              activeTab === "funded"
-                ? "border-violet-500 text-gray-100"
-                : "border-transparent text-gray-500 hover:text-gray-300"
-            )}
-          >
-            Funded
-            <span className={clsx(
-              "px-1.5 py-0.5 text-xs rounded-full",
-              activeTab === "funded"
-                ? "bg-emerald-500/20 text-emerald-400"
-                : "bg-gray-700 text-gray-400"
-            )}>
-              {fundedPitches.length}
-            </span>
-          </button>
+        <nav className="flex gap-4 overflow-x-auto">
+          {(Object.keys(tabConfig) as Tab[]).map((tab) => {
+            const config = tabConfig[tab];
+            const count = statusCounts[tab];
+            const isActive = activeTab === tab;
+            
+            // Color classes based on tab
+            const activeColorClasses = {
+              gray: "bg-gray-500/20 text-gray-300",
+              blue: "bg-blue-500/20 text-blue-400",
+              violet: "bg-violet-500/20 text-violet-400",
+              emerald: "bg-emerald-500/20 text-emerald-400",
+            }[config.color];
+            
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={clsx(
+                  "py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap",
+                  isActive
+                    ? "border-violet-500 text-gray-100"
+                    : "border-transparent text-gray-500 hover:text-gray-300"
+                )}
+              >
+                {config.label}
+                <span className={clsx(
+                  "px-1.5 py-0.5 text-xs rounded-full",
+                  isActive ? activeColorClasses : "bg-gray-700 text-gray-400"
+                )}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </nav>
       </div>
 
@@ -580,14 +595,14 @@ export default function PitchesPage() {
             </svg>
           </div>
           <h3 className="text-base font-medium text-gray-100">
-            {activeTab === "available" ? "No available pitches" : "No funded pitches"}
+            No {activeTab === "all" ? "" : tabConfig[activeTab].label.toLowerCase()} pitches
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            {activeTab === "available"
+            {activeTab === "all" || activeTab === "BACKLOG"
               ? "Create a pitch to add to your backlog"
-              : "Assign pitches to cycles to see them here"}
+              : `No pitches with "${tabConfig[activeTab].label}" status`}
           </p>
-          {activeTab === "available" && (
+          {(activeTab === "all" || activeTab === "BACKLOG") && (
             <button
               onClick={() => {
                 resetForm();
@@ -619,11 +634,9 @@ export default function PitchesPage() {
                 <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   PM
                 </th>
-                {activeTab === "funded" && (
-                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cycle
-                  </th>
-                )}
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Cycle
+                </th>
                 <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -674,11 +687,13 @@ export default function PitchesPage() {
                       <span className="text-sm text-gray-600">—</span>
                     )}
                   </td>
-                  {activeTab === "funded" && (
-                    <td className="px-5 py-4">
-                      <span className="text-sm text-gray-300">{pitch.cycle?.name}</span>
-                    </td>
-                  )}
+                  <td className="px-5 py-4">
+                    {pitch.cycle ? (
+                      <span className="text-sm text-gray-300">{pitch.cycle.name}</span>
+                    ) : (
+                      <span className="text-sm text-gray-600">—</span>
+                    )}
+                  </td>
                   <td className="px-5 py-4 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button
@@ -690,7 +705,7 @@ export default function PitchesPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
-                      {activeTab === "funded" && (
+                      {pitch.cycle && (
                         <button
                           onClick={() => handleRemoveFromCycle(pitch)}
                           className="p-1.5 text-gray-400 hover:text-amber-400 hover:bg-amber-500/10 rounded transition-colors"
