@@ -4,9 +4,10 @@ import { PitchStatus } from "@/lib/types";
 import clsx from "clsx";
 
 const statusConfig: Record<
-  PitchStatus,
+  string,
   { label: string; className: string }
 > = {
+  // New statuses
   BACKLOG: {
     label: "Backlog",
     className: "bg-gray-700 text-gray-300",
@@ -27,6 +28,28 @@ const statusConfig: Record<
     label: "Canceled",
     className: "bg-gray-700 text-gray-500 line-through",
   },
+  // Legacy statuses (for existing data)
+  PLANNED: {
+    label: "Backlog",
+    className: "bg-gray-700 text-gray-300",
+  },
+  IN_PROGRESS: {
+    label: "Ready for Dev",
+    className: "bg-violet-500/20 text-violet-400",
+  },
+  DONE: {
+    label: "Complete",
+    className: "bg-emerald-500/20 text-emerald-400",
+  },
+  DROPPED: {
+    label: "Canceled",
+    className: "bg-gray-700 text-gray-500 line-through",
+  },
+};
+
+const defaultStatus = {
+  label: "Unknown",
+  className: "bg-gray-700 text-gray-300",
 };
 
 interface StatusBadgeProps {
@@ -35,7 +58,7 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const config = statusConfig[status];
+  const config = statusConfig[status] || defaultStatus;
 
   return (
     <span

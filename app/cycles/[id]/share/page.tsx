@@ -13,7 +13,8 @@ function formatDate(date: string | Date) {
   });
 }
 
-const statusConfig: Record<PitchStatus, { label: string; className: string }> = {
+const statusConfig: Record<string, { label: string; className: string }> = {
+  // New statuses
   BACKLOG: {
     label: "Backlog",
     className: "bg-gray-700 text-gray-300",
@@ -34,10 +35,32 @@ const statusConfig: Record<PitchStatus, { label: string; className: string }> = 
     label: "Canceled",
     className: "bg-gray-700 text-gray-500 line-through",
   },
+  // Legacy statuses (for existing data)
+  PLANNED: {
+    label: "Backlog",
+    className: "bg-gray-700 text-gray-300",
+  },
+  IN_PROGRESS: {
+    label: "Ready for Dev",
+    className: "bg-violet-500/25 text-violet-400",
+  },
+  DONE: {
+    label: "Complete",
+    className: "bg-emerald-500/25 text-emerald-400",
+  },
+  DROPPED: {
+    label: "Canceled",
+    className: "bg-gray-700 text-gray-500 line-through",
+  },
+};
+
+const defaultStatus = {
+  label: "Unknown",
+  className: "bg-gray-700 text-gray-300",
 };
 
 function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
-  const statusInfo = statusConfig[pitch.status];
+  const statusInfo = statusConfig[pitch.status] || defaultStatus;
   const isFullyStaffed = pitch.remainingWeeks <= 0;
 
   return (
