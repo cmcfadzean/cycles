@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOrganization } from "@/lib/auth";
+import { requireOrganization, requireAdmin } from "@/lib/auth";
 
 export async function PATCH(
   request: NextRequest,
@@ -76,7 +76,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; cycleId: string }> }
 ) {
   try {
-    const organization = await requireOrganization();
+    const organization = await requireAdmin();
     const { id: engineerId, cycleId } = await params;
 
     // Verify capacity exists and belongs to org
@@ -123,6 +123,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete capacity:", error);
+    if (error instanceof Error && error.message === "Admin access required") {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

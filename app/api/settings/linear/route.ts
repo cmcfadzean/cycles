@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOrganization } from "@/lib/auth";
+import { requireOrganization, requireAdmin } from "@/lib/auth";
 import { encrypt, decrypt } from "@/lib/encryption";
 
 // GET - Check if Linear is connected
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove Linear API key
 export async function DELETE() {
   try {
-    const organization = await requireOrganization();
+    const organization = await requireAdmin();
 
     await prisma.organization.update({
       where: { id: organization.id },
@@ -103,6 +103,9 @@ export async function DELETE() {
     });
   } catch (error) {
     console.error("Failed to remove Linear API key:", error);
+    if (error instanceof Error && error.message === "Admin access required") {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
