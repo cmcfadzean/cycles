@@ -130,24 +130,13 @@ export function StatusBadge({ status, className, onChange, disabled }: StatusBad
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={clsx(
-          "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold transition-all",
+          "inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold transition-all",
           "hover:ring-2 hover:ring-gray-600 cursor-pointer",
           config.className,
           className
         )}
       >
         {config.label}
-        <svg
-          className={clsx(
-            "w-3 h-3 transition-transform",
-            isOpen && "rotate-180"
-          )}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
       </button>
 
       {isOpen && (
