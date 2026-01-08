@@ -196,6 +196,7 @@ function DroppablePitchCard({
   onAssignmentDelete,
   onAssignmentUpdate,
   onEdit,
+  onStatusChange,
   isOver,
 }: {
   pitch: PitchWithAssignments;
@@ -203,6 +204,7 @@ function DroppablePitchCard({
   onAssignmentDelete: (id: string) => void;
   onAssignmentUpdate: (id: string, weeks: number) => void;
   onEdit: (pitch: PitchWithAssignments) => void;
+  onStatusChange: (pitchId: string, newStatus: PitchStatus) => void;
   isOver?: boolean;
 }) {
   const { setNodeRef } = useDroppable({
@@ -266,7 +268,10 @@ function DroppablePitchCard({
               </span>
             )}
           </div>
-          <StatusBadge status={pitch.status} />
+          <StatusBadge 
+            status={pitch.status} 
+            onChange={(newStatus) => onStatusChange(pitch.id, newStatus)}
+          />
         </div>
         <button
           onClick={() => onEdit(pitch)}
@@ -818,6 +823,26 @@ export default function CycleDetailPage() {
       fetchCycle();
     } catch {
       toast.error("Failed to remove assignment");
+    }
+  }
+
+  async function handlePitchStatusChange(pitchId: string, newStatus: PitchStatus) {
+    try {
+      const res = await fetch(`/api/pitches/${pitchId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update status");
+      }
+
+      toast.success("Status updated");
+      fetchCycle();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update status");
     }
   }
 
@@ -2012,6 +2037,7 @@ export default function CycleDetailPage() {
                             onAssignmentDelete={handleAssignmentDelete}
                             onAssignmentUpdate={handleAssignmentUpdate}
                             onEdit={handleOpenEditPitch}
+                            onStatusChange={handlePitchStatusChange}
                             isOver={dropTargetPitchId === pitch.id}
                           />
                         ))}
@@ -2037,6 +2063,7 @@ export default function CycleDetailPage() {
                             onAssignmentDelete={handleAssignmentDelete}
                             onAssignmentUpdate={handleAssignmentUpdate}
                             onEdit={handleOpenEditPitch}
+                            onStatusChange={handlePitchStatusChange}
                             isOver={dropTargetPitchId === pitch.id}
                           />
                         ))}

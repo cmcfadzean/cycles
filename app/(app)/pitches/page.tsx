@@ -415,6 +415,26 @@ export default function PitchesPage() {
     }
   }
 
+  async function handleStatusChange(pitchId: string, newStatus: PitchStatus) {
+    try {
+      const res = await fetch(`/api/pitches/${pitchId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update status");
+      }
+
+      toast.success("Status updated");
+      fetchPitches();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update status");
+    }
+  }
+
   async function handleDelete() {
     if (!deletingPitch) return;
 
@@ -678,7 +698,10 @@ export default function PitchesPage() {
                     {pitch.estimateWeeks > 0 ? `${pitch.estimateWeeks}w` : "—"}
                   </td>
                   <td className="px-5 py-4">
-                    <StatusBadge status={pitch.status} />
+                    <StatusBadge 
+                      status={pitch.status} 
+                      onChange={(newStatus) => handleStatusChange(pitch.id, newStatus)}
+                    />
                   </td>
                   <td className="px-5 py-4">
                     {pitch.productManager ? (
