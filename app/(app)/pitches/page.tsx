@@ -301,6 +301,7 @@ export default function PitchesPage() {
             body: JSON.stringify({
               title: project.name,
               pitchDocUrl: project.url,
+              linearProjectId: project.id, // Store Linear project ID for future sync
               notes: project.description || "",
               estimateWeeks: 0, // Default, user can edit later
             }),

@@ -127,6 +127,7 @@ model Pitch {
   productDesignerId String?
   title             String
   pitchDocUrl       String?
+  linearProjectId   String?          // Linear project ID for future sync/updates
   estimateWeeks     Decimal          @default(0)
   status            String           @default("PLANNED")
   priority          Int?

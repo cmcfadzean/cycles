@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
         productDesignerId: body.productDesignerId || null,
         title: body.title,
         pitchDocUrl: body.pitchDocUrl || null,
+        linearProjectId: body.linearProjectId || null,
         estimateWeeks: body.estimateWeeks || 0,
         priority: body.priority ?? null,
         notes: body.notes || null,
