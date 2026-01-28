@@ -2329,39 +2329,35 @@ export default function CycleDetailPage() {
                             )}
                           </div>
                         </div>
-                        {isSelected && (
-                          <div
-                            className="flex items-center gap-2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <span className="text-xs text-gray-400">weeks:</span>
-                            <input
-                              type="number"
-                              step="0.5"
-                              min="0.5"
-                              className="input w-16 py-1 px-2 text-sm"
-                              value={selectedEngineersMap[eng.id]}
-                              onChange={(e) =>
-                                setSelectedEngineersMap({
-                                  ...selectedEngineersMap,
-                                  [eng.id]: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        )}
+                        <div
+                          className={`flex items-center gap-2 ${isSelected ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span className="text-xs text-gray-400">weeks:</span>
+                          <input
+                            type="number"
+                            step="0.5"
+                            min="0.5"
+                            className="input w-16 py-1 px-2 text-sm"
+                            value={selectedEngineersMap[eng.id] || defaultAvailableWeeks}
+                            onChange={(e) =>
+                              setSelectedEngineersMap({
+                                ...selectedEngineersMap,
+                                [eng.id]: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               )}
               
-              {Object.keys(selectedEngineersMap).length > 0 && (
-                <p className="mt-2 text-sm text-primary-400">
-                  {Object.keys(selectedEngineersMap).length} engineer
-                  {Object.keys(selectedEngineersMap).length > 1 ? "s" : ""} selected
-                </p>
-              )}
+              <p className={`mt-2 text-sm ${Object.keys(selectedEngineersMap).length > 0 ? "text-primary-400" : "text-gray-500"}`}>
+                {Object.keys(selectedEngineersMap).length} engineer
+                {Object.keys(selectedEngineersMap).length !== 1 ? "s" : ""} selected
+              </p>
             </div>
 
             <div className="border-t border-gray-700 pt-4 mt-4">
