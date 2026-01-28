@@ -588,10 +588,8 @@ export default function CycleDetailPage() {
   const [engineerToDelete, setEngineerToDelete] = useState<EngineerWithCapacity | null>(null);
 
   // Form states
-  const [addEngineerForm, setAddEngineerForm] = useState({
-    engineerId: "",
-    availableWeeks: "6",
-  });
+  const [selectedEngineersMap, setSelectedEngineersMap] = useState<Record<string, string>>({});
+  const [defaultAvailableWeeks, setDefaultAvailableWeeks] = useState("6");
   const [isCreatingNewEngineer, setIsCreatingNewEngineer] = useState(false);
   const [newEngineerForm, setNewEngineerForm] = useState({
     name: "",
@@ -940,42 +938,53 @@ export default function CycleDetailPage() {
   async function handleAddEngineerToCycle(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!addEngineerForm.engineerId) {
-      toast.error("Please select an engineer");
+    const selectedEngineerIds = Object.keys(selectedEngineersMap);
+    if (selectedEngineerIds.length === 0) {
+      toast.error("Please select at least one engineer");
       return;
     }
 
-    const weeks = parseFloat(addEngineerForm.availableWeeks);
-    if (isNaN(weeks) || weeks <= 0) {
-      toast.error("Please enter valid available weeks");
-      return;
+    // Validate all weeks values
+    for (const engineerId of selectedEngineerIds) {
+      const weeks = parseFloat(selectedEngineersMap[engineerId]);
+      if (isNaN(weeks) || weeks <= 0) {
+        const engineer = availableEngineers.find((e) => e.id === engineerId);
+        toast.error(`Please enter valid available weeks for ${engineer?.name || "engineer"}`);
+        return;
+      }
     }
 
     try {
-      const res = await fetch(
-        `/api/engineers/${addEngineerForm.engineerId}/capacities`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            cycleId,
-            availableWeeks: weeks,
-          }),
-        }
+      const results = await Promise.all(
+        selectedEngineerIds.map(async (engineerId) => {
+          const weeks = parseFloat(selectedEngineersMap[engineerId]);
+          const res = await fetch(`/api/engineers/${engineerId}/capacities`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              cycleId,
+              availableWeeks: weeks,
+            }),
+          });
+
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || "Failed to add engineer");
+          }
+
+          return res.json();
+        })
       );
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to add engineer");
-      }
-
-      toast.success("Engineer added to cycle");
+      const count = results.length;
+      toast.success(`${count} engineer${count > 1 ? "s" : ""} added to cycle`);
       setIsAddEngineerModalOpen(false);
-      setAddEngineerForm({ engineerId: "", availableWeeks: "6" });
+      setSelectedEngineersMap({});
+      setDefaultAvailableWeeks("6");
       fetchCycle();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to add engineer"
+        err instanceof Error ? err.message : "Failed to add engineers"
       );
     }
   }
@@ -988,7 +997,7 @@ export default function CycleDetailPage() {
       return;
     }
 
-    const weeks = parseFloat(addEngineerForm.availableWeeks);
+    const weeks = parseFloat(defaultAvailableWeeks);
     if (isNaN(weeks) || weeks <= 0) {
       toast.error("Please enter valid available weeks");
       return;
@@ -1034,7 +1043,8 @@ export default function CycleDetailPage() {
       setIsAddEngineerModalOpen(false);
       setIsCreatingNewEngineer(false);
       setNewEngineerForm({ name: "", email: "" });
-      setAddEngineerForm({ engineerId: "", availableWeeks: "6" });
+      setSelectedEngineersMap({});
+      setDefaultAvailableWeeks("6");
       fetchCycle();
       fetchEngineers();
     } catch (err) {
@@ -2200,13 +2210,8 @@ export default function CycleDetailPage() {
                 min="0.5"
                 className="input"
                 placeholder="e.g., 6"
-                value={addEngineerForm.availableWeeks}
-                onChange={(e) =>
-                  setAddEngineerForm({
-                    ...addEngineerForm,
-                    availableWeeks: e.target.value,
-                  })
-                }
+                value={defaultAvailableWeeks}
+                onChange={(e) => setDefaultAvailableWeeks(e.target.value)}
               />
               <p className="mt-1 text-sm text-gray-500">
                 How many weeks can this engineer work during this cycle?
@@ -2245,56 +2250,118 @@ export default function CycleDetailPage() {
         ) : (
           <form onSubmit={handleAddEngineerToCycle} className="space-y-5">
             <div>
-              <label htmlFor="engineer" className="label">
-                Engineer
-              </label>
-              <select
-                id="engineer"
-                className="input"
-                value={addEngineerForm.engineerId}
-                onChange={(e) =>
-                  setAddEngineerForm({
-                    ...addEngineerForm,
-                    engineerId: e.target.value,
-                  })
-                }
-              >
-                <option value="">Select an engineer...</option>
-                {availableEngineers.map((eng) => (
-                  <option key={eng.id} value={eng.id}>
-                    {eng.name} {eng.email ? `(${eng.email})` : ""}
-                  </option>
-                ))}
-              </select>
-              {availableEngineers.length === 0 && (
-                <p className="mt-2 text-sm text-gray-500">
+              <div className="flex items-center justify-between mb-2">
+                <label className="label mb-0">Select Engineers</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Default weeks:</span>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0.5"
+                    className="input w-20 py-1 px-2 text-sm"
+                    value={defaultAvailableWeeks}
+                    onChange={(e) => setDefaultAvailableWeeks(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              {availableEngineers.length === 0 ? (
+                <p className="text-sm text-gray-500 py-4 text-center bg-gray-800/50 rounded-lg">
                   All engineers are already in this cycle.
                 </p>
+              ) : (
+                <div className="max-h-64 overflow-y-auto space-y-2 border border-gray-700 rounded-lg p-3 bg-gray-800/30">
+                  {availableEngineers.map((eng) => {
+                    const isSelected = eng.id in selectedEngineersMap;
+                    return (
+                      <div
+                        key={eng.id}
+                        className={`flex items-center justify-between p-2.5 rounded-lg transition-colors cursor-pointer ${
+                          isSelected
+                            ? "bg-primary-900/40 border border-primary-700/50"
+                            : "bg-gray-700/30 hover:bg-gray-700/50 border border-transparent"
+                        }`}
+                        onClick={() => {
+                          if (isSelected) {
+                            const newMap = { ...selectedEngineersMap };
+                            delete newMap[eng.id];
+                            setSelectedEngineersMap(newMap);
+                          } else {
+                            setSelectedEngineersMap({
+                              ...selectedEngineersMap,
+                              [eng.id]: defaultAvailableWeeks,
+                            });
+                          }
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                              isSelected
+                                ? "bg-primary-500 border-primary-500"
+                                : "border-gray-500 hover:border-gray-400"
+                            }`}
+                          >
+                            {isSelected && (
+                              <svg
+                                className="w-3 h-3 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={3}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-200">
+                              {eng.name}
+                            </div>
+                            {eng.email && (
+                              <div className="text-xs text-gray-500">
+                                {eng.email}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <div
+                            className="flex items-center gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <span className="text-xs text-gray-400">weeks:</span>
+                            <input
+                              type="number"
+                              step="0.5"
+                              min="0.5"
+                              className="input w-16 py-1 px-2 text-sm"
+                              value={selectedEngineersMap[eng.id]}
+                              onChange={(e) =>
+                                setSelectedEngineersMap({
+                                  ...selectedEngineersMap,
+                                  [eng.id]: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
-            </div>
-
-            <div>
-              <label htmlFor="availableWeeks" className="label">
-                Available Weeks
-              </label>
-              <input
-                id="availableWeeks"
-                type="number"
-                step="0.5"
-                min="0.5"
-                className="input"
-                placeholder="e.g., 6"
-                value={addEngineerForm.availableWeeks}
-                onChange={(e) =>
-                  setAddEngineerForm({
-                    ...addEngineerForm,
-                    availableWeeks: e.target.value,
-                  })
-                }
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                How many weeks can this engineer work during this cycle?
-              </p>
+              
+              {Object.keys(selectedEngineersMap).length > 0 && (
+                <p className="mt-2 text-sm text-primary-400">
+                  {Object.keys(selectedEngineersMap).length} engineer
+                  {Object.keys(selectedEngineersMap).length > 1 ? "s" : ""} selected
+                </p>
+              )}
             </div>
 
             <div className="border-t border-gray-700 pt-4 mt-4">
@@ -2330,10 +2397,14 @@ export default function CycleDetailPage() {
               </button>
               <button
                 type="submit"
-                disabled={availableEngineers.length === 0 || !addEngineerForm.engineerId}
+                disabled={availableEngineers.length === 0 || Object.keys(selectedEngineersMap).length === 0}
                 className="btn-primary"
               >
-                Add to Cycle
+                Add {Object.keys(selectedEngineersMap).length > 0
+                  ? `${Object.keys(selectedEngineersMap).length} Engineer${
+                      Object.keys(selectedEngineersMap).length > 1 ? "s" : ""
+                    }`
+                  : "to Cycle"}
               </button>
             </div>
           </form>
