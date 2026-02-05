@@ -565,13 +565,6 @@ function EngineerAvatar({
     }
   }, [isOpen]);
 
-  const handleWeeksChange = (newWeeks: number) => {
-    if (newWeeks > 0) {
-      setWeeks(newWeeks.toString());
-      onUpdate(assignment.id, newWeeks);
-    }
-  };
-
   const initials = assignment.engineerName
     .split(" ")
     .map((n) => n[0])
@@ -632,46 +625,24 @@ function EngineerAvatar({
             </div>
 
             {/* Weeks Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">Weeks:</span>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleWeeksChange(parseFloat(weeks) - 0.5);
-                  }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  className="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center text-sm font-bold"
-                >
-                  −
-                </button>
-                <input
-                  type="number"
-                  step="0.5"
-                  min="0.5"
-                  value={weeks}
-                  onChange={(e) => {
-                    setWeeks(e.target.value);
-                    const val = parseFloat(e.target.value);
-                    if (!isNaN(val) && val > 0) {
-                      onUpdate(assignment.id, val);
-                    }
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  className="w-14 h-6 text-center text-sm bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-violet-500"
-                />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleWeeksChange(parseFloat(weeks) + 0.5);
-                  }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  className="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center text-sm font-bold"
-                >
-                  +
-                </button>
-              </div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Weeks</label>
+              <input
+                type="number"
+                step="0.5"
+                min="0.5"
+                value={weeks}
+                onChange={(e) => {
+                  setWeeks(e.target.value);
+                  const val = parseFloat(e.target.value);
+                  if (!isNaN(val) && val > 0) {
+                    onUpdate(assignment.id, val);
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="w-full h-7 text-center text-sm bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-violet-500"
+              />
             </div>
           </div>
         </div>,
