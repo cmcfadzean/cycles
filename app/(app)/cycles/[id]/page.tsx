@@ -2135,9 +2135,9 @@ export default function CycleDetailPage() {
         </div>
 
         {activeTab === "main" ? (
-          <div className="flex h-[calc(100vh-240px)] overflow-hidden rounded-xl border border-gray-700/50">
-            {/* Engineers Sidebar */}
-            <div className="w-72 min-w-72 bg-gray-900/50 border-r border-gray-700/50 flex flex-col">
+          <div className="flex h-[calc(100vh-240px)] rounded-xl border border-gray-700/50">
+            {/* Engineers Sidebar - Fixed, does not scroll */}
+            <div className="w-72 flex-shrink-0 bg-gray-900/50 border-r border-gray-700/50 flex flex-col overflow-hidden">
               {/* Summary Stats */}
               <div className="p-4 border-b border-gray-700/50 space-y-3">
                 <div className="flex items-center justify-between">
@@ -2228,9 +2228,9 @@ export default function CycleDetailPage() {
               </div>
             </div>
 
-            {/* Kanban Board */}
-            <div className="flex-1 overflow-x-auto">
-              <div className="flex gap-4 p-4 h-full min-w-max">
+            {/* Kanban Board - Horizontally scrollable */}
+            <div className="flex-1 overflow-x-auto overflow-y-hidden">
+              <div className="flex gap-4 p-4 h-full">
                 {/* Unassigned Column */}
                 <KanbanColumn
                   id="unassigned"
