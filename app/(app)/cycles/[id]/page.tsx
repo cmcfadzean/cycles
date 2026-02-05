@@ -2515,25 +2515,6 @@ export default function CycleDetailPage() {
                           All engineers fully allocated
                         </div>
                       )}
-                    {/* Show fully allocated engineers collapsed */}
-                    {cycle.engineers.filter((e) => e.remainingWeeks <= 0).length > 0 && (
-                      <div className="pt-3 border-t border-gray-700/50 mt-3">
-                        <div className="text-xs text-gray-500 mb-2">Fully Allocated</div>
-                        {cycle.engineers
-                          .filter((e) => e.remainingWeeks <= 0)
-                          .map((engineer) => (
-                            <div
-                              key={engineer.id}
-                              className="flex items-center gap-2 py-1.5 px-2 text-sm text-gray-500"
-                            >
-                              <div className="w-6 h-6 rounded bg-gray-700 flex items-center justify-center text-xs">
-                                {engineer.name.split(" ").map((n) => n[0]).join("")}
-                              </div>
-                              <span className="truncate">{engineer.name}</span>
-                            </div>
-                          ))}
-                      </div>
-                    )}
                   </>
                 )}
               </div>
