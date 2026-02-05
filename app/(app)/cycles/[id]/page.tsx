@@ -482,30 +482,31 @@ function RoleAvatar({
             transform: "translate(-50%, -100%)",
           }}
         >
-          <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-3 min-w-[160px]">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-3 min-w-[140px]">
             {/* Arrow */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-gray-800" />
             
-            {/* Role */}
-            <div className="text-xs text-gray-400 mb-1">{role}</div>
-            
-            {/* Name */}
-            <div className="font-medium text-gray-100 text-sm mb-3">
-              {name}
+            {/* Header with delete icon */}
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="text-xs text-gray-400 mb-0.5">{role}</div>
+                <div className="font-medium text-gray-100 text-sm">{name}</div>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove();
+                  setIsOpen(false);
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors -mt-1 -mr-1"
+                title="Remove from pitch"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-
-            {/* Remove Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-                setIsOpen(false);
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded py-1.5 transition-colors"
-            >
-              Remove from pitch
-            </button>
           </div>
         </div>,
         document.body
@@ -609,13 +610,29 @@ function EngineerAvatar({
             {/* Arrow */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-gray-800" />
             
-            {/* Name */}
-            <div className="font-medium text-gray-100 text-sm mb-3">
-              {assignment.engineerName}
+            {/* Header with name and delete icon */}
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <div className="font-medium text-gray-100 text-sm">
+                {assignment.engineerName}
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(assignment.id);
+                  setIsOpen(false);
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors -mt-1 -mr-1"
+                title="Remove from pitch"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
             {/* Weeks Selector */}
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2">
               <span className="text-xs text-gray-400">Weeks:</span>
               <div className="flex items-center gap-1">
                 <button
@@ -656,19 +673,6 @@ function EngineerAvatar({
                 </button>
               </div>
             </div>
-
-            {/* Remove Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(assignment.id);
-                setIsOpen(false);
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded py-1.5 transition-colors"
-            >
-              Remove from pitch
-            </button>
           </div>
         </div>,
         document.body
