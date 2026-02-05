@@ -499,7 +499,7 @@ function EngineerAvatar({
         onPointerDown={(e) => e.stopPropagation()}
         className={clsx(
           "w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all",
-          "bg-violet-600 text-white hover:bg-violet-500 hover:scale-110"
+          "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:scale-110"
         )}
         title={`${assignment.engineerName} - ${assignment.weeksAllocated}w`}
       >
