@@ -2135,7 +2135,7 @@ export default function CycleDetailPage() {
         </div>
 
         {activeTab === "main" ? (
-          <div className="flex w-full h-[calc(100vh-200px)] rounded-xl border border-gray-700/50">
+          <div className="flex w-full h-[calc(100vh-300px)] rounded-xl border border-gray-700/50">
             {/* Engineers Sidebar */}
             <div className="w-72 shrink-0 bg-gray-900/50 border-r border-gray-700/50 flex flex-col">
               {/* Summary Stats */}
