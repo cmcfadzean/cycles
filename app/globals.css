@@ -8,14 +8,9 @@
     --font-geist-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
   }
 
-  html {
-    overflow-x: hidden;
-  }
-
   body {
     @apply bg-gray-950 min-h-screen text-gray-100;
     font-family: var(--font-geist-sans);
-    overflow-x: hidden;
   }
 }
 
