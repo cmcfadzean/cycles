@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { CycleDetail, PitchStatus, PitchWithAssignments } from "@/lib/types";
+import { CycleDetail, PitchWithAssignments, Pod } from "@/lib/types";
 import clsx from "clsx";
 
 function formatDate(date: string | Date) {
@@ -14,63 +14,40 @@ function formatDate(date: string | Date) {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  // New statuses
-  BACKLOG: {
-    label: "Backlog",
-    className: "bg-gray-700 text-gray-300",
-  },
-  PLANNING: {
-    label: "Planning",
-    className: "bg-blue-500/25 text-blue-400",
-  },
-  READY_FOR_DEV: {
-    label: "Ready for Dev",
-    className: "bg-violet-500/25 text-violet-400",
-  },
-  COMPLETE: {
-    label: "Complete",
-    className: "bg-emerald-500/25 text-emerald-400",
-  },
-  CANCELED: {
-    label: "Canceled",
-    className: "bg-gray-700 text-gray-500 line-through",
-  },
-  // Legacy statuses (for existing data)
-  PLANNED: {
-    label: "Backlog",
-    className: "bg-gray-700 text-gray-300",
-  },
-  IN_PROGRESS: {
-    label: "Ready for Dev",
-    className: "bg-violet-500/25 text-violet-400",
-  },
-  DONE: {
-    label: "Complete",
-    className: "bg-emerald-500/25 text-emerald-400",
-  },
-  DROPPED: {
-    label: "Canceled",
-    className: "bg-gray-700 text-gray-500 line-through",
-  },
+  BACKLOG: { label: "Backlog", className: "bg-gray-700 text-gray-300" },
+  PLANNING: { label: "Planning", className: "bg-blue-500/25 text-blue-400" },
+  READY_FOR_DEV: { label: "Ready for Dev", className: "bg-violet-500/25 text-violet-400" },
+  COMPLETE: { label: "Complete", className: "bg-emerald-500/25 text-emerald-400" },
+  CANCELED: { label: "Canceled", className: "bg-gray-700 text-gray-500 line-through" },
+  PLANNED: { label: "Backlog", className: "bg-gray-700 text-gray-300" },
+  IN_PROGRESS: { label: "Ready for Dev", className: "bg-violet-500/25 text-violet-400" },
+  DONE: { label: "Complete", className: "bg-emerald-500/25 text-emerald-400" },
+  DROPPED: { label: "Canceled", className: "bg-gray-700 text-gray-500 line-through" },
 };
 
-const defaultStatus = {
-  label: "Unknown",
-  className: "bg-gray-700 text-gray-300",
-};
+const defaultStatus = { label: "Unknown", className: "bg-gray-700 text-gray-300" };
 
-function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
+// Compact pitch card for Kanban view
+function KanbanPitchCard({ pitch }: { pitch: PitchWithAssignments }) {
   const statusInfo = statusConfig[pitch.status] || defaultStatus;
-  const isFullyStaffed = pitch.remainingWeeks <= 0;
+  const filledPercentage = pitch.estimateWeeks > 0
+    ? (pitch.assignedWeeks / pitch.estimateWeeks) * 100
+    : 0;
+
+  const getStatusColor = () => {
+    if (pitch.remainingWeeks < 0) return "bg-red-500";
+    if (pitch.remainingWeeks === 0) return "bg-emerald-500";
+    return "bg-amber-500";
+  };
 
   return (
     <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1">
             {pitch.priority && (
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-gray-800 text-xs font-medium text-gray-400">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-700 text-xs font-semibold text-gray-300">
                 {pitch.priority}
               </span>
             )}
@@ -79,172 +56,129 @@ function PitchCard({ pitch }: { pitch: PitchWithAssignments }) {
                 href={pitch.pitchDocUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-gray-100 hover:text-white transition-colors truncate flex items-center gap-1"
+                className="font-semibold text-sm text-gray-100 hover:text-white transition-colors truncate flex items-center gap-1"
               >
                 {pitch.title}
-                <svg
-                  className="w-3 h-3 shrink-0 text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
+                <svg className="w-3 h-3 shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               </a>
             ) : (
-              <h3 className="font-medium text-gray-100 truncate">
-                {pitch.title}
-              </h3>
+              <h3 className="font-semibold text-sm text-gray-100 truncate">{pitch.title}</h3>
             )}
           </div>
-          <span
-            className={clsx(
-              "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-              statusInfo.className
-            )}
-          >
+          <span className={clsx("inline-flex items-center px-2 py-0.5 rounded text-xs font-medium", statusInfo.className)}>
             {statusInfo.label}
           </span>
         </div>
       </div>
 
-      {pitch.notes && (
-        <p className="text-sm text-gray-500 mb-3 line-clamp-2">
-          {pitch.notes}
-        </p>
-      )}
-
-      {/* Estimate */}
-      <div className="space-y-2 mb-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">Estimate</span>
-          <span className="font-medium text-gray-300">
-            {pitch.estimateWeeks.toFixed(1)}w
-          </span>
-        </div>
-
-        <div className="h-1.5 rounded-full overflow-hidden bg-gray-800">
+      {/* Progress */}
+      <div className="space-y-2 mb-4">
+        <div className="h-2 rounded-full overflow-hidden bg-gray-800">
           <div
-            className={clsx(
-              "h-full rounded-full transition-all duration-300",
-              pitch.remainingWeeks < 0
-                ? "bg-red-500"
-                : pitch.remainingWeeks === 0
-                  ? "bg-emerald-500"
-                  : "bg-amber-500"
-            )}
-            style={{
-              width: `${Math.min((pitch.assignedWeeks / pitch.estimateWeeks) * 100, 100)}%`,
-            }}
+            className={clsx("h-full rounded-full transition-all", getStatusColor())}
+            style={{ width: `${Math.min(filledPercentage, 100)}%` }}
           />
         </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">Assigned</span>
-          <span className="font-medium text-gray-300">
-            {pitch.assignedWeeks.toFixed(1)}w
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-gray-400">
+            {pitch.assignedWeeks.toFixed(1)}w / {Number(pitch.estimateWeeks).toFixed(1)}w
           </span>
+          {pitch.remainingWeeks > 0 && (
+            <span className="text-amber-400">{pitch.remainingWeeks.toFixed(1)}w left</span>
+          )}
+          {pitch.remainingWeeks === 0 && (
+            <span className="text-emerald-400">Staffed</span>
+          )}
+          {pitch.remainingWeeks < 0 && (
+            <span className="text-red-400">Over by {Math.abs(pitch.remainingWeeks).toFixed(1)}w</span>
+          )}
         </div>
       </div>
 
-      {/* Status indicator */}
-      <div
-        className={clsx(
-          "text-xs text-center font-semibold rounded py-1.5 mb-3",
-          isFullyStaffed
-            ? pitch.remainingWeeks < 0
-              ? "text-red-400 bg-red-500/20"
-              : "text-emerald-400 bg-emerald-500/20"
-            : "text-amber-400 bg-amber-500/20"
-        )}
-      >
-        {isFullyStaffed
-          ? pitch.remainingWeeks < 0
-            ? `Over by ${Math.abs(pitch.remainingWeeks).toFixed(1)}w`
-            : "Fully staffed"
-          : `${pitch.remainingWeeks.toFixed(1)}w unassigned`}
-      </div>
-
-      {/* Engineers Section */}
-      <div className="space-y-2">
-        <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Engineers
-        </div>
-        {pitch.assignments.length > 0 ? (
-          <div className="space-y-1.5">
-            {pitch.assignments.map((assignment) => (
-              <div
-                key={assignment.id}
-                className="flex items-center justify-between bg-gray-800/50 rounded px-2.5 py-1.5"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded bg-gray-700 flex items-center justify-center text-gray-400 text-xs font-medium">
-                    {assignment.engineerName
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </div>
-                  <span className="text-sm text-gray-300">
-                    {assignment.engineerName}
-                  </span>
-                </div>
-                <span className="text-sm text-gray-400">
-                  {assignment.weeksAllocated.toFixed(1)}w
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 italic">No engineers assigned</p>
-        )}
-      </div>
-
-      {/* Product Support Section */}
-      <div className="space-y-2 mt-3">
-        <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Product Support
-        </div>
-        {pitch.productManagerName ? (
-          <div className="flex items-center gap-2 bg-gray-800/50 rounded px-2.5 py-1.5">
-            <div className="w-5 h-5 rounded bg-violet-600/30 flex items-center justify-center text-violet-400 text-xs font-medium">
-              {pitch.productManagerName
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()
-                .slice(0, 2)}
+      {/* Team - Stacked with full names */}
+      <div className="space-y-1.5">
+        {/* Product Manager */}
+        {pitch.productManagerName && (
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-medium shrink-0">
+              {pitch.productManagerName.split(" ").map((n) => n[0]).join("")}
             </div>
-            <span className="text-sm text-gray-300">{pitch.productManagerName}</span>
+            <span className="text-sm text-gray-300 truncate">{pitch.productManagerName}</span>
+            <span className="text-xs text-violet-400 shrink-0">PM</span>
           </div>
-        ) : (
-          <p className="text-sm text-gray-500 italic">No product support</p>
+        )}
+
+        {/* Product Designer */}
+        {pitch.productDesignerName && (
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-pink-600 flex items-center justify-center text-white text-xs font-medium shrink-0">
+              {pitch.productDesignerName.split(" ").map((n) => n[0]).join("")}
+            </div>
+            <span className="text-sm text-gray-300 truncate">{pitch.productDesignerName}</span>
+            <span className="text-xs text-pink-400 shrink-0">Design</span>
+          </div>
+        )}
+
+        {/* Engineers */}
+        {pitch.assignments.map((assignment) => (
+          <div key={assignment.id} className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 text-xs font-medium shrink-0">
+              {assignment.engineerName.split(" ").map((n) => n[0]).join("")}
+            </div>
+            <span className="text-sm text-gray-300 truncate">{assignment.engineerName}</span>
+            <span className="text-xs text-gray-500 shrink-0">{assignment.weeksAllocated.toFixed(1)}w</span>
+          </div>
+        ))}
+
+        {/* Empty state */}
+        {!pitch.productManagerName && !pitch.productDesignerName && pitch.assignments.length === 0 && (
+          <p className="text-xs text-gray-500 italic">No team assigned</p>
         )}
       </div>
+    </div>
+  );
+}
 
-      {/* Design Support Section */}
-      <div className="space-y-2 mt-3">
-        <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Design Support
+// Kanban Column
+function KanbanColumn({
+  title,
+  subtitle,
+  pitches,
+}: {
+  title: string;
+  subtitle?: string;
+  pitches: PitchWithAssignments[];
+}) {
+  const totalWeeks = pitches.reduce((sum, p) => sum + Number(p.estimateWeeks), 0);
+  const assignedWeeks = pitches.reduce((sum, p) => sum + p.assignedWeeks, 0);
+
+  return (
+    <div className="flex flex-col w-80 min-w-80 bg-gray-800/30 rounded-xl border border-gray-700/50">
+      {/* Column Header */}
+      <div className="p-4 border-b border-gray-700/50">
+        <h3 className="font-semibold text-gray-100 mb-1">{title}</h3>
+        {subtitle && (
+          <div className="text-xs text-violet-400 mb-2">{subtitle}</div>
+        )}
+        <div className="flex items-center gap-3 text-xs text-gray-400">
+          <span>{pitches.length} pitch{pitches.length !== 1 ? "es" : ""}</span>
+          <span>•</span>
+          <span>{assignedWeeks.toFixed(1)}w / {totalWeeks.toFixed(1)}w</span>
         </div>
-        {pitch.productDesignerName ? (
-          <div className="flex items-center gap-2 bg-gray-800/50 rounded px-2.5 py-1.5">
-            <div className="w-5 h-5 rounded bg-pink-600/30 flex items-center justify-center text-pink-400 text-xs font-medium">
-              {pitch.productDesignerName
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()
-                .slice(0, 2)}
-            </div>
-            <span className="text-sm text-gray-300">{pitch.productDesignerName}</span>
+      </div>
+
+      {/* Pitches */}
+      <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
+        {pitches.map((pitch) => (
+          <KanbanPitchCard key={pitch.id} pitch={pitch} />
+        ))}
+        
+        {pitches.length === 0 && (
+          <div className="text-center py-8 text-gray-500 text-sm">
+            <p>No pitches</p>
           </div>
-        ) : (
-          <p className="text-sm text-gray-500 italic">No design support</p>
         )}
       </div>
     </div>
@@ -261,7 +195,6 @@ export default function ShareCyclePage() {
 
   const fetchCycle = useCallback(async () => {
     try {
-      // Use the public share endpoint (no auth required)
       const res = await fetch(`/api/cycles/${cycleId}/share`);
       if (!res.ok) {
         if (res.status === 404) {
@@ -297,18 +230,8 @@ export default function ShareCyclePage() {
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-gray-800 flex items-center justify-center">
-            <svg
-              className="w-6 h-6 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
+            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
           <p className="text-gray-400">{error || "Cycle not found"}</p>
@@ -317,7 +240,7 @@ export default function ShareCyclePage() {
     );
   }
 
-  // Sort pitches by priority (nulls last)
+  // Sort pitches by priority
   const sortedPitches = [...cycle.pitches].sort((a, b) => {
     if (a.priority === null && b.priority === null) return 0;
     if (a.priority === null) return 1;
@@ -325,25 +248,17 @@ export default function ShareCyclePage() {
     return a.priority - b.priority;
   });
 
+  const unassignedPitches = sortedPitches.filter((p) => !p.podId);
+
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100">
+    <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col">
       {/* Header */}
-      <header className="border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-6 py-6">
+      <header className="border-b border-gray-800 shrink-0">
+        <div className="px-6 py-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-gray-900"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                />
+              <svg className="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
             <div>
@@ -359,68 +274,71 @@ export default function ShareCyclePage() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-6">
-        {sortedPitches.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-gray-800 flex items-center justify-center">
-              <svg
-                className="w-6 h-6 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
+      {/* Summary Stats */}
+      <div className="px-6 py-4 border-b border-gray-800 shrink-0">
+        <div className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">Available:</span>
+            <span className="font-semibold text-gray-100">{cycle.totalAvailableWeeks.toFixed(1)}w</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">Required:</span>
+            <span className="font-semibold text-gray-100">{cycle.totalRequiredWeeks.toFixed(1)}w</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">Balance:</span>
+            <span className={clsx(
+              "font-semibold",
+              cycle.surplusOrDeficit >= 0 ? "text-emerald-400" : "text-red-400"
+            )}>
+              {cycle.surplusOrDeficit >= 0 ? "+" : ""}{cycle.surplusOrDeficit.toFixed(1)}w
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">Pitches:</span>
+            <span className="font-semibold text-gray-100">{cycle.pitches.length}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">Engineers:</span>
+            <span className="font-semibold text-gray-100">{cycle.engineers.length}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Kanban Board */}
+      <main className="flex-1 overflow-hidden p-6">
+        {cycle.pitches.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-gray-800 flex items-center justify-center">
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <p className="text-gray-500">No pitches in this cycle yet</p>
             </div>
-            <p className="text-gray-500">No pitches in this cycle yet</p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {/* Pods with their pitches */}
-            {cycle.pods.map((pod) => {
-              const podPitches = sortedPitches.filter((p) => p.podId === pod.id);
-              if (podPitches.length === 0) return null;
+          <div className="h-full overflow-x-auto scrollbar-thin">
+            <div className="flex gap-4 h-full pb-4">
+              {/* Unassigned Column - only show if there are unassigned pitches */}
+              {unassignedPitches.length > 0 && (
+                <KanbanColumn
+                  title="Unassigned"
+                  pitches={unassignedPitches}
+                />
+              )}
 
-              return (
-                <div key={pod.id} className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-sm font-medium text-gray-300">{pod.name}</h3>
-                    {pod.leaderName && (
-                      <span className="text-xs bg-violet-900/30 text-violet-300 px-2 py-0.5 rounded-full border border-violet-700/50">
-                        Lead: {pod.leaderName}
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pl-4 border-l border-gray-800">
-                    {podPitches.map((pitch) => (
-                      <PitchCard key={pitch.id} pitch={pitch} />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Ungrouped pitches */}
-            {sortedPitches.filter((p) => !p.podId).length > 0 && (
-              <div className="space-y-4">
-                {cycle.pods.length > 0 && (
-                  <h3 className="text-sm font-medium text-gray-500">Ungrouped</h3>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {sortedPitches
-                    .filter((p) => !p.podId)
-                    .map((pitch) => (
-                      <PitchCard key={pitch.id} pitch={pitch} />
-                    ))}
-                </div>
-              </div>
-            )}
+              {/* Pod Columns */}
+              {cycle.pods.map((pod) => (
+                <KanbanColumn
+                  key={pod.id}
+                  title={pod.name}
+                  subtitle={pod.leaderName ? `Lead: ${pod.leaderName}` : undefined}
+                  pitches={sortedPitches.filter((p) => p.podId === pod.id)}
+                />
+              ))}
+            </div>
           </div>
         )}
       </main>
