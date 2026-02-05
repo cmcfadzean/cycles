@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
 import {
   DndContext,
@@ -442,12 +443,30 @@ function EngineerAvatar({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [weeks, setWeeks] = useState(assignment.weeksAllocated.toString());
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Update position when opening
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.top - 8, // Position above the button
+        left: rect.left + rect.width / 2,
+      });
+    }
+  }, [isOpen]);
 
   // Close popover when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -470,8 +489,9 @@ function EngineerAvatar({
     .join("");
 
   return (
-    <div className="relative" ref={popoverRef}>
+    <>
       <button
+        ref={buttonRef}
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
@@ -486,9 +506,17 @@ function EngineerAvatar({
         {initials}
       </button>
 
-      {/* Popover */}
-      {isOpen && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">
+      {/* Popover - rendered via portal to escape overflow */}
+      {isOpen && createPortal(
+        <div
+          ref={popoverRef}
+          className="fixed z-[9999]"
+          style={{
+            top: position.top,
+            left: position.left,
+            transform: "translate(-50%, -100%)",
+          }}
+        >
           <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-3 min-w-[180px]">
             {/* Arrow */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-gray-800" />
@@ -554,9 +582,10 @@ function EngineerAvatar({
               Remove from pitch
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
 
