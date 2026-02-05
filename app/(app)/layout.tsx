@@ -277,9 +277,16 @@ export default function AppLayout({
 
       {/* Main content */}
       <main className="flex-1 ml-16">
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          {children}
-        </div>
+        {/* Full-width layout for cycle detail pages (Kanban board) */}
+        {/^\/cycles\/[^/]+$/.test(pathname) ? (
+          <div className="h-screen">
+            {children}
+          </div>
+        ) : (
+          <div className="max-w-6xl mx-auto px-6 py-8">
+            {children}
+          </div>
+        )}
       </main>
 
       {/* Create Cycle Modal - Available globally */}
