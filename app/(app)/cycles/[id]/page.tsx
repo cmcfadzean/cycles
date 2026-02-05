@@ -1193,7 +1193,9 @@ export default function CycleDetailPage() {
   const [deleteCycleConfirmation, setDeleteCycleConfirmation] = useState("");
   const [isCreatePodModalOpen, setIsCreatePodModalOpen] = useState(false);
   const [isEditPodModalOpen, setIsEditPodModalOpen] = useState(false);
+  const [isDeletePodModalOpen, setIsDeletePodModalOpen] = useState(false);
   const [editingPod, setEditingPod] = useState<Pod | null>(null);
+  const [podToDelete, setPodToDelete] = useState<Pod | null>(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [pendingAssignment, setPendingAssignment] = useState<{
     engineer: EngineerWithCapacity;
@@ -2195,13 +2197,16 @@ export default function CycleDetailPage() {
     }
   }
 
-  async function handleDeletePod(podId: string) {
-    if (!confirm("Are you sure you want to delete this pod? Pitches will be ungrouped.")) {
-      return;
-    }
+  function handleOpenDeletePod(pod: Pod) {
+    setPodToDelete(pod);
+    setIsDeletePodModalOpen(true);
+  }
+
+  async function handleDeletePod() {
+    if (!podToDelete) return;
 
     try {
-      const res = await fetch(`/api/pods/${podId}`, {
+      const res = await fetch(`/api/pods/${podToDelete.id}`, {
         method: "DELETE",
       });
 
@@ -2211,6 +2216,8 @@ export default function CycleDetailPage() {
       }
 
       toast.success("Pod deleted");
+      setIsDeletePodModalOpen(false);
+      setPodToDelete(null);
       fetchCycle();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete pod");
@@ -2598,7 +2605,7 @@ export default function CycleDetailPage() {
                         activePitchId={activePitch?.id || null}
                         onAddPitch={() => setIsAddPitchModalOpen(true)}
                         onEditPod={() => handleOpenEditPod(pod)}
-                        onDeletePod={() => handleDeletePod(pod.id)}
+                        onDeletePod={() => handleOpenDeletePod(pod)}
                         isAdmin={isAdmin}
                         isOver={dropTargetColumnId === `column-${pod.id}`}
                       />
@@ -3607,6 +3614,46 @@ export default function CycleDetailPage() {
               className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
             >
               Delete Engineer
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Pod Confirmation Modal */}
+      <Modal
+        isOpen={isDeletePodModalOpen}
+        onClose={() => {
+          setIsDeletePodModalOpen(false);
+          setPodToDelete(null);
+        }}
+        title="Delete Pod"
+      >
+        <div className="space-y-5">
+          <p className="text-gray-400">
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-gray-100">
+              {podToDelete?.name}
+            </span>
+            ? Pitches in this pod will be moved to unassigned.
+          </p>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsDeletePodModalOpen(false);
+                setPodToDelete(null);
+              }}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeletePod}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+            >
+              Delete Pod
             </button>
           </div>
         </div>
