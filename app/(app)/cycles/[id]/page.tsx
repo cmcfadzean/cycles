@@ -425,6 +425,141 @@ function DroppablePitchCard({
   );
 }
 
+// Engineer Avatar with Popover for editing weeks
+function EngineerAvatar({
+  assignment,
+  onUpdate,
+  onDelete,
+}: {
+  assignment: {
+    id: string;
+    engineerId: string;
+    engineerName: string;
+    weeksAllocated: number;
+  };
+  onUpdate: (id: string, weeks: number) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [weeks, setWeeks] = useState(assignment.weeksAllocated.toString());
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Close popover when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isOpen]);
+
+  const handleWeeksChange = (newWeeks: number) => {
+    if (newWeeks > 0) {
+      setWeeks(newWeeks.toString());
+      onUpdate(assignment.id, newWeeks);
+    }
+  };
+
+  const initials = assignment.engineerName
+    .split(" ")
+    .map((n) => n[0])
+    .join("");
+
+  return (
+    <div className="relative" ref={popoverRef}>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        className={clsx(
+          "w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all",
+          "bg-violet-600 text-white hover:bg-violet-500 hover:scale-110"
+        )}
+        title={`${assignment.engineerName} - ${assignment.weeksAllocated}w`}
+      >
+        {initials}
+      </button>
+
+      {/* Popover */}
+      {isOpen && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-3 min-w-[180px]">
+            {/* Arrow */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-gray-800" />
+            
+            {/* Name */}
+            <div className="font-medium text-gray-100 text-sm mb-3">
+              {assignment.engineerName}
+            </div>
+
+            {/* Weeks Selector */}
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs text-gray-400">Weeks:</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleWeeksChange(parseFloat(weeks) - 0.5);
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center text-sm font-bold"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0.5"
+                  value={weeks}
+                  onChange={(e) => {
+                    setWeeks(e.target.value);
+                    const val = parseFloat(e.target.value);
+                    if (!isNaN(val) && val > 0) {
+                      onUpdate(assignment.id, val);
+                    }
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="w-14 h-6 text-center text-sm bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-violet-500"
+                />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleWeeksChange(parseFloat(weeks) + 0.5);
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 flex items-center justify-center text-sm font-bold"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Remove Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(assignment.id);
+                setIsOpen(false);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded py-1.5 transition-colors"
+            >
+              Remove from pitch
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Kanban Pitch Card - Draggable and Droppable (compact version for Kanban columns)
 function KanbanPitchCard({
   pitch,
@@ -567,30 +702,12 @@ function KanbanPitchCard({
       {pitch.assignments.length > 0 ? (
         <div className="flex flex-wrap gap-1">
           {pitch.assignments.map((assignment) => (
-            <div
+            <EngineerAvatar
               key={assignment.id}
-              className="flex items-center gap-1.5 bg-gray-700/50 rounded px-2 py-1 text-xs group"
-            >
-              <div className="w-4 h-4 rounded bg-gray-600 flex items-center justify-center text-gray-300 text-[10px] font-medium">
-                {assignment.engineerName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </div>
-              <span className="text-gray-300">{assignment.weeksAllocated.toFixed(1)}w</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAssignmentDelete(assignment.id);
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-400 transition-all"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+              assignment={assignment}
+              onUpdate={onAssignmentUpdate}
+              onDelete={onAssignmentDelete}
+            />
           ))}
         </div>
       ) : (
