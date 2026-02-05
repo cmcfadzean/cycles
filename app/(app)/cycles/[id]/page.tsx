@@ -2231,22 +2231,24 @@ export default function CycleDetailPage() {
             {/* Pods - scrolls horizontally */}
             <div className="flex-1 min-w-0 overflow-x-auto">
               <div className="flex gap-4 p-4">
-                {/* Unassigned Column */}
-                <KanbanColumn
-                  id="unassigned"
-                  title="Unassigned"
-                  pitches={cycle.pitches.filter((p) => !p.podId)}
-                  cycleId={cycleId}
-                  onAssignmentDelete={handleAssignmentDelete}
-                  onAssignmentUpdate={handleAssignmentUpdate}
-                  onEditPitch={handleOpenEditPitch}
-                  onPitchStatusChange={handlePitchStatusChange}
-                  onWeeksUpdate={fetchCycle}
-                  dropTargetPitchId={dropTargetPitchId}
-                  activePitchId={activePitch?.id || null}
-                  onAddPitch={() => setIsAddPitchModalOpen(true)}
-                  isOver={dropTargetColumnId === "column-unassigned"}
-                />
+                {/* Unassigned Column - only show if there are unassigned pitches */}
+                {cycle.pitches.filter((p) => !p.podId).length > 0 && (
+                  <KanbanColumn
+                    id="unassigned"
+                    title="Unassigned"
+                    pitches={cycle.pitches.filter((p) => !p.podId)}
+                    cycleId={cycleId}
+                    onAssignmentDelete={handleAssignmentDelete}
+                    onAssignmentUpdate={handleAssignmentUpdate}
+                    onEditPitch={handleOpenEditPitch}
+                    onPitchStatusChange={handlePitchStatusChange}
+                    onWeeksUpdate={fetchCycle}
+                    dropTargetPitchId={dropTargetPitchId}
+                    activePitchId={activePitch?.id || null}
+                    onAddPitch={() => setIsAddPitchModalOpen(true)}
+                    isOver={dropTargetColumnId === "column-unassigned"}
+                  />
+                )}
 
                 {/* Pod Columns */}
                 {cycle.pods.map((pod) => (
