@@ -999,7 +999,7 @@ function KanbanColumn({
       </div>
 
       {/* Pitches */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
         {pitches.map((pitch) => (
           <KanbanPitchCard
             key={pitch.id}
@@ -2524,7 +2524,7 @@ export default function CycleDetailPage() {
               </div>
 
               {/* Engineers List */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-2">
                 {cycle.engineers.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-gray-500 text-sm">No engineers yet</p>
@@ -2560,7 +2560,7 @@ export default function CycleDetailPage() {
             </div>
 
             {/* Pods - scrolls horizontally */}
-            <div className="flex-1 min-w-0 overflow-x-auto">
+            <div className="flex-1 min-w-0 overflow-x-auto scrollbar-thin">
               <div className="flex gap-4 p-4">
                 {/* Unassigned Column - only show if there are unassigned pitches */}
                 {cycle.pitches.filter((p) => !p.podId).length > 0 && (
