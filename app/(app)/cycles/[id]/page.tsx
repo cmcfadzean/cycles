@@ -2135,7 +2135,7 @@ export default function CycleDetailPage() {
         </div>
 
         {activeTab === "main" ? (
-          <div className="flex w-full rounded-xl border border-gray-700/50">
+          <div className="flex w-full h-[calc(100vh-200px)] rounded-xl border border-gray-700/50">
             {/* Engineers Sidebar */}
             <div className="w-72 shrink-0 bg-gray-900/50 border-r border-gray-700/50 flex flex-col">
               {/* Summary Stats */}
@@ -2174,7 +2174,7 @@ export default function CycleDetailPage() {
               </div>
 
               {/* Engineers List */}
-              <div className="flex-1 p-3 space-y-2">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {cycle.engineers.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-gray-500 text-sm">No engineers yet</p>
