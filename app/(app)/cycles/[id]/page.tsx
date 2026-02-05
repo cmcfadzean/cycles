@@ -2003,7 +2003,7 @@ export default function CycleDetailPage() {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="space-y-6 overflow-x-hidden">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
@@ -2229,8 +2229,8 @@ export default function CycleDetailPage() {
             </div>
 
             {/* Kanban Board - Horizontally scrollable */}
-            <div className="flex-1 overflow-x-auto overflow-y-hidden">
-              <div className="flex gap-4 p-4 h-full">
+            <div className="flex-1 min-w-0 overflow-x-auto overflow-y-hidden">
+              <div className="inline-flex gap-4 p-4 h-full">
                 {/* Unassigned Column */}
                 <KanbanColumn
                   id="unassigned"
