@@ -279,7 +279,7 @@ export default function AppLayout({
       <main className="flex-1 ml-16">
         {/* Full-width layout for cycle detail pages (Kanban board) */}
         {/^\/cycles\/[^/]+$/.test(pathname) ? (
-          <div className="h-screen">
+          <div className="h-screen p-6">
             {children}
           </div>
         ) : (
