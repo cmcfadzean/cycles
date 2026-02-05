@@ -49,6 +49,10 @@ export async function PATCH(
       updateData.leaderId = body.leaderId || null;
     }
 
+    if (body.sortOrder !== undefined) {
+      updateData.sortOrder = body.sortOrder;
+    }
+
     const pod = await prisma.pod.update({
       where: { id },
       data: updateData,

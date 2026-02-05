@@ -49,6 +49,7 @@ export async function GET(
           include: {
             leader: true,
           },
+          orderBy: { sortOrder: "asc" },
         },
         assignments: true,
       },

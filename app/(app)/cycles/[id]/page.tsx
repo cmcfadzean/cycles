@@ -8,12 +8,21 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  DragOverEvent,
   useDraggable,
   useDroppable,
   PointerSensor,
   useSensor,
   useSensors,
+  closestCenter,
 } from "@dnd-kit/core";
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Modal } from "@/components/Modal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { InlineWeeksEditor } from "@/components/InlineWeeksEditor";
@@ -856,6 +865,44 @@ function PitchDragOverlay({
   );
 }
 
+// Sortable Kanban Column wrapper for pods
+function SortableKanbanColumn({
+  pod,
+  children,
+}: {
+  pod: Pod;
+  children: React.ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: `sortable-pod-${pod.id}`,
+    data: { pod },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <div 
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing"
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 // Kanban Column
 function KanbanColumn({
   id,
@@ -1353,6 +1400,26 @@ export default function CycleDetailPage() {
 
     if (!over) return;
 
+    // Handle pod reordering
+    if (active.id.toString().startsWith("sortable-pod-") && over.id.toString().startsWith("sortable-pod-")) {
+      const activeId = active.id.toString().replace("sortable-pod-", "");
+      const overId = over.id.toString().replace("sortable-pod-", "");
+      
+      if (activeId !== overId && cycle) {
+        const oldIndex = cycle.pods.findIndex((p) => p.id === activeId);
+        const newIndex = cycle.pods.findIndex((p) => p.id === overId);
+        
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newPods = arrayMove(cycle.pods, oldIndex, newIndex);
+          // Optimistically update the UI
+          setCycle({ ...cycle, pods: newPods });
+          // Save to server
+          handlePodReorder(newPods.map((p) => p.id));
+        }
+      }
+      return;
+    }
+
     // Handle engineer dropped on pitch
     if (wasEngineerDrag && over.id.toString().startsWith("pitch-")) {
       const engineer = active.data.current?.engineer as EngineerWithCapacity;
@@ -1405,6 +1472,24 @@ export default function CycleDetailPage() {
       if (pitch.podId !== newPodId) {
         handlePitchMove(pitch.id, newPodId);
       }
+    }
+  }
+
+  async function handlePodReorder(podIds: string[]) {
+    try {
+      const res = await fetch("/api/pods", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ podIds, cycleId }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to reorder pods");
+      }
+    } catch (err) {
+      toast.error("Failed to save pod order");
+      // Refetch to revert optimistic update
+      fetchCycle();
     }
   }
 
@@ -2490,30 +2575,36 @@ export default function CycleDetailPage() {
                   />
                 )}
 
-                {/* Pod Columns */}
-                {cycle.pods.map((pod) => (
-                  <KanbanColumn
-                    key={pod.id}
-                    id={pod.id}
-                    title={pod.name}
-                    subtitle={pod.leaderName ? `Lead: ${pod.leaderName}` : undefined}
-                    pitches={cycle.pitches.filter((p) => p.podId === pod.id)}
-                    cycleId={cycleId}
-                    onAssignmentDelete={handleAssignmentDelete}
-                    onAssignmentUpdate={handleAssignmentUpdate}
-                    onEditPitch={handleOpenEditPitch}
-                    onPitchStatusChange={handlePitchStatusChange}
-                    onWeeksUpdate={fetchCycle}
-                    onPitchUpdate={handlePitchUpdate}
-                    dropTargetPitchId={dropTargetPitchId}
-                    activePitchId={activePitch?.id || null}
-                    onAddPitch={() => setIsAddPitchModalOpen(true)}
-                    onEditPod={() => handleOpenEditPod(pod)}
-                    onDeletePod={() => handleDeletePod(pod.id)}
-                    isAdmin={isAdmin}
-                    isOver={dropTargetColumnId === `column-${pod.id}`}
-                  />
-                ))}
+                {/* Pod Columns - Sortable */}
+                <SortableContext
+                  items={cycle.pods.map((p) => `sortable-pod-${p.id}`)}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  {cycle.pods.map((pod) => (
+                    <SortableKanbanColumn key={pod.id} pod={pod}>
+                      <KanbanColumn
+                        id={pod.id}
+                        title={pod.name}
+                        subtitle={pod.leaderName ? `Lead: ${pod.leaderName}` : undefined}
+                        pitches={cycle.pitches.filter((p) => p.podId === pod.id)}
+                        cycleId={cycleId}
+                        onAssignmentDelete={handleAssignmentDelete}
+                        onAssignmentUpdate={handleAssignmentUpdate}
+                        onEditPitch={handleOpenEditPitch}
+                        onPitchStatusChange={handlePitchStatusChange}
+                        onWeeksUpdate={fetchCycle}
+                        onPitchUpdate={handlePitchUpdate}
+                        dropTargetPitchId={dropTargetPitchId}
+                        activePitchId={activePitch?.id || null}
+                        onAddPitch={() => setIsAddPitchModalOpen(true)}
+                        onEditPod={() => handleOpenEditPod(pod)}
+                        onDeletePod={() => handleDeletePod(pod.id)}
+                        isAdmin={isAdmin}
+                        isOver={dropTargetColumnId === `column-${pod.id}`}
+                      />
+                    </SortableKanbanColumn>
+                  ))}
+                </SortableContext>
 
                 {/* Add Pod Button */}
                 <div className="w-80 min-w-80">
