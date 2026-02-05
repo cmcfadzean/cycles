@@ -625,8 +625,8 @@ function EngineerAvatar({
             </div>
 
             {/* Weeks Selector */}
-            <div>
-              <label className="text-xs text-gray-400 block mb-1">Weeks</label>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Weeks:</span>
               <input
                 type="number"
                 step="0.5"
@@ -641,7 +641,7 @@ function EngineerAvatar({
                 }}
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
-                className="w-full h-7 text-center text-sm bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-violet-500"
+                className="w-16 h-7 text-center text-sm bg-gray-700 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-violet-500"
               />
             </div>
           </div>
