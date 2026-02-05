@@ -276,10 +276,16 @@ export default function AppLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-16">
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          {children}
-        </div>
+      <main className="flex-1 ml-16 overflow-hidden">
+        {/^\/cycles\/[^/]+$/.test(pathname) ? (
+          <div className="w-full h-full p-6">
+            {children}
+          </div>
+        ) : (
+          <div className="max-w-6xl mx-auto px-6 py-8">
+            {children}
+          </div>
+        )}
       </main>
 
       {/* Create Cycle Modal - Available globally */}
