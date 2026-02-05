@@ -426,6 +426,122 @@ function DroppablePitchCard({
   );
 }
 
+// Role Avatar (for PM/Designer) with Popover for removing
+function RoleAvatar({
+  name,
+  role,
+  color,
+  onRemove,
+}: {
+  name: string;
+  role: "Product Manager" | "Product Designer";
+  color: "violet" | "pink";
+  onRemove: () => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Update position when opening
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.top - 8,
+        left: rect.left + rect.width / 2,
+      });
+    }
+  }, [isOpen]);
+
+  // Close popover when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isOpen]);
+
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("");
+
+  const colorClasses = color === "violet"
+    ? "bg-violet-600 text-white hover:bg-violet-500"
+    : "bg-pink-600 text-white hover:bg-pink-500";
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        className={clsx(
+          "w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all hover:scale-110",
+          colorClasses
+        )}
+        title={`${role}: ${name}`}
+      >
+        {initials}
+      </button>
+
+      {/* Popover - rendered via portal to escape overflow */}
+      {isOpen && createPortal(
+        <div
+          ref={popoverRef}
+          className="fixed z-[9999]"
+          style={{
+            top: position.top,
+            left: position.left,
+            transform: "translate(-50%, -100%)",
+          }}
+        >
+          <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-3 min-w-[160px]">
+            {/* Arrow */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-gray-800" />
+            
+            {/* Role */}
+            <div className="text-xs text-gray-400 mb-1">{role}</div>
+            
+            {/* Name */}
+            <div className="font-medium text-gray-100 text-sm mb-3">
+              {name}
+            </div>
+
+            {/* Remove Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+                setIsOpen(false);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded py-1.5 transition-colors"
+            >
+              Remove from pitch
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
 // Engineer Avatar with Popover for editing weeks
 function EngineerAvatar({
   assignment,
@@ -598,6 +714,7 @@ function KanbanPitchCard({
   onEdit,
   onStatusChange,
   onWeeksUpdate,
+  onPitchUpdate,
   isOver,
   isDragging,
 }: {
@@ -608,6 +725,7 @@ function KanbanPitchCard({
   onEdit: (pitch: PitchWithAssignments) => void;
   onStatusChange: (pitchId: string, newStatus: PitchStatus) => void;
   onWeeksUpdate: () => void;
+  onPitchUpdate: (pitchId: string, data: { productManagerId?: string | null; productDesignerId?: string | null }) => void;
   isOver?: boolean;
   isDragging?: boolean;
 }) {
@@ -727,23 +845,45 @@ function KanbanPitchCard({
         </div>
       </div>
 
-      {/* Assigned Engineers */}
-      {pitch.assignments.length > 0 ? (
-        <div className="flex flex-wrap gap-1">
-          {pitch.assignments.map((assignment) => (
-            <EngineerAvatar
-              key={assignment.id}
-              assignment={assignment}
-              onUpdate={onAssignmentUpdate}
-              onDelete={onAssignmentDelete}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-2 border border-dashed border-gray-600 rounded text-xs text-gray-500">
-          Drop engineer here
-        </div>
-      )}
+      {/* Team Avatars - PM, Designer, Engineers */}
+      <div className="flex flex-wrap gap-1 items-center">
+        {/* Product Manager */}
+        {pitch.productManagerName && (
+          <RoleAvatar
+            name={pitch.productManagerName}
+            role="Product Manager"
+            color="violet"
+            onRemove={() => onPitchUpdate(pitch.id, { productManagerId: null })}
+          />
+        )}
+        
+        {/* Product Designer */}
+        {pitch.productDesignerName && (
+          <RoleAvatar
+            name={pitch.productDesignerName}
+            role="Product Designer"
+            color="pink"
+            onRemove={() => onPitchUpdate(pitch.id, { productDesignerId: null })}
+          />
+        )}
+        
+        {/* Engineers */}
+        {pitch.assignments.map((assignment) => (
+          <EngineerAvatar
+            key={assignment.id}
+            assignment={assignment}
+            onUpdate={onAssignmentUpdate}
+            onDelete={onAssignmentDelete}
+          />
+        ))}
+        
+        {/* Empty state */}
+        {!pitch.productManagerName && !pitch.productDesignerName && pitch.assignments.length === 0 && (
+          <div className="w-full text-center py-2 border border-dashed border-gray-600 rounded text-xs text-gray-500">
+            Drop engineer here
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -781,6 +921,7 @@ function KanbanColumn({
   onEditPitch,
   onPitchStatusChange,
   onWeeksUpdate,
+  onPitchUpdate,
   dropTargetPitchId,
   activePitchId,
   onAddPitch,
@@ -799,6 +940,7 @@ function KanbanColumn({
   onEditPitch: (pitch: PitchWithAssignments) => void;
   onPitchStatusChange: (pitchId: string, newStatus: PitchStatus) => void;
   onWeeksUpdate: () => void;
+  onPitchUpdate: (pitchId: string, data: { productManagerId?: string | null; productDesignerId?: string | null }) => void;
   dropTargetPitchId: string | null;
   activePitchId: string | null;
   onAddPitch?: () => void;
@@ -874,6 +1016,7 @@ function KanbanColumn({
             onEdit={onEditPitch}
             onStatusChange={onPitchStatusChange}
             onWeeksUpdate={onWeeksUpdate}
+            onPitchUpdate={onPitchUpdate}
             isOver={dropTargetPitchId === pitch.id}
             isDragging={activePitchId === pitch.id}
           />
@@ -1470,6 +1613,28 @@ export default function CycleDetailPage() {
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to update assignment"
+      );
+    }
+  }
+
+  async function handlePitchUpdate(pitchId: string, data: { productManagerId?: string | null; productDesignerId?: string | null }) {
+    try {
+      const res = await fetch(`/api/pitches/${pitchId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to update pitch");
+      }
+
+      toast.success("Pitch updated");
+      fetchCycle();
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update pitch"
       );
     }
   }
@@ -2389,6 +2554,7 @@ export default function CycleDetailPage() {
                     onEditPitch={handleOpenEditPitch}
                     onPitchStatusChange={handlePitchStatusChange}
                     onWeeksUpdate={fetchCycle}
+                    onPitchUpdate={handlePitchUpdate}
                     dropTargetPitchId={dropTargetPitchId}
                     activePitchId={activePitch?.id || null}
                     onAddPitch={() => setIsAddPitchModalOpen(true)}
@@ -2410,6 +2576,7 @@ export default function CycleDetailPage() {
                     onEditPitch={handleOpenEditPitch}
                     onPitchStatusChange={handlePitchStatusChange}
                     onWeeksUpdate={fetchCycle}
+                    onPitchUpdate={handlePitchUpdate}
                     dropTargetPitchId={dropTargetPitchId}
                     activePitchId={activePitch?.id || null}
                     onAddPitch={() => setIsAddPitchModalOpen(true)}
