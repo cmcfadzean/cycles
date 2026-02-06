@@ -871,7 +871,8 @@ function SortableKanbanColumn({
   children,
 }: {
   pod: Pod;
-  children: (dragHandleProps: { listeners: Record<string, unknown>; attributes: Record<string, unknown> }) => React.ReactNode;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  children: (dragHandleProps: { listeners: any; attributes: any }) => React.ReactNode;
 }) {
   const {
     attributes,
@@ -893,7 +894,7 @@ function SortableKanbanColumn({
 
   return (
     <div ref={setNodeRef} style={style}>
-      {children({ listeners: listeners || {}, attributes: attributes || {} })}
+      {children({ listeners, attributes })}
     </div>
   );
 }
@@ -938,7 +939,8 @@ function KanbanColumn({
   onDeletePod?: () => void;
   isAdmin?: boolean;
   isOver?: boolean;
-  dragHandleProps?: { listeners: Record<string, unknown>; attributes: Record<string, unknown> };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dragHandleProps?: { listeners: any; attributes: any };
 }) {
   const { setNodeRef } = useDroppable({
     id: `column-${id}`,
