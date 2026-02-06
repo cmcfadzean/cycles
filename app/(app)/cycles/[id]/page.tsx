@@ -871,7 +871,7 @@ function SortableKanbanColumn({
   children,
 }: {
   pod: Pod;
-  children: React.ReactNode;
+  children: (dragHandleProps: { listeners: Record<string, unknown>; attributes: Record<string, unknown> }) => React.ReactNode;
 }) {
   const {
     attributes,
@@ -892,13 +892,8 @@ function SortableKanbanColumn({
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
-      <div 
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing"
-      >
-        {children}
-      </div>
+    <div ref={setNodeRef} style={style}>
+      {children({ listeners: listeners || {}, attributes: attributes || {} })}
     </div>
   );
 }
@@ -923,6 +918,7 @@ function KanbanColumn({
   onDeletePod,
   isAdmin,
   isOver,
+  dragHandleProps,
 }: {
   id: string;
   title: string;
@@ -942,6 +938,7 @@ function KanbanColumn({
   onDeletePod?: () => void;
   isAdmin?: boolean;
   isOver?: boolean;
+  dragHandleProps?: { listeners: Record<string, unknown>; attributes: Record<string, unknown> };
 }) {
   const { setNodeRef } = useDroppable({
     id: `column-${id}`,
@@ -959,8 +956,15 @@ function KanbanColumn({
         isOver ? "border-primary-500 bg-primary-900/20" : "border-gray-700/50"
       )}
     >
-      {/* Column Header */}
-      <div className="p-4 border-b border-gray-700/50">
+      {/* Column Header - drag handle */}
+      <div 
+        className={clsx(
+          "p-4 border-b border-gray-700/50",
+          dragHandleProps && "cursor-grab active:cursor-grabbing"
+        )}
+        {...(dragHandleProps?.listeners || {})}
+        {...(dragHandleProps?.attributes || {})}
+      >
         <div className="flex items-center justify-between mb-1">
           <h3 className="font-semibold text-gray-100">{title}</h3>
           <div className="flex items-center gap-1">
@@ -2589,26 +2593,29 @@ export default function CycleDetailPage() {
                 >
                   {cycle.pods.map((pod) => (
                     <SortableKanbanColumn key={pod.id} pod={pod}>
-                      <KanbanColumn
-                        id={pod.id}
-                        title={pod.name}
-                        subtitle={pod.leaderName ? `Lead: ${pod.leaderName}` : undefined}
-                        pitches={cycle.pitches.filter((p) => p.podId === pod.id)}
-                        cycleId={cycleId}
-                        onAssignmentDelete={handleAssignmentDelete}
-                        onAssignmentUpdate={handleAssignmentUpdate}
-                        onEditPitch={handleOpenEditPitch}
-                        onPitchStatusChange={handlePitchStatusChange}
-                        onWeeksUpdate={fetchCycle}
-                        onPitchUpdate={handlePitchUpdate}
-                        dropTargetPitchId={dropTargetPitchId}
-                        activePitchId={activePitch?.id || null}
-                        onAddPitch={() => setIsAddPitchModalOpen(true)}
-                        onEditPod={() => handleOpenEditPod(pod)}
-                        onDeletePod={() => handleOpenDeletePod(pod)}
-                        isAdmin={isAdmin}
-                        isOver={dropTargetColumnId === `column-${pod.id}`}
-                      />
+                      {(dragHandleProps) => (
+                        <KanbanColumn
+                          id={pod.id}
+                          title={pod.name}
+                          subtitle={pod.leaderName ? `Lead: ${pod.leaderName}` : undefined}
+                          pitches={cycle.pitches.filter((p) => p.podId === pod.id)}
+                          cycleId={cycleId}
+                          onAssignmentDelete={handleAssignmentDelete}
+                          onAssignmentUpdate={handleAssignmentUpdate}
+                          onEditPitch={handleOpenEditPitch}
+                          onPitchStatusChange={handlePitchStatusChange}
+                          onWeeksUpdate={fetchCycle}
+                          onPitchUpdate={handlePitchUpdate}
+                          dropTargetPitchId={dropTargetPitchId}
+                          activePitchId={activePitch?.id || null}
+                          onAddPitch={() => setIsAddPitchModalOpen(true)}
+                          onEditPod={() => handleOpenEditPod(pod)}
+                          onDeletePod={() => handleOpenDeletePod(pod)}
+                          isAdmin={isAdmin}
+                          isOver={dropTargetColumnId === `column-${pod.id}`}
+                          dragHandleProps={dragHandleProps}
+                        />
+                      )}
                     </SortableKanbanColumn>
                   ))}
                 </SortableContext>
