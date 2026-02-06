@@ -950,7 +950,6 @@ function KanbanColumn({
 
   return (
     <div
-      ref={setNodeRef}
       className={clsx(
         "flex flex-col w-80 min-w-80 bg-gray-800/30 rounded-xl border transition-all",
         isOver ? "border-primary-500 bg-primary-900/20" : "border-gray-700/50"
@@ -1002,8 +1001,8 @@ function KanbanColumn({
         </div>
       </div>
 
-      {/* Pitches */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
+      {/* Pitches - droppable area */}
+      <div ref={setNodeRef} className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
         {pitches.map((pitch) => (
           <KanbanPitchCard
             key={pitch.id}
