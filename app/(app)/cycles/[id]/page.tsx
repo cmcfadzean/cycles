@@ -1339,6 +1339,22 @@ export default function CycleDetailPage() {
     }
   }, [cycleId]);
 
+  async function handleDeleteSignup(signupId: string) {
+    try {
+      const res = await fetch(`/api/cycles/${cycleId}/signup/results?signupId=${signupId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete signup");
+      }
+      toast.success("Signup deleted");
+      setSignups((prev) => prev.filter((s) => s.id !== signupId));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete signup");
+    }
+  }
+
   const fetchProductManagers = useCallback(async () => {
     try {
       const res = await fetch("/api/product-managers");
@@ -2875,6 +2891,7 @@ export default function CycleDetailPage() {
                           <span className="inline-flex items-center gap-1">🥉 3rd Choice</span>
                         </th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Submitted</th>
+                        <th className="w-10"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800/50">
@@ -2891,6 +2908,17 @@ export default function CycleDetailPage() {
                               hour: "numeric",
                               minute: "2-digit",
                             })}
+                          </td>
+                          <td className="py-3 px-4">
+                            <button
+                              onClick={() => handleDeleteSignup(signup.id)}
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              title="Delete signup"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
                           </td>
                         </tr>
                       ))}
