@@ -1177,7 +1177,7 @@ export default function CycleDetailPage() {
   const [allProductManagers, setAllProductManagers] = useState<{ id: string; name: string }[]>([]);
   const [allProductDesigners, setAllProductDesigners] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"main" | "betting">("main");
+  const [activeTab, setActiveTab] = useState<"main" | "betting" | "signups">("main");
 
   const [activeEngineer, setActiveEngineer] =
     useState<EngineerWithCapacity | null>(null);
@@ -1236,6 +1236,17 @@ export default function CycleDetailPage() {
     priority: number | null;
     pitchDocUrl: string | null;
   }>>([]);
+
+  // Signups state
+  const [signups, setSignups] = useState<Array<{
+    id: string;
+    personName: string;
+    firstChoice: { pitchId: string; pitchTitle: string };
+    secondChoice: { pitchId: string; pitchTitle: string };
+    thirdChoice: { pitchId: string; pitchTitle: string };
+    createdAt: string;
+  }>>([]);
+  const [signupsLoading, setSignupsLoading] = useState(false);
   const [selectedPitchId, setSelectedPitchId] = useState("");
   const [editPitchForm, setEditPitchForm] = useState({
     title: "",
@@ -1314,6 +1325,20 @@ export default function CycleDetailPage() {
     }
   }, []);
 
+  const fetchSignups = useCallback(async () => {
+    setSignupsLoading(true);
+    try {
+      const res = await fetch(`/api/cycles/${cycleId}/signup/results`);
+      if (!res.ok) throw new Error("Failed to fetch signups");
+      const data = await res.json();
+      setSignups(data);
+    } catch {
+      console.error("Failed to load signups");
+    } finally {
+      setSignupsLoading(false);
+    }
+  }, [cycleId]);
+
   const fetchProductManagers = useCallback(async () => {
     try {
       const res = await fetch("/api/product-managers");
@@ -1343,6 +1368,13 @@ export default function CycleDetailPage() {
     fetchProductManagers();
     fetchProductDesigners();
   }, [fetchCycle, fetchEngineers, fetchAvailablePitches, fetchProductManagers, fetchProductDesigners]);
+
+  // Fetch signups when the signups tab is activated
+  useEffect(() => {
+    if (activeTab === "signups") {
+      fetchSignups();
+    }
+  }, [activeTab, fetchSignups]);
 
   function handleDragStart(event: DragStartEvent) {
     const { active } = event;
@@ -2486,6 +2518,22 @@ export default function CycleDetailPage() {
                 </span>
               )}
             </button>
+            <button
+              onClick={() => setActiveTab("signups")}
+              className={clsx(
+                "py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+                activeTab === "signups"
+                  ? "border-violet-500 text-gray-100"
+                  : "border-transparent text-gray-500 hover:text-gray-300"
+              )}
+            >
+              Signups
+              {signups.length > 0 && (
+                <span className="px-1.5 py-0.5 text-xs rounded-full bg-blue-500/20 text-blue-400">
+                  {signups.length}
+                </span>
+              )}
+            </button>
           </nav>
         </div>
 
@@ -2642,7 +2690,7 @@ export default function CycleDetailPage() {
               {activePitch && <PitchDragOverlay pitch={activePitch} />}
             </DragOverlay>
           </div>
-        ) : (
+        ) : activeTab === "betting" ? (
           /* Betting Table View */
           <div className="space-y-6">
             {/* Summary Bar - same as main view */}
@@ -2753,6 +2801,101 @@ export default function CycleDetailPage() {
                         ))}
                     </>
                   )}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* Signups View */
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-100">Pitch Signups</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {signups.length} submission{signups.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={fetchSignups}
+                  className="btn-secondary text-sm flex items-center gap-1.5"
+                  disabled={signupsLoading}
+                >
+                  <svg className={clsx("w-4 h-4", signupsLoading && "animate-spin")} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button>
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/cycles/${cycleId}/signup`;
+                    navigator.clipboard.writeText(url);
+                    toast.success("Signup link copied to clipboard");
+                  }}
+                  className="btn-primary text-sm flex items-center gap-1.5"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                  Copy Signup Link
+                </button>
+              </div>
+            </div>
+
+            <div className="card">
+              {signupsLoading ? (
+                <div className="p-8 flex items-center justify-center">
+                  <div className="animate-spin w-6 h-6 border-2 border-gray-600 border-t-gray-300 rounded-full" />
+                </div>
+              ) : signups.length === 0 ? (
+                <div className="p-8 text-center">
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-gray-800 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-500">No signups yet</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Share the signup link to start collecting preferences
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-800">
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-1">🥇 1st Choice</span>
+                        </th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-1">🥈 2nd Choice</span>
+                        </th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-1">🥉 3rd Choice</span>
+                        </th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Submitted</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800/50">
+                      {signups.map((signup) => (
+                        <tr key={signup.id} className="hover:bg-gray-800/30 transition-colors">
+                          <td className="py-3 px-4 text-sm font-medium text-gray-200">{signup.personName}</td>
+                          <td className="py-3 px-4 text-sm text-gray-300">{signup.firstChoice.pitchTitle}</td>
+                          <td className="py-3 px-4 text-sm text-gray-300">{signup.secondChoice.pitchTitle}</td>
+                          <td className="py-3 px-4 text-sm text-gray-300">{signup.thirdChoice.pitchTitle}</td>
+                          <td className="py-3 px-4 text-sm text-gray-500">
+                            {new Date(signup.createdAt).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
