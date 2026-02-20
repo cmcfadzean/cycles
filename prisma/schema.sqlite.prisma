@@ -153,3 +153,13 @@ model Assignment {
 }
 
 // PitchStatus values: BACKLOG, PLANNING, READY_FOR_DEV, COMPLETE, CANCELED
+
+model PitchSignup {
+  id                  String   @id @default(cuid())
+  cycleId             String
+  personName          String
+  firstChoicePitchId  String
+  secondChoicePitchId String
+  thirdChoicePitchId  String
+  createdAt           DateTime @default(now())
+}

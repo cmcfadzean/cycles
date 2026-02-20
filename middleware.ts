@@ -6,6 +6,8 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/cycles/(.*)/share(.*)", // Share pages are public
   "/api/cycles/(.*)/share(.*)", // Share API endpoints are public
+  "/cycles/(.*)/signup(.*)", // Signup pages are public
+  "/api/cycles/(.*)/signup(.*)", // Signup API endpoints are public
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
