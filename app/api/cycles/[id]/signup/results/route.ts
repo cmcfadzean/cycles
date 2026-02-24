@@ -52,6 +52,7 @@ export async function GET(
         pitchId: s.thirdChoicePitchId,
         pitchTitle: pitchMap.get(s.thirdChoicePitchId) ?? "Unknown pitch",
       },
+      checked: s.checked,
       createdAt: s.createdAt,
     }));
 
@@ -63,6 +64,60 @@ export async function GET(
     }
     return NextResponse.json(
       { error: "Failed to fetch signups" },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH - Toggle checked state on a signup
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const organization = await requireOrganization();
+    const { id: cycleId } = await params;
+    const body = await request.json();
+    const { signupId, checked } = body;
+
+    if (!signupId || typeof checked !== "boolean") {
+      return NextResponse.json(
+        { error: "signupId and checked (boolean) are required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify cycle belongs to organization
+    const cycle = await prisma.cycle.findFirst({
+      where: { id: cycleId, organizationId: organization.id },
+    });
+
+    if (!cycle) {
+      return NextResponse.json({ error: "Cycle not found" }, { status: 404 });
+    }
+
+    // Verify signup exists and belongs to this cycle
+    const signup = await prisma.pitchSignup.findFirst({
+      where: { id: signupId, cycleId },
+    });
+
+    if (!signup) {
+      return NextResponse.json({ error: "Signup not found" }, { status: 404 });
+    }
+
+    await prisma.pitchSignup.update({
+      where: { id: signupId },
+      data: { checked },
+    });
+
+    return NextResponse.json({ success: true, checked });
+  } catch (error) {
+    console.error("Failed to update signup:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json(
+      { error: "Failed to update signup" },
       { status: 500 }
     );
   }

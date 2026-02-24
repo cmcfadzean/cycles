@@ -1244,6 +1244,7 @@ export default function CycleDetailPage() {
     firstChoice: { pitchId: string; pitchTitle: string };
     secondChoice: { pitchId: string; pitchTitle: string };
     thirdChoice: { pitchId: string; pitchTitle: string };
+    checked: boolean;
     createdAt: string;
   }>>([]);
   const [signupsLoading, setSignupsLoading] = useState(false);
@@ -1352,6 +1353,31 @@ export default function CycleDetailPage() {
       setSignups((prev) => prev.filter((s) => s.id !== signupId));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete signup");
+    }
+  }
+
+  async function handleToggleSignupChecked(signupId: string, currentChecked: boolean) {
+    const newChecked = !currentChecked;
+    // Optimistic update
+    setSignups((prev) =>
+      prev.map((s) => (s.id === signupId ? { ...s, checked: newChecked } : s))
+    );
+    try {
+      const res = await fetch(`/api/cycles/${cycleId}/signup/results`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signupId, checked: newChecked }),
+      });
+      if (!res.ok) {
+        // Revert on failure
+        setSignups((prev) =>
+          prev.map((s) => (s.id === signupId ? { ...s, checked: currentChecked } : s))
+        );
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update signup");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update signup");
     }
   }
 
@@ -2880,6 +2906,7 @@ export default function CycleDetailPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-800">
+                        <th className="w-10 py-3 px-4"></th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
                           <span className="inline-flex items-center gap-1">🥇 1st Choice</span>
@@ -2895,13 +2922,41 @@ export default function CycleDetailPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800/50">
-                      {signups.map((signup) => (
-                        <tr key={signup.id} className="hover:bg-gray-800/30 transition-colors">
-                          <td className="py-3 px-4 text-sm font-medium text-gray-200">{signup.personName}</td>
-                          <td className="py-3 px-4 text-sm text-gray-300">{signup.firstChoice.pitchTitle}</td>
-                          <td className="py-3 px-4 text-sm text-gray-300">{signup.secondChoice.pitchTitle}</td>
-                          <td className="py-3 px-4 text-sm text-gray-300">{signup.thirdChoice.pitchTitle}</td>
-                          <td className="py-3 px-4 text-sm text-gray-500">
+                      {[...signups].sort((a, b) => {
+                        if (a.checked !== b.checked) return a.checked ? 1 : -1;
+                        return 0;
+                      }).map((signup) => (
+                        <tr
+                          key={signup.id}
+                          className={clsx(
+                            "transition-colors",
+                            signup.checked
+                              ? "opacity-50"
+                              : "hover:bg-gray-800/30"
+                          )}
+                        >
+                          <td className="py-3 px-4">
+                            <button
+                              onClick={() => handleToggleSignupChecked(signup.id, signup.checked)}
+                              className={clsx(
+                                "w-5 h-5 rounded border flex items-center justify-center transition-colors",
+                                signup.checked
+                                  ? "bg-violet-500 border-violet-500"
+                                  : "border-gray-600 hover:border-gray-400"
+                              )}
+                            >
+                              {signup.checked && (
+                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </button>
+                          </td>
+                          <td className={clsx("py-3 px-4 text-sm font-medium", signup.checked ? "text-gray-500 line-through" : "text-gray-200")}>{signup.personName}</td>
+                          <td className={clsx("py-3 px-4 text-sm", signup.checked ? "text-gray-600 line-through" : "text-gray-300")}>{signup.firstChoice.pitchTitle}</td>
+                          <td className={clsx("py-3 px-4 text-sm", signup.checked ? "text-gray-600 line-through" : "text-gray-300")}>{signup.secondChoice.pitchTitle}</td>
+                          <td className={clsx("py-3 px-4 text-sm", signup.checked ? "text-gray-600 line-through" : "text-gray-300")}>{signup.thirdChoice.pitchTitle}</td>
+                          <td className={clsx("py-3 px-4 text-sm", signup.checked ? "text-gray-700" : "text-gray-500")}>
                             {new Date(signup.createdAt).toLocaleDateString(undefined, {
                               month: "short",
                               day: "numeric",

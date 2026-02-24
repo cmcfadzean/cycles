@@ -162,5 +162,6 @@ model PitchSignup {
   firstChoicePitchId  String
   secondChoicePitchId String
   thirdChoicePitchId  String
+  checked             Boolean  @default(false)
   createdAt           DateTime @default(now())
 }
