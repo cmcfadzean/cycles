@@ -72,6 +72,22 @@ export async function POST(
       return NextResponse.json({ error: "Cycle not found" }, { status: 404 });
     }
 
+    // Fetch signup preferences for this cycle
+    const signups = await prisma.pitchSignup.findMany({
+      where: { cycleId: id },
+    });
+
+    const pitchTitleMap = new Map(
+      cycle.pitches.map((p) => [p.id, p.title])
+    );
+
+    const signupPreferences = signups.map((s) => ({
+      personName: s.personName,
+      firstChoice: pitchTitleMap.get(s.firstChoicePitchId) ?? "Unknown",
+      secondChoice: pitchTitleMap.get(s.secondChoicePitchId) ?? "Unknown",
+      thirdChoice: pitchTitleMap.get(s.thirdChoicePitchId) ?? "Unknown",
+    }));
+
     const engineers = cycle.capacities.map((cap) => ({
       engineerId: cap.engineer.id,
       engineerName: cap.engineer.name,
@@ -105,7 +121,11 @@ RULES:
 5. Every engineer should be assigned to at least one pitch if possible.
 6. weeksAllocated must be a positive number (minimum 0.5 increments).
 ${totalCapacity < totalRequired ? `7. IMPORTANT: Total capacity (${totalCapacity}w) is less than total required (${totalRequired}w). Not all work can be fully covered. Prioritize higher-priority pitches.` : ""}
-
+${signupPreferences.length > 0 ? `${totalCapacity < totalRequired ? "8" : "7"}. PREFERENCES: People submitted signup preferences for which pitches they want to work on. Match each person name to the closest engineer by name (fuzzy match — e.g. "Court" matches "Court McFadzean"). Try to assign each engineer to their preferred pitch (1st choice > 2nd > 3rd). Preferences should be honored when capacity and priority constraints allow. In the reasoning, mention which preferences were accommodated and which had to be overridden and why.` : ""}
+${signupPreferences.length > 0 ? `
+SIGNUP PREFERENCES:
+${signupPreferences.map((s) => `- ${s.personName}: 1st "${s.firstChoice}", 2nd "${s.secondChoice}", 3rd "${s.thirdChoice}"`).join("\n")}
+` : ""}
 ENGINEERS:
 ${engineers.map((e) => `- ${e.engineerName} (id: ${e.engineerId}): ${e.availableWeeks} weeks available`).join("\n")}
 
