@@ -1177,7 +1177,7 @@ export default function CycleDetailPage() {
   const [allProductManagers, setAllProductManagers] = useState<{ id: string; name: string }[]>([]);
   const [allProductDesigners, setAllProductDesigners] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"main" | "betting" | "signups">("main");
+  const [activeTab, setActiveTab] = useState<"main" | "betting" | "staffplan" | "signups">("main");
 
   const [activeEngineer, setActiveEngineer] =
     useState<EngineerWithCapacity | null>(null);
@@ -1248,6 +1248,28 @@ export default function CycleDetailPage() {
     createdAt: string;
   }>>([]);
   const [signupsLoading, setSignupsLoading] = useState(false);
+
+  // Staff Plan state
+  interface StaffPlanAssignment {
+    engineerId: string;
+    engineerName: string;
+    pitchId: string;
+    pitchTitle: string;
+    weeksAllocated: number;
+  }
+  interface StaffingRec {
+    id: string;
+    cycleId: string;
+    status: string;
+    assignments: StaffPlanAssignment[];
+    reasoning: string | null;
+    createdAt: string;
+  }
+  const [staffingRec, setStaffingRec] = useState<StaffingRec | null>(null);
+  const [staffingLoading, setStaffingLoading] = useState(false);
+  const [staffingGenerating, setStaffingGenerating] = useState(false);
+  const [staffingApproved, setStaffingApproved] = useState(false);
+
   const [selectedPitchId, setSelectedPitchId] = useState("");
   const [editPitchForm, setEditPitchForm] = useState({
     title: "",
@@ -1340,6 +1362,102 @@ export default function CycleDetailPage() {
     }
   }, [cycleId]);
 
+  const fetchStaffingRec = useCallback(async () => {
+    setStaffingLoading(true);
+    try {
+      const res = await fetch(`/api/cycles/${cycleId}/staffing`);
+      if (!res.ok) throw new Error("Failed to fetch staffing recommendation");
+      const data = await res.json();
+      setStaffingRec(data.recommendation);
+      setStaffingApproved(false);
+    } catch {
+      console.error("Failed to load staffing recommendation");
+    } finally {
+      setStaffingLoading(false);
+    }
+  }, [cycleId]);
+
+  async function handleGenerateStaffPlan() {
+    setStaffingGenerating(true);
+    try {
+      const res = await fetch(`/api/cycles/${cycleId}/staffing`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to generate plan");
+      }
+      const data = await res.json();
+      setStaffingRec(data.recommendation);
+      setStaffingApproved(false);
+      toast.success("Staff plan generated!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to generate staff plan");
+    } finally {
+      setStaffingGenerating(false);
+    }
+  }
+
+  async function handleApproveStaffPlan() {
+    try {
+      const res = await fetch(`/api/cycles/${cycleId}/staffing/approve`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("Failed to approve plan");
+      setStaffingApproved(true);
+      toast.success("Staff plan approved! Assignments updated.");
+      fetchCycle();
+    } catch {
+      toast.error("Failed to approve staff plan");
+    }
+  }
+
+  async function handleDenyStaffPlan() {
+    try {
+      const res = await fetch(`/api/cycles/${cycleId}/staffing`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to deny plan");
+      setStaffingRec(null);
+      toast.success("Staff plan discarded");
+    } catch {
+      toast.error("Failed to discard staff plan");
+    }
+  }
+
+  async function handleUpdateStaffPlanAssignment(index: number, newWeeks: number) {
+    if (!staffingRec) return;
+    const updated = [...staffingRec.assignments];
+    updated[index] = { ...updated[index], weeksAllocated: newWeeks };
+    setStaffingRec({ ...staffingRec, assignments: updated });
+
+    try {
+      await fetch(`/api/cycles/${cycleId}/staffing`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignments: updated }),
+      });
+    } catch {
+      toast.error("Failed to save change");
+    }
+  }
+
+  async function handleRemoveStaffPlanAssignment(index: number) {
+    if (!staffingRec) return;
+    const updated = staffingRec.assignments.filter((_, i) => i !== index);
+    setStaffingRec({ ...staffingRec, assignments: updated });
+
+    try {
+      await fetch(`/api/cycles/${cycleId}/staffing`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignments: updated }),
+      });
+    } catch {
+      toast.error("Failed to save change");
+    }
+  }
+
   async function handleDeleteSignup(signupId: string) {
     try {
       const res = await fetch(`/api/cycles/${cycleId}/signup/results?signupId=${signupId}`, {
@@ -1417,6 +1535,13 @@ export default function CycleDetailPage() {
       fetchSignups();
     }
   }, [activeTab, fetchSignups]);
+
+  // Fetch staffing recommendation when staff plan tab is activated
+  useEffect(() => {
+    if (activeTab === "staffplan") {
+      fetchStaffingRec();
+    }
+  }, [activeTab, fetchStaffingRec]);
 
   function handleDragStart(event: DragStartEvent) {
     const { active } = event;
@@ -2561,6 +2686,22 @@ export default function CycleDetailPage() {
               )}
             </button>
             <button
+              onClick={() => setActiveTab("staffplan")}
+              className={clsx(
+                "py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+                activeTab === "staffplan"
+                  ? "border-violet-500 text-gray-100"
+                  : "border-transparent text-gray-500 hover:text-gray-300"
+              )}
+            >
+              Staff Plan
+              {staffingRec && (
+                <span className="px-1.5 py-0.5 text-xs rounded-full bg-violet-500/20 text-violet-400">
+                  Draft
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => setActiveTab("signups")}
               className={clsx(
                 "py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
@@ -2846,6 +2987,349 @@ export default function CycleDetailPage() {
                 </div>
               )}
             </div>
+          </div>
+        ) : activeTab === "staffplan" ? (
+          /* Staff Plan View */
+          <div className="space-y-6">
+            {staffingLoading ? (
+              <div className="p-12 flex items-center justify-center">
+                <div className="animate-spin w-8 h-8 border-2 border-gray-600 border-t-gray-300 rounded-full" />
+              </div>
+            ) : staffingApproved ? (
+              <div className="card p-12 text-center space-y-4">
+                <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-100">Staff Plan Approved</h3>
+                <p className="text-gray-400">Assignments have been applied to the cycle.</p>
+                <button
+                  onClick={() => setActiveTab("main")}
+                  className="btn-primary"
+                >
+                  View Cycle
+                </button>
+              </div>
+            ) : !staffingRec ? (
+              <div className="card p-12 text-center space-y-4">
+                <div className="w-16 h-16 mx-auto rounded-full bg-gray-800 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-100">AI Staff Plan</h3>
+                <p className="text-gray-400">
+                  Generate an AI-powered staffing recommendation based on engineer capacity and pitch estimates.
+                </p>
+                <button
+                  onClick={handleGenerateStaffPlan}
+                  disabled={staffingGenerating || !cycle || cycle.engineers.length === 0 || cycle.pitches.length === 0}
+                  className="btn-primary inline-flex items-center gap-2"
+                >
+                  {staffingGenerating ? (
+                    <>
+                      <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Generate Staff Plan
+                    </>
+                  )}
+                </button>
+                {cycle && (cycle.engineers.length === 0 || cycle.pitches.length === 0) && (
+                  <p className="text-sm text-amber-400">
+                    Add engineers and pitches to the cycle before generating a plan.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-lg font-semibold text-gray-100">AI Staff Plan</h2>
+                    <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-violet-500/20 text-violet-400 border border-violet-500/30">
+                      Draft
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleGenerateStaffPlan}
+                      disabled={staffingGenerating}
+                      className="btn-secondary text-sm inline-flex items-center gap-1.5"
+                    >
+                      {staffingGenerating ? (
+                        <>
+                          <div className="animate-spin w-3.5 h-3.5 border-2 border-gray-500 border-t-gray-300 rounded-full" />
+                          Regenerating...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Regenerate
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleDenyStaffPlan}
+                      className="btn-secondary text-sm text-red-400 hover:text-red-300 inline-flex items-center gap-1.5"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Discard
+                    </button>
+                    <button
+                      onClick={handleApproveStaffPlan}
+                      className="btn-primary text-sm inline-flex items-center gap-1.5"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Approve & Apply
+                    </button>
+                  </div>
+                </div>
+
+                {/* Reasoning */}
+                {staffingRec.reasoning && (
+                  <div className="card p-4 bg-violet-500/5 border-violet-500/20">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-violet-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-violet-300 mb-1">AI Reasoning</p>
+                        <p className="text-sm text-gray-300 leading-relaxed">{staffingRec.reasoning}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary Cards */}
+                {(() => {
+                  const engineerSummary = new Map<string, { name: string; allocated: number; available: number }>();
+                  const pitchSummary = new Map<string, { title: string; allocated: number; estimate: number }>();
+
+                  for (const a of staffingRec.assignments) {
+                    const eng = engineerSummary.get(a.engineerId) || {
+                      name: a.engineerName,
+                      allocated: 0,
+                      available: cycle?.engineers.find((e) => e.id === a.engineerId)?.availableWeeks || 0,
+                    };
+                    eng.allocated += a.weeksAllocated;
+                    engineerSummary.set(a.engineerId, eng);
+
+                    const pit = pitchSummary.get(a.pitchId) || {
+                      title: a.pitchTitle,
+                      allocated: 0,
+                      estimate: cycle?.pitches.find((p) => p.id === a.pitchId)?.estimateWeeks || 0,
+                    };
+                    pit.allocated += a.weeksAllocated;
+                    pitchSummary.set(a.pitchId, pit);
+                  }
+
+                  const totalAllocated = staffingRec.assignments.reduce((s, a) => s + a.weeksAllocated, 0);
+                  const totalAvailable = cycle?.totalAvailableWeeks || 0;
+                  const totalRequired = cycle?.totalRequiredWeeks || 0;
+
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="card p-5">
+                        <div className="text-sm font-medium text-gray-400 mb-1">Engineers</div>
+                        <div className="text-3xl font-bold text-gray-100">
+                          {engineerSummary.size}
+                          <span className="text-lg font-normal text-gray-500 ml-1">assigned</span>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-500">
+                          of {cycle?.engineers.length || 0} total
+                        </div>
+                      </div>
+                      <div className="card p-5">
+                        <div className="text-sm font-medium text-gray-400 mb-1">Weeks Allocated</div>
+                        <div className="text-3xl font-bold text-gray-100">
+                          {totalAllocated.toFixed(1)}
+                          <span className="text-lg font-normal text-gray-500 ml-1">
+                            of {totalAvailable.toFixed(1)}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-500">
+                          {(totalAvailable - totalAllocated).toFixed(1)}w unallocated
+                        </div>
+                      </div>
+                      <div className="card p-5">
+                        <div className="text-sm font-medium text-gray-400 mb-1">Pitches Covered</div>
+                        <div className="text-3xl font-bold text-gray-100">
+                          {pitchSummary.size}
+                          <span className="text-lg font-normal text-gray-500 ml-1">
+                            of {cycle?.pitches.length || 0}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-500">
+                          {totalRequired.toFixed(1)}w estimated total
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Assignments Table */}
+                <div className="card">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-800">
+                          <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Engineer</th>
+                          <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Pitch</th>
+                          <th className="text-center py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Weeks</th>
+                          <th className="w-10"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-800/50">
+                        {staffingRec.assignments.map((assignment, idx) => {
+                          const engineer = cycle?.engineers.find((e) => e.id === assignment.engineerId);
+                          const pitch = cycle?.pitches.find((p) => p.id === assignment.pitchId);
+                          return (
+                            <tr key={idx} className="hover:bg-gray-800/30 transition-colors">
+                              <td className="py-3 px-4">
+                                <div className="text-sm font-medium text-gray-200">{assignment.engineerName}</div>
+                                {engineer && (
+                                  <div className="text-xs text-gray-500">{engineer.availableWeeks.toFixed(1)}w available</div>
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="text-sm text-gray-200">{assignment.pitchTitle}</div>
+                                {pitch && (
+                                  <div className="text-xs text-gray-500">{pitch.estimateWeeks.toFixed(1)}w estimated</div>
+                                )}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  min="0.5"
+                                  value={assignment.weeksAllocated}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value);
+                                    if (!isNaN(val) && val > 0) {
+                                      handleUpdateStaffPlanAssignment(idx, val);
+                                    }
+                                  }}
+                                  className="w-20 text-center bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-sm text-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none"
+                                />
+                              </td>
+                              <td className="py-3 px-4">
+                                <button
+                                  onClick={() => handleRemoveStaffPlanAssignment(idx)}
+                                  className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                  title="Remove assignment"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Engineer Summary */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="card">
+                    <div className="px-4 py-3 border-b border-gray-800">
+                      <h3 className="text-sm font-medium text-gray-300">Engineer Allocation</h3>
+                    </div>
+                    <div className="divide-y divide-gray-800/50">
+                      {cycle?.engineers.map((engineer) => {
+                        const allocated = staffingRec.assignments
+                          .filter((a) => a.engineerId === engineer.id)
+                          .reduce((s, a) => s + a.weeksAllocated, 0);
+                        const pct = engineer.availableWeeks > 0 ? (allocated / engineer.availableWeeks) * 100 : 0;
+                        return (
+                          <div key={engineer.id} className="px-4 py-3 flex items-center gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium text-gray-200 truncate">{engineer.name}</div>
+                              <div className="text-xs text-gray-500">
+                                {allocated.toFixed(1)}w / {engineer.availableWeeks.toFixed(1)}w
+                              </div>
+                            </div>
+                            <div className="w-32 flex-shrink-0">
+                              <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                                <div
+                                  className={clsx(
+                                    "h-full rounded-full transition-all",
+                                    pct > 100 ? "bg-red-500" : pct >= 80 ? "bg-amber-500" : "bg-emerald-500"
+                                  )}
+                                  style={{ width: `${Math.min(pct, 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className={clsx(
+                              "text-xs font-medium w-12 text-right",
+                              pct > 100 ? "text-red-400" : pct >= 80 ? "text-amber-400" : "text-emerald-400"
+                            )}>
+                              {Math.round(pct)}%
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="card">
+                    <div className="px-4 py-3 border-b border-gray-800">
+                      <h3 className="text-sm font-medium text-gray-300">Pitch Coverage</h3>
+                    </div>
+                    <div className="divide-y divide-gray-800/50">
+                      {cycle?.pitches.map((pitch) => {
+                        const allocated = staffingRec.assignments
+                          .filter((a) => a.pitchId === pitch.id)
+                          .reduce((s, a) => s + a.weeksAllocated, 0);
+                        const pct = pitch.estimateWeeks > 0 ? (allocated / pitch.estimateWeeks) * 100 : 0;
+                        return (
+                          <div key={pitch.id} className="px-4 py-3 flex items-center gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium text-gray-200 truncate">{pitch.title}</div>
+                              <div className="text-xs text-gray-500">
+                                {allocated.toFixed(1)}w / {pitch.estimateWeeks.toFixed(1)}w
+                              </div>
+                            </div>
+                            <div className="w-32 flex-shrink-0">
+                              <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                                <div
+                                  className={clsx(
+                                    "h-full rounded-full transition-all",
+                                    pct >= 100 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500"
+                                  )}
+                                  style={{ width: `${Math.min(pct, 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className={clsx(
+                              "text-xs font-medium w-12 text-right",
+                              pct >= 100 ? "text-emerald-400" : pct >= 50 ? "text-amber-400" : "text-red-400"
+                            )}>
+                              {Math.round(pct)}%
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           /* Signups View */

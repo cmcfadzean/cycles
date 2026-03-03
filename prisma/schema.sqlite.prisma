@@ -164,3 +164,13 @@ model PitchSignup {
   checked             Boolean  @default(false)
   createdAt           DateTime @default(now())
 }
+
+model StaffingRecommendation {
+  id          String   @id @default(cuid())
+  cycleId     String
+  status      String   @default("draft") // draft | approved | denied
+  assignments String   // JSON: [{engineerId, engineerName, pitchId, pitchTitle, weeksAllocated}]
+  reasoning   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
