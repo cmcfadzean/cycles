@@ -15,7 +15,7 @@ export default async function HomePage() {
       <header className="fixed top-0 inset-x-0 z-50 border-b border-gray-800/50 bg-gray-950/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <svg className="w-7 h-7 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-9 h-9 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h-1a1 1 0 00-1 1v8a1 1 0 001 1h1m0-10v10m0-10h2a1 1 0 011 1v8a1 1 0 01-1 1H6m12-10h1a1 1 0 011 1v8a1 1 0 01-1 1h-1m0-10v10m0-10h-2a1 1 0 00-1 1v8a1 1 0 001 1h2M9 12h6" />
             </svg>
             <span className="text-lg font-semibold tracking-tight">Cycles</span>
@@ -290,7 +290,7 @@ export default async function HomePage() {
       <footer className="border-t border-gray-800/50 px-6 py-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <svg className="w-6 h-6 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h-1a1 1 0 00-1 1v8a1 1 0 001 1h1m0-10v10m0-10h2a1 1 0 011 1v8a1 1 0 01-1 1H6m12-10h1a1 1 0 011 1v8a1 1 0 01-1 1h-1m0-10v10m0-10h-2a1 1 0 00-1 1v8a1 1 0 001 1h2M9 12h6" />
             </svg>
             <span className="text-sm text-gray-500">Cycles</span>
