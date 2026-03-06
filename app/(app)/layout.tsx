@@ -165,8 +165,8 @@ export default function AppLayout({
       <aside className="fixed inset-y-0 left-0 w-16 bg-gray-900 border-r border-gray-800 flex flex-col z-30">
         {/* Logo */}
         <div className="h-16 flex items-center justify-center border-b border-gray-800">
-          <Link href="/dashboard" className="group relative flex items-center justify-center w-10 h-10 rounded-lg bg-white">
-            <svg className="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Link href="/dashboard" className="group relative flex items-center justify-center w-10 h-10 rounded-lg">
+            <svg className="w-8 h-8 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h-1a1 1 0 00-1 1v8a1 1 0 001 1h1m0-10v10m0-10h2a1 1 0 011 1v8a1 1 0 01-1 1H6m12-10h1a1 1 0 011 1v8a1 1 0 01-1 1h-1m0-10v10m0-10h-2a1 1 0 00-1 1v8a1 1 0 001 1h2M9 12h6" />
             </svg>
             {/* Tooltip */}
