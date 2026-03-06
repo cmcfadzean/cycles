@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 const navigation = [
   {
     name: "Cycles",
-    href: "/",
+    href: "/dashboard",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -165,7 +165,7 @@ export default function AppLayout({
       <aside className="fixed inset-y-0 left-0 w-16 bg-gray-900 border-r border-gray-800 flex flex-col z-30">
         {/* Logo */}
         <div className="h-16 flex items-center justify-center border-b border-gray-800">
-          <Link href="/" className="group relative flex items-center justify-center w-10 h-10 rounded-lg bg-white">
+          <Link href="/dashboard" className="group relative flex items-center justify-center w-10 h-10 rounded-lg bg-white">
             <svg className="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
@@ -189,8 +189,8 @@ export default function AppLayout({
               key={item.name}
               item={item}
               isActive={
-                item.href === "/"
-                  ? pathname === "/" || pathname.startsWith("/cycles")
+                item.href === "/dashboard"
+                  ? pathname === "/dashboard" || pathname.startsWith("/cycles")
                   : pathname.startsWith(item.href)
               }
             />
