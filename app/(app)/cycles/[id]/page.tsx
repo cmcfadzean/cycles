@@ -2989,14 +2989,14 @@ export default function CycleDetailPage() {
             </div>
           </div>
         ) : activeTab === "staffplan" ? (
-          /* Staff Plan View */
-          <div className="space-y-6">
-            {staffingLoading ? (
-              <div className="p-12 flex items-center justify-center">
-                <div className="animate-spin w-8 h-8 border-2 border-gray-600 border-t-gray-300 rounded-full" />
-              </div>
-            ) : staffingApproved ? (
-              <div className="card p-12 text-center space-y-4">
+          /* Staff Plan View — mirrors Cycle View layout */
+          staffingLoading ? (
+            <div className="flex items-center justify-center h-[calc(100vh-270px)]">
+              <div className="animate-spin w-8 h-8 border-2 border-gray-600 border-t-gray-300 rounded-full" />
+            </div>
+          ) : staffingApproved ? (
+            <div className="flex items-center justify-center h-[calc(100vh-270px)]">
+              <div className="text-center space-y-4">
                 <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 flex items-center justify-center">
                   <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -3004,24 +3004,19 @@ export default function CycleDetailPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-100">Staff Plan Approved</h3>
                 <p className="text-gray-400">Assignments have been applied to the cycle.</p>
-                <button
-                  onClick={() => setActiveTab("main")}
-                  className="btn-primary"
-                >
-                  View Cycle
-                </button>
+                <button onClick={() => setActiveTab("main")} className="btn-primary">View Cycle</button>
               </div>
-            ) : !staffingRec ? (
-              <div className="card p-12 text-center space-y-4">
+            </div>
+          ) : !staffingRec ? (
+            <div className="flex items-center justify-center h-[calc(100vh-270px)]">
+              <div className="text-center space-y-4">
                 <div className="w-16 h-16 mx-auto rounded-full bg-gray-800 flex items-center justify-center">
                   <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-100">AI Staff Plan</h3>
-                <p className="text-gray-400">
-                  Generate an AI-powered staffing recommendation based on engineer capacity and pitch estimates.
-                </p>
+                <p className="text-gray-400 max-w-sm">Generate an AI-powered staffing recommendation based on engineer capacity, pitch estimates, and signup preferences.</p>
                 <button
                   onClick={handleGenerateStaffPlan}
                   disabled={staffingGenerating || !cycle || cycle.engineers.length === 0 || cycle.pitches.length === 0}
@@ -3042,295 +3037,271 @@ export default function CycleDetailPage() {
                   )}
                 </button>
                 {cycle && (cycle.engineers.length === 0 || cycle.pitches.length === 0) && (
-                  <p className="text-sm text-amber-400">
-                    Add engineers and pitches to the cycle before generating a plan.
-                  </p>
+                  <p className="text-sm text-amber-400">Add engineers and pitches to the cycle first.</p>
                 )}
               </div>
-            ) : (
-              <>
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-lg font-semibold text-gray-100">AI Staff Plan</h2>
-                    <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-violet-500/20 text-violet-400 border border-violet-500/30">
-                      Draft
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
+            </div>
+          ) : (
+            <div className="flex w-full h-[calc(100vh-270px)] rounded-xl border border-gray-700/50">
+              {/* Engineers Sidebar */}
+              <div className="w-72 shrink-0 bg-gray-900/50 border-r border-gray-700/50 flex flex-col">
+                {/* Summary Stats */}
+                {(() => {
+                  const totalAllocated = staffingRec.assignments.reduce((s, a) => s + a.weeksAllocated, 0);
+                  return (
+                    <div className="p-4 border-b border-gray-700/50 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-400">Available</span>
+                        <span className="font-semibold text-gray-100">{cycle.totalAvailableWeeks.toFixed(1)}w</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-400">Required</span>
+                        <span className="font-semibold text-gray-100">{cycle.totalRequiredWeeks.toFixed(1)}w</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-400">Allocated</span>
+                        <span className="font-semibold text-violet-400">{totalAllocated.toFixed(1)}w</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-400">Balance</span>
+                        <span className={clsx(
+                          "font-semibold",
+                          cycle.surplusOrDeficit >= 0 ? "text-emerald-400" : "text-red-400"
+                        )}>
+                          {cycle.surplusOrDeficit >= 0 ? "+" : ""}{cycle.surplusOrDeficit.toFixed(1)}w
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Engineers Header */}
+                <div className="p-4 border-b border-gray-700/50">
+                  <h3 className="font-semibold text-gray-100">Engineers</h3>
+                </div>
+
+                {/* Engineers List */}
+                <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-2">
+                  {cycle.engineers.map((engineer) => {
+                    const allocated = staffingRec.assignments
+                      .filter((a) => a.engineerId === engineer.id)
+                      .reduce((s, a) => s + a.weeksAllocated, 0);
+                    const remaining = engineer.availableWeeks - allocated;
+                    const pct = engineer.availableWeeks > 0
+                      ? (allocated / engineer.availableWeeks) * 100
+                      : 0;
+
+                    return (
+                      <div key={engineer.id} className="card p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-7 h-7 rounded-md bg-gray-700 flex items-center justify-center text-gray-300 text-xs font-medium">
+                            {engineer.name.split(" ").map((n) => n[0]).join("")}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-100 truncate">{engineer.name}</div>
+                          </div>
+                        </div>
+                        <div className="progress-bar h-2">
+                          <div
+                            className={clsx(
+                              "progress-bar-fill",
+                              pct > 100 ? "bg-red-500" : pct >= 100 ? "bg-emerald-500" : pct > 0 ? "bg-amber-500" : "bg-gray-700"
+                            )}
+                            style={{ width: `${Math.min(pct, 100)}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between mt-1.5">
+                          <span className="text-xs text-gray-500">
+                            {allocated.toFixed(1)} / {engineer.availableWeeks.toFixed(1)}w
+                          </span>
+                          <span className={clsx(
+                            "text-xs font-medium",
+                            remaining === 0 ? "text-emerald-400" : remaining < 0 ? "text-red-400" : "text-amber-400"
+                          )}>
+                            {remaining === 0 ? "Full" : remaining > 0 ? `${remaining.toFixed(1)}w left` : `Over ${Math.abs(remaining).toFixed(1)}w`}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="p-3 border-t border-gray-700/50 space-y-2">
+                  <button
+                    onClick={handleApproveStaffPlan}
+                    className="btn-primary w-full text-sm inline-flex items-center justify-center gap-1.5"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Approve & Apply
+                  </button>
+                  <div className="flex gap-2">
                     <button
                       onClick={handleGenerateStaffPlan}
                       disabled={staffingGenerating}
-                      className="btn-secondary text-sm inline-flex items-center gap-1.5"
+                      className="btn-secondary flex-1 text-sm inline-flex items-center justify-center gap-1.5"
                     >
                       {staffingGenerating ? (
-                        <>
-                          <div className="animate-spin w-3.5 h-3.5 border-2 border-gray-500 border-t-gray-300 rounded-full" />
-                          Regenerating...
-                        </>
+                        <div className="animate-spin w-3.5 h-3.5 border-2 border-gray-500 border-t-gray-300 rounded-full" />
                       ) : (
-                        <>
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
-                          Regenerate
-                        </>
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
                       )}
+                      Redo
                     </button>
                     <button
                       onClick={handleDenyStaffPlan}
-                      className="btn-secondary text-sm text-red-400 hover:text-red-300 inline-flex items-center gap-1.5"
+                      className="btn-secondary flex-1 text-sm text-red-400 hover:text-red-300 inline-flex items-center justify-center gap-1.5"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                       Discard
                     </button>
-                    <button
-                      onClick={handleApproveStaffPlan}
-                      className="btn-primary text-sm inline-flex items-center gap-1.5"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Approve & Apply
-                    </button>
                   </div>
                 </div>
+              </div>
 
-                {/* Reasoning */}
+              {/* Pitch Cards — scrollable main area */}
+              <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin p-4">
+                {/* AI Reasoning banner */}
                 {staffingRec.reasoning && (
-                  <div className="card p-4 bg-violet-500/5 border-violet-500/20">
-                    <div className="flex items-start gap-3">
-                      <svg className="w-5 h-5 text-violet-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="mb-4 rounded-lg p-3 bg-violet-500/5 border border-violet-500/20">
+                    <div className="flex items-start gap-2">
+                      <svg className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                       </svg>
-                      <div>
-                        <p className="text-sm font-medium text-violet-300 mb-1">AI Reasoning</p>
-                        <p className="text-sm text-gray-300 leading-relaxed">{staffingRec.reasoning}</p>
-                      </div>
+                      <p className="text-sm text-gray-300 leading-relaxed">{staffingRec.reasoning}</p>
                     </div>
                   </div>
                 )}
 
-                {/* Summary Cards */}
-                {(() => {
-                  const engineerSummary = new Map<string, { name: string; allocated: number; available: number }>();
-                  const pitchSummary = new Map<string, { title: string; allocated: number; estimate: number }>();
+                {/* Pitch cards grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {cycle.pitches.map((pitch) => {
+                    const pitchAssignments = staffingRec.assignments
+                      .map((a, idx) => ({ ...a, _idx: idx }))
+                      .filter((a) => a.pitchId === pitch.id);
+                    const allocatedWeeks = pitchAssignments.reduce((s, a) => s + a.weeksAllocated, 0);
+                    const remainingWeeks = pitch.estimateWeeks - allocatedWeeks;
+                    const filledPct = pitch.estimateWeeks > 0 ? (allocatedWeeks / pitch.estimateWeeks) * 100 : 0;
 
-                  for (const a of staffingRec.assignments) {
-                    const eng = engineerSummary.get(a.engineerId) || {
-                      name: a.engineerName,
-                      allocated: 0,
-                      available: cycle?.engineers.find((e) => e.id === a.engineerId)?.availableWeeks || 0,
+                    const getBarColor = () => {
+                      if (remainingWeeks < 0) return "bg-red-500";
+                      if (remainingWeeks === 0) return "bg-emerald-500";
+                      return "bg-amber-500";
                     };
-                    eng.allocated += a.weeksAllocated;
-                    engineerSummary.set(a.engineerId, eng);
 
-                    const pit = pitchSummary.get(a.pitchId) || {
-                      title: a.pitchTitle,
-                      allocated: 0,
-                      estimate: cycle?.pitches.find((p) => p.id === a.pitchId)?.estimateWeeks || 0,
-                    };
-                    pit.allocated += a.weeksAllocated;
-                    pitchSummary.set(a.pitchId, pit);
-                  }
-
-                  const totalAllocated = staffingRec.assignments.reduce((s, a) => s + a.weeksAllocated, 0);
-                  const totalAvailable = cycle?.totalAvailableWeeks || 0;
-                  const totalRequired = cycle?.totalRequiredWeeks || 0;
-
-                  return (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="card p-5">
-                        <div className="text-sm font-medium text-gray-400 mb-1">Engineers</div>
-                        <div className="text-3xl font-bold text-gray-100">
-                          {engineerSummary.size}
-                          <span className="text-lg font-normal text-gray-500 ml-1">assigned</span>
-                        </div>
-                        <div className="mt-2 text-sm text-gray-500">
-                          of {cycle?.engineers.length || 0} total
-                        </div>
-                      </div>
-                      <div className="card p-5">
-                        <div className="text-sm font-medium text-gray-400 mb-1">Weeks Allocated</div>
-                        <div className="text-3xl font-bold text-gray-100">
-                          {totalAllocated.toFixed(1)}
-                          <span className="text-lg font-normal text-gray-500 ml-1">
-                            of {totalAvailable.toFixed(1)}
-                          </span>
-                        </div>
-                        <div className="mt-2 text-sm text-gray-500">
-                          {(totalAvailable - totalAllocated).toFixed(1)}w unallocated
-                        </div>
-                      </div>
-                      <div className="card p-5">
-                        <div className="text-sm font-medium text-gray-400 mb-1">Pitches Covered</div>
-                        <div className="text-3xl font-bold text-gray-100">
-                          {pitchSummary.size}
-                          <span className="text-lg font-normal text-gray-500 ml-1">
-                            of {cycle?.pitches.length || 0}
-                          </span>
-                        </div>
-                        <div className="mt-2 text-sm text-gray-500">
-                          {totalRequired.toFixed(1)}w estimated total
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Assignments Table */}
-                <div className="card">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-800">
-                          <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Engineer</th>
-                          <th className="text-left py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Pitch</th>
-                          <th className="text-center py-3 px-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Weeks</th>
-                          <th className="w-10"></th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-800/50">
-                        {staffingRec.assignments.map((assignment, idx) => {
-                          const engineer = cycle?.engineers.find((e) => e.id === assignment.engineerId);
-                          const pitch = cycle?.pitches.find((p) => p.id === assignment.pitchId);
-                          return (
-                            <tr key={idx} className="hover:bg-gray-800/30 transition-colors">
-                              <td className="py-3 px-4">
-                                <div className="text-sm font-medium text-gray-200">{assignment.engineerName}</div>
-                                {engineer && (
-                                  <div className="text-xs text-gray-500">{engineer.availableWeeks.toFixed(1)}w available</div>
-                                )}
-                              </td>
-                              <td className="py-3 px-4">
-                                <div className="text-sm text-gray-200">{assignment.pitchTitle}</div>
-                                {pitch && (
-                                  <div className="text-xs text-gray-500">{pitch.estimateWeeks.toFixed(1)}w estimated</div>
-                                )}
-                              </td>
-                              <td className="py-3 px-4 text-center">
-                                <input
-                                  type="number"
-                                  step="0.5"
-                                  min="0.5"
-                                  value={assignment.weeksAllocated}
-                                  onChange={(e) => {
-                                    const val = parseFloat(e.target.value);
-                                    if (!isNaN(val) && val > 0) {
-                                      handleUpdateStaffPlanAssignment(idx, val);
-                                    }
-                                  }}
-                                  className="w-20 text-center bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-sm text-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none"
-                                />
-                              </td>
-                              <td className="py-3 px-4">
-                                <button
-                                  onClick={() => handleRemoveStaffPlanAssignment(idx)}
-                                  className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                  title="Remove assignment"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Engineer Summary */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="card">
-                    <div className="px-4 py-3 border-b border-gray-800">
-                      <h3 className="text-sm font-medium text-gray-300">Engineer Allocation</h3>
-                    </div>
-                    <div className="divide-y divide-gray-800/50">
-                      {cycle?.engineers.map((engineer) => {
-                        const allocated = staffingRec.assignments
-                          .filter((a) => a.engineerId === engineer.id)
-                          .reduce((s, a) => s + a.weeksAllocated, 0);
-                        const pct = engineer.availableWeeks > 0 ? (allocated / engineer.availableWeeks) * 100 : 0;
-                        return (
-                          <div key={engineer.id} className="px-4 py-3 flex items-center gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-gray-200 truncate">{engineer.name}</div>
-                              <div className="text-xs text-gray-500">
-                                {allocated.toFixed(1)}w / {engineer.availableWeeks.toFixed(1)}w
-                              </div>
-                            </div>
-                            <div className="w-32 flex-shrink-0">
-                              <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-                                <div
-                                  className={clsx(
-                                    "h-full rounded-full transition-all",
-                                    pct > 100 ? "bg-red-500" : pct >= 80 ? "bg-amber-500" : "bg-emerald-500"
-                                  )}
-                                  style={{ width: `${Math.min(pct, 100)}%` }}
-                                />
-                              </div>
-                            </div>
-                            <div className={clsx(
-                              "text-xs font-medium w-12 text-right",
-                              pct > 100 ? "text-red-400" : pct >= 80 ? "text-amber-400" : "text-emerald-400"
-                            )}>
-                              {Math.round(pct)}%
-                            </div>
+                    return (
+                      <div key={pitch.id} className="card p-5">
+                        {/* Pitch header */}
+                        <div className="mb-4">
+                          <div className="flex items-center gap-2 mb-1">
+                            {pitch.priority && (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-700 text-xs font-semibold text-gray-300">
+                                {pitch.priority}
+                              </span>
+                            )}
+                            {pitch.pitchDocUrl ? (
+                              <a href={pitch.pitchDocUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-100 hover:text-primary-400 transition-colors truncate">
+                                {pitch.title}
+                                <svg className="w-3.5 h-3.5 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                              </a>
+                            ) : (
+                              <span className="font-semibold text-gray-100 truncate">{pitch.title}</span>
+                            )}
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                        </div>
 
-                  <div className="card">
-                    <div className="px-4 py-3 border-b border-gray-800">
-                      <h3 className="text-sm font-medium text-gray-300">Pitch Coverage</h3>
-                    </div>
-                    <div className="divide-y divide-gray-800/50">
-                      {cycle?.pitches.map((pitch) => {
-                        const allocated = staffingRec.assignments
-                          .filter((a) => a.pitchId === pitch.id)
-                          .reduce((s, a) => s + a.weeksAllocated, 0);
-                        const pct = pitch.estimateWeeks > 0 ? (allocated / pitch.estimateWeeks) * 100 : 0;
-                        return (
-                          <div key={pitch.id} className="px-4 py-3 flex items-center gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-gray-200 truncate">{pitch.title}</div>
-                              <div className="text-xs text-gray-500">
-                                {allocated.toFixed(1)}w / {pitch.estimateWeeks.toFixed(1)}w
-                              </div>
-                            </div>
-                            <div className="w-32 flex-shrink-0">
-                              <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-                                <div
-                                  className={clsx(
-                                    "h-full rounded-full transition-all",
-                                    pct >= 100 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500"
-                                  )}
-                                  style={{ width: `${Math.min(pct, 100)}%` }}
-                                />
-                              </div>
-                            </div>
-                            <div className={clsx(
-                              "text-xs font-medium w-12 text-right",
-                              pct >= 100 ? "text-emerald-400" : pct >= 50 ? "text-amber-400" : "text-red-400"
-                            )}>
-                              {Math.round(pct)}%
-                            </div>
+                        {/* Estimate & progress */}
+                        <div className="space-y-3 mb-4">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">Estimate</span>
+                            <span className="font-medium text-gray-200">{pitch.estimateWeeks.toFixed(1)}w</span>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                          <div className="progress-bar h-2.5">
+                            <div
+                              className={clsx("progress-bar-fill", getBarColor())}
+                              style={{ width: `${Math.min(filledPct, 100)}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">Assigned</span>
+                            <span className="font-medium text-gray-200">{allocatedWeeks.toFixed(1)}w</span>
+                          </div>
+                        </div>
+
+                        {/* Status pill */}
+                        {remainingWeeks !== 0 && (
+                          <div className={clsx(
+                            "text-xs text-center font-medium rounded-lg py-1.5 mb-4",
+                            remainingWeeks > 0 ? "text-amber-400 bg-amber-500/20" : "text-red-400 bg-red-500/20"
+                          )}>
+                            {remainingWeeks > 0 ? `${remainingWeeks.toFixed(1)}w unassigned` : `Over by ${Math.abs(remainingWeeks).toFixed(1)}w`}
+                          </div>
+                        )}
+                        {remainingWeeks === 0 && (
+                          <div className="text-xs text-center font-semibold rounded py-1.5 mb-4 text-emerald-400 bg-emerald-500/20">
+                            Fully staffed
+                          </div>
+                        )}
+
+                        {/* Engineer assignments */}
+                        <div className="space-y-2">
+                          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">Engineers</div>
+                          {pitchAssignments.length > 0 ? (
+                            <div className="space-y-2">
+                              {pitchAssignments.map((assignment) => (
+                                <div key={assignment._idx} className="flex items-center justify-between bg-gray-700/50 rounded-lg px-3 py-2 group">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-md bg-gray-700 flex items-center justify-center text-gray-300 text-xs font-medium">
+                                      {assignment.engineerName.split(" ").map((n) => n[0]).join("")}
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-200">{assignment.engineerName}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => {
+                                        const newVal = prompt("Weeks allocated:", String(assignment.weeksAllocated));
+                                        if (newVal !== null) {
+                                          const parsed = parseFloat(newVal);
+                                          if (!isNaN(parsed) && parsed > 0) handleUpdateStaffPlanAssignment(assignment._idx, parsed);
+                                        }
+                                      }}
+                                      className="text-sm font-semibold text-primary-400 hover:text-primary-300 px-2 py-1 rounded hover:bg-primary-900/30 transition-colors"
+                                    >
+                                      {assignment.weeksAllocated.toFixed(1)}w
+                                    </button>
+                                    <button
+                                      onClick={() => handleRemoveStaffPlanAssignment(assignment._idx)}
+                                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400 transition-all"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-4 border-2 border-dashed border-gray-600 rounded-lg">
+                              <p className="text-sm text-gray-500">No engineers assigned</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          )
         ) : (
           /* Signups View */
           <div className="space-y-6">
