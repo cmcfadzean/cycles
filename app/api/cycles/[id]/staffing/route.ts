@@ -111,17 +111,28 @@ export async function POST(
     const totalCapacity = engineers.reduce((s, e) => s + e.availableWeeks, 0);
     const totalRequired = pitches.reduce((s, p) => s + p.estimateWeeks, 0);
 
-    const prompt = `You are a staffing planner for an engineering team. Given the engineers and their available capacity, and the pitches (projects) with their estimated effort, create an optimal staffing plan.
+    const prompt = `You are a staffing planner for an engineering team. You MUST produce a complete staffing plan that allocates ALL engineers and fully staffs ALL pitches.
 
-RULES:
-1. Each engineer's total allocated weeks MUST NOT exceed their availableWeeks.
-2. Each pitch's total allocated weeks should ideally match its estimateWeeks, but can be less if there isn't enough capacity.
-3. STRONGLY prefer assigning an engineer to as few pitches as possible — ideally one engineer works on one pitch for the full duration. Only split an engineer across pitches when necessary.
-4. Higher priority pitches (lower priority number) should be staffed first and more fully.
-5. Every engineer should be assigned to at least one pitch if possible.
-6. weeksAllocated must be a positive number (minimum 0.5 increments).
-${totalCapacity < totalRequired ? `7. IMPORTANT: Total capacity (${totalCapacity}w) is less than total required (${totalRequired}w). Not all work can be fully covered. Prioritize higher-priority pitches.` : ""}
-${signupPreferences.length > 0 ? `${totalCapacity < totalRequired ? "8" : "7"}. PREFERENCES: People submitted signup preferences for which pitches they want to work on. Match each person name to the closest engineer by name (fuzzy match — e.g. "Court" matches "Court McFadzean"). Try to assign each engineer to their preferred pitch (1st choice > 2nd > 3rd). Preferences should be honored when capacity and priority constraints allow. In the reasoning, mention which preferences were accommodated and which had to be overridden and why.` : ""}
+PRIORITY #1 — FULL COVERAGE (non-negotiable):
+- Every single pitch MUST be fully staffed: the sum of weeksAllocated for each pitch MUST equal its estimateWeeks exactly.
+- Every single engineer MUST be allocated: the sum of weeksAllocated for each engineer MUST equal their availableWeeks exactly.
+- An engineer's total allocated weeks MUST NOT exceed their availableWeeks.
+- weeksAllocated must be a positive number in 0.5 increments (minimum 0.5).
+${totalCapacity > totalRequired ? `- There are ${(totalCapacity - totalRequired).toFixed(1)} surplus weeks. Distribute the extra across pitches proportionally (some pitches may get slightly more than their estimate). Every engineer-week must be used.` : ""}
+${totalCapacity < totalRequired ? `- There is a deficit of ${(totalRequired - totalCapacity).toFixed(1)} weeks. Some lower-priority pitches may be understaffed, but allocate every available engineer-week. Staff higher-priority pitches (lower priority number) fully first.` : ""}
+
+PRIORITY #2 — ENGINEER HAPPINESS (best effort):
+${signupPreferences.length > 0 ? `Engineers submitted signup preferences for which pitches they want to work on. Match each person name below to the closest engineer by name (fuzzy match — e.g. "Court" matches "Court McFadzean"). Try to put engineers on their 1st choice pitch. If that's not possible, try 2nd choice, then 3rd. This is secondary to full coverage — never leave a pitch understaffed or an engineer unallocated just to honor a preference.` : "No signup preferences were submitted. Assign engineers to pitches purely based on coverage needs."}
+
+PRIORITY #3 — CONTINUITY (tie-breaker):
+- When possible, prefer assigning an engineer to fewer pitches (ideally one) so they can focus deeply. But splitting across 2-3 pitches is fine and expected to achieve full coverage.
+- Higher priority pitches (lower priority number) should be prioritized if there is a capacity deficit.
+
+SUMMARY:
+- Total engineer capacity: ${totalCapacity.toFixed(1)} weeks
+- Total pitch estimates: ${totalRequired.toFixed(1)} weeks
+- Engineers: ${engineers.length}
+- Pitches: ${pitches.length}
 ${signupPreferences.length > 0 ? `
 SIGNUP PREFERENCES:
 ${signupPreferences.map((s) => `- ${s.personName}: 1st "${s.firstChoice}", 2nd "${s.secondChoice}", 3rd "${s.thirdChoice}"`).join("\n")}
@@ -132,12 +143,18 @@ ${engineers.map((e) => `- ${e.engineerName} (id: ${e.engineerId}): ${e.available
 PITCHES (ordered by priority):
 ${pitches.map((p) => `- ${p.pitchTitle} (id: ${p.pitchId}): ${p.estimateWeeks} weeks estimated, priority ${p.priority}`).join("\n")}
 
+VALIDATION — Before returning, verify:
+1. For each engineer, sum their weeksAllocated. It MUST equal their availableWeeks.
+2. For each pitch, sum its weeksAllocated. It MUST equal its estimateWeeks (unless deficit makes it impossible).
+3. No engineer is missing from the assignments.
+4. No pitch is missing from the assignments.
+
 Return a JSON object with this exact shape:
 {
   "assignments": [
     { "engineerId": "...", "engineerName": "...", "pitchId": "...", "pitchTitle": "...", "weeksAllocated": <number> }
   ],
-  "reasoning": "A brief explanation of the staffing rationale."
+  "reasoning": "Brief explanation: which preferences were honored, which weren't and why, and how surplus/deficit was handled."
 }
 
 Only return valid JSON, no markdown formatting.`;
