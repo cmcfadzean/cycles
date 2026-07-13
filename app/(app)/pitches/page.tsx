@@ -81,7 +81,7 @@ const tabConfig: Record<Tab, { label: string; color: string }> = {
   all: { label: "All", color: "gray" },
   BACKLOG: { label: "Backlog", color: "gray" },
   PLANNING: { label: "Planning", color: "blue" },
-  READY_FOR_DEV: { label: "Ready for Dev", color: "violet" },
+  READY_FOR_DEV: { label: "Ready for Dev", color: "primary" },
   COMPLETE: { label: "Complete", color: "emerald" },
   CANCELED: { label: "Canceled", color: "gray" },
 };
@@ -572,7 +572,7 @@ export default function PitchesPage() {
             const activeColorClasses = {
               gray: "bg-gray-500/20 text-gray-300",
               blue: "bg-blue-500/20 text-blue-400",
-              violet: "bg-violet-500/20 text-violet-400",
+              primary: "bg-primary-500/20 text-primary-400",
               emerald: "bg-emerald-500/20 text-emerald-400",
             }[config.color];
             
@@ -583,7 +583,7 @@ export default function PitchesPage() {
                 className={clsx(
                   "py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap",
                   isActive
-                    ? "border-violet-500 text-gray-100"
+                    ? "border-primary-500 text-gray-100"
                     : "border-transparent text-gray-500 hover:text-gray-300"
                 )}
               >
@@ -787,7 +787,7 @@ export default function PitchesPage() {
               className={clsx(
                 "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors",
                 createMode === "manual"
-                  ? "bg-violet-600 text-white"
+                  ? "bg-primary-600 text-white"
                   : "bg-gray-800 text-gray-400 hover:text-gray-200"
               )}
             >
@@ -803,7 +803,7 @@ export default function PitchesPage() {
               className={clsx(
                 "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2",
                 createMode === "linear"
-                  ? "bg-violet-600 text-white"
+                  ? "bg-primary-600 text-white"
                   : "bg-gray-800 text-gray-400 hover:text-gray-200"
               )}
             >
@@ -957,7 +957,7 @@ export default function PitchesPage() {
                 <p className="text-gray-400">No active projects found in Linear</p>
                 <button
                   onClick={() => fetchLinearProjects()}
-                  className="mt-4 text-violet-400 hover:text-violet-300 text-sm"
+                  className="mt-4 text-primary-400 hover:text-primary-300 text-sm"
                 >
                   Refresh
                 </button>
@@ -1014,7 +1014,7 @@ export default function PitchesPage() {
                           className={clsx(
                             "w-full text-left p-3 rounded-lg border transition-colors",
                             isSelected
-                              ? "border-violet-500 bg-violet-500/10"
+                              ? "border-primary-500 bg-primary-500/10"
                               : "border-gray-700 hover:border-gray-600 hover:bg-gray-800/50"
                           )}
                         >
@@ -1023,7 +1023,7 @@ export default function PitchesPage() {
                               className={clsx(
                                 "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors",
                                 isSelected
-                                  ? "border-violet-500 bg-violet-500"
+                                  ? "border-primary-500 bg-primary-500"
                                   : "border-gray-600"
                               )}
                             >
@@ -1108,7 +1108,7 @@ export default function PitchesPage() {
                 </p>
                 <Link
                   href="/settings"
-                  className="text-sm text-violet-400 hover:text-violet-300"
+                  className="text-sm text-primary-400 hover:text-primary-300"
                 >
                   Go to Settings →
                 </Link>

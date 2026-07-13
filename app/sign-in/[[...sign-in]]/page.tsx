@@ -43,10 +43,10 @@ export default function SignInPage() {
               formFieldInput:
                 "bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500",
               formButtonPrimary:
-                "bg-violet-600 hover:bg-violet-500 text-white",
-              footerActionLink: "text-violet-400 hover:text-violet-300",
+                "bg-primary-600 hover:bg-primary-500 text-white",
+              footerActionLink: "text-primary-400 hover:text-primary-300",
               identityPreviewText: "text-neutral-300",
-              identityPreviewEditButton: "text-violet-400",
+              identityPreviewEditButton: "text-primary-400",
             },
           }}
         />

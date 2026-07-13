@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 export default async function HomePage() {
   const { userId } = await auth();
@@ -15,9 +16,7 @@ export default async function HomePage() {
       <header className="fixed top-0 inset-x-0 z-50 border-b border-gray-800/50 bg-gray-950/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <svg className="w-9 h-9 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h-1a1 1 0 00-1 1v8a1 1 0 001 1h1m0-10v10m0-10h2a1 1 0 011 1v8a1 1 0 01-1 1H6m12-10h1a1 1 0 011 1v8a1 1 0 01-1 1h-1m0-10v10m0-10h-2a1 1 0 00-1 1v8a1 1 0 001 1h2M9 12h6" />
-            </svg>
+            <Logo className="text-3xl" />
             <span className="text-lg font-semibold tracking-tight">Cycles</span>
           </div>
           <nav className="flex items-center gap-6">
@@ -35,13 +34,13 @@ export default async function HomePage() {
       <section className="relative pt-40 pb-32 px-6">
         {/* Gradient orbs */}
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[600px] opacity-20 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-600 rounded-full blur-[128px]" />
-          <div className="absolute top-32 right-1/4 w-72 h-72 bg-blue-600 rounded-full blur-[128px]" />
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary-600 rounded-full blur-[128px]" />
+          <div className="absolute top-32 right-1/4 w-72 h-72 bg-teal-700 rounded-full blur-[128px]" />
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-8 rounded-full border border-gray-800 bg-gray-900/50 text-sm text-gray-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse" />
             Shape Up methodology, supercharged with AI
           </div>
 
@@ -49,7 +48,7 @@ export default async function HomePage() {
             The planning system{" "}
             <br className="hidden sm:block" />
             for product{" "}
-            <span className="bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary-300 to-teal-300 bg-clip-text text-transparent">
               engineering
             </span>
           </h1>
@@ -149,8 +148,8 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Feature 1: Betting Table */}
             <div className="group rounded-xl border border-gray-800 bg-gray-900/50 p-8 hover:border-gray-700 transition-colors">
-              <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center mb-6">
+                <svg className="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -224,7 +223,7 @@ export default async function HomePage() {
                 step: "01",
                 title: "Shape pitches",
                 description: "Define work, set estimates, and assign product managers and designers.",
-                color: "violet",
+                color: "primary",
               },
               {
                 step: "02",
@@ -247,7 +246,7 @@ export default async function HomePage() {
             ].map((item) => (
               <div key={item.step} className="relative">
                 <div className={`text-5xl font-bold mb-4 ${
-                  item.color === "violet" ? "text-violet-500/20" :
+                  item.color === "primary" ? "text-primary-500/20" :
                   item.color === "emerald" ? "text-emerald-500/20" :
                   item.color === "blue" ? "text-blue-500/20" :
                   "text-amber-500/20"
@@ -266,7 +265,7 @@ export default async function HomePage() {
       <section className="relative px-6 py-32 border-t border-gray-800/50">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] opacity-15">
-            <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-violet-600 rounded-full blur-[128px]" />
+            <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-primary-600 rounded-full blur-[128px]" />
             <div className="absolute bottom-16 right-1/4 w-64 h-64 bg-blue-600 rounded-full blur-[128px]" />
           </div>
         </div>
@@ -290,9 +289,7 @@ export default async function HomePage() {
       <footer className="border-t border-gray-800/50 px-6 py-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <svg className="w-8 h-8 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h-1a1 1 0 00-1 1v8a1 1 0 001 1h1m0-10v10m0-10h2a1 1 0 011 1v8a1 1 0 01-1 1H6m12-10h1a1 1 0 011 1v8a1 1 0 01-1 1h-1m0-10v10m0-10h-2a1 1 0 00-1 1v8a1 1 0 001 1h2M9 12h6" />
-            </svg>
+            <Logo className="text-2xl" />
             <span className="text-sm text-gray-500">Cycles</span>
           </div>
           <p className="text-sm text-gray-600">

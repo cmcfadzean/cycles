@@ -100,7 +100,7 @@ export function InlineWeeksEditor({
           type="number"
           step="0.5"
           min="0"
-          className="w-16 px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-violet-500"
+          className="w-16 px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-gray-100 focus:outline-none focus:border-primary-500"
           value={weeksValue}
           onChange={(e) => setWeeksValue(e.target.value)}
           onBlur={handleSave}

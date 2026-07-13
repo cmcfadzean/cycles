@@ -9,19 +9,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Vibrant violet for primary actions
+        // Muted sage green for primary actions
         primary: {
-          50: "#f5f3ff",
-          100: "#ede9fe",
-          200: "#ddd6fe",
-          300: "#c4b5fd",
-          400: "#a78bfa",
-          500: "#8b5cf6",
-          600: "#7c3aed",
-          700: "#6d28d9",
-          800: "#5b21b6",
-          900: "#4c1d95",
-          950: "#2e1065",
+          50: "#f4f6f1",
+          100: "#e5eadd",
+          200: "#ccd6bd",
+          300: "#acbc95",
+          400: "#8fa374",
+          500: "#718857",
+          600: "#576b42",
+          700: "#445435",
+          800: "#39442d",
+          900: "#313a28",
+          950: "#181f12",
         },
         // Neutral grays without blue tint
         gray: {
@@ -46,7 +46,7 @@ const config: Config = {
       },
       boxShadow: {
         soft: "0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3)",
-        glow: "0 0 20px rgba(139, 92, 246, 0.3)",
+        glow: "0 0 20px rgba(113, 136, 87, 0.3)",
       },
       borderColor: {
         DEFAULT: "#262626",

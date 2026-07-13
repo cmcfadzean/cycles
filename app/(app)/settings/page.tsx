@@ -189,7 +189,7 @@ export default function SettingsPage() {
                 href="https://linear.app/settings/api"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-violet-400 hover:text-violet-300 mt-3"
+                className="inline-flex items-center gap-1 text-sm text-primary-400 hover:text-primary-300 mt-3"
               >
                 Open Linear API Settings
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

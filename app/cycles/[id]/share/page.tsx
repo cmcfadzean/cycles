@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { CycleDetail, PitchWithAssignments, Pod } from "@/lib/types";
 import clsx from "clsx";
+import Logo from "@/components/Logo";
 
 function formatDate(date: string | Date) {
   return new Date(date).toLocaleDateString("en-US", {
@@ -16,11 +17,11 @@ function formatDate(date: string | Date) {
 const statusConfig: Record<string, { label: string; className: string }> = {
   BACKLOG: { label: "Backlog", className: "bg-gray-700 text-gray-300" },
   PLANNING: { label: "Planning", className: "bg-blue-500/25 text-blue-400" },
-  READY_FOR_DEV: { label: "Ready for Dev", className: "bg-violet-500/25 text-violet-400" },
+  READY_FOR_DEV: { label: "Ready for Dev", className: "bg-primary-500/25 text-primary-400" },
   COMPLETE: { label: "Complete", className: "bg-emerald-500/25 text-emerald-400" },
   CANCELED: { label: "Canceled", className: "bg-gray-700 text-gray-500 line-through" },
   PLANNED: { label: "Backlog", className: "bg-gray-700 text-gray-300" },
-  IN_PROGRESS: { label: "Ready for Dev", className: "bg-violet-500/25 text-violet-400" },
+  IN_PROGRESS: { label: "Ready for Dev", className: "bg-primary-500/25 text-primary-400" },
   DONE: { label: "Complete", className: "bg-emerald-500/25 text-emerald-400" },
   DROPPED: { label: "Canceled", className: "bg-gray-700 text-gray-500 line-through" },
 };
@@ -102,11 +103,11 @@ function KanbanPitchCard({ pitch }: { pitch: PitchWithAssignments }) {
         {/* Product Manager */}
         {pitch.productManagerName && (
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-medium shrink-0">
+            <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-medium shrink-0">
               {pitch.productManagerName.split(" ").map((n) => n[0]).join("")}
             </div>
             <span className="text-sm text-gray-300 truncate">{pitch.productManagerName}</span>
-            <span className="text-xs text-violet-400 shrink-0">PM</span>
+            <span className="text-xs text-primary-400 shrink-0">PM</span>
           </div>
         )}
 
@@ -160,7 +161,7 @@ function KanbanColumn({
       <div className="p-4 border-b border-gray-700/50">
         <h3 className="font-semibold text-gray-100 mb-1">{title}</h3>
         {subtitle && (
-          <div className="text-xs text-violet-400 mb-2">{subtitle}</div>
+          <div className="text-xs text-primary-400 mb-2">{subtitle}</div>
         )}
         <div className="flex items-center gap-3 text-xs text-gray-400">
           <span>{pitches.length} pitch{pitches.length !== 1 ? "es" : ""}</span>
@@ -256,9 +257,7 @@ export default function ShareCyclePage() {
       <header className="border-b border-gray-800 shrink-0">
         <div className="px-6 py-6">
           <div className="flex items-center gap-3">
-            <svg className="w-10 h-10 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h-1a1 1 0 00-1 1v8a1 1 0 001 1h1m0-10v10m0-10h2a1 1 0 011 1v8a1 1 0 01-1 1H6m12-10h1a1 1 0 011 1v8a1 1 0 01-1 1h-1m0-10v10m0-10h-2a1 1 0 00-1 1v8a1 1 0 001 1h2M9 12h6" />
-            </svg>
+            <Logo className="text-3xl" />
             <div>
               <h1 className="text-xl font-semibold text-gray-100">{cycle.name}</h1>
               <p className="text-sm text-gray-500">
