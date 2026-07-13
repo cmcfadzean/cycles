@@ -244,7 +244,7 @@ export default function ProductManagersPage() {
                 <tr key={pm.id} className="hover:bg-gray-800/50 transition-colors">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-md bg-violet-600/20 flex items-center justify-center text-violet-400 text-sm font-medium">
+                      <div className="w-8 h-8 rounded-md bg-primary-600/20 flex items-center justify-center text-primary-400 text-sm font-medium">
                         {pm.name
                           .split(" ")
                           .map((n) => n[0])

@@ -19,7 +19,7 @@ const statusConfig: Record<
   },
   READY_FOR_DEV: {
     label: "Ready for Dev",
-    className: "bg-violet-500/20 text-violet-400",
+    className: "bg-primary-500/20 text-primary-400",
   },
   COMPLETE: {
     label: "Complete",
@@ -36,7 +36,7 @@ const statusConfig: Record<
   },
   IN_PROGRESS: {
     label: "Ready for Dev",
-    className: "bg-violet-500/20 text-violet-400",
+    className: "bg-primary-500/20 text-primary-400",
   },
   DONE: {
     label: "Complete",
@@ -162,14 +162,14 @@ export function StatusBadge({ status, className, onChange, disabled }: StatusBad
                     "w-2 h-2 rounded-full",
                     statusOption === "BACKLOG" && "bg-gray-400",
                     statusOption === "PLANNING" && "bg-blue-400",
-                    statusOption === "READY_FOR_DEV" && "bg-violet-400",
+                    statusOption === "READY_FOR_DEV" && "bg-primary-400",
                     statusOption === "COMPLETE" && "bg-emerald-400",
                     statusOption === "CANCELED" && "bg-gray-500"
                   )}
                 />
                 {optionConfig.label}
                 {isSelected && (
-                  <svg className="w-4 h-4 ml-auto text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 ml-auto text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 )}

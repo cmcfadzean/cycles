@@ -6,6 +6,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import { UserButton, OrganizationSwitcher } from "@clerk/nextjs";
 import { Modal } from "@/components/Modal";
+import Logo from "@/components/Logo";
 import toast from "react-hot-toast";
 
 const navigation = [
@@ -88,7 +89,7 @@ function NavItem({ item, isActive }: { item: typeof navigation[0]; isActive: boo
       className={clsx(
         "group relative flex items-center justify-center w-10 h-10 rounded-lg transition-colors",
         isActive
-          ? "bg-violet-600 text-white"
+          ? "bg-primary-600 text-white"
           : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
       )}
     >
@@ -166,9 +167,7 @@ export default function AppLayout({
         {/* Logo */}
         <div className="h-16 flex items-center justify-center border-b border-gray-800">
           <Link href="/dashboard" className="group relative flex items-center justify-center w-10 h-10 rounded-lg">
-            <svg className="w-10 h-10 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h-1a1 1 0 00-1 1v8a1 1 0 001 1h1m0-10v10m0-10h2a1 1 0 011 1v8a1 1 0 01-1 1H6m12-10h1a1 1 0 011 1v8a1 1 0 01-1 1h-1m0-10v10m0-10h-2a1 1 0 00-1 1v8a1 1 0 001 1h2M9 12h6" />
-            </svg>
+            <Logo className="text-3xl" />
             {/* Tooltip */}
             <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-md text-sm font-medium text-gray-100 whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 shadow-lg">
               Cycle Planning
@@ -217,7 +216,7 @@ export default function AppLayout({
             className={clsx(
               "group relative flex items-center justify-center w-10 h-10 rounded-lg transition-colors",
               pathname === "/settings"
-                ? "bg-violet-600 text-white"
+                ? "bg-primary-600 text-white"
                 : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
             )}
           >
