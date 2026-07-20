@@ -57,12 +57,12 @@ function DraggableEngineerCard({
   engineer,
   isDragging,
   onEdit,
-  onDelete,
+  onRemove,
 }: {
   engineer: EngineerWithCapacity;
   isDragging?: boolean;
   onEdit: (engineer: EngineerWithCapacity) => void;
-  onDelete: (engineer: EngineerWithCapacity) => void;
+  onRemove: (engineer: EngineerWithCapacity) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `engineer-${engineer.id}`,
@@ -130,7 +130,7 @@ function DraggableEngineerCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(engineer);
+              onRemove(engineer);
             }}
             onPointerDown={(e) => e.stopPropagation()}
             className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
@@ -1190,7 +1190,7 @@ export default function CycleDetailPage() {
   // Modal states
   const [isAddEngineerModalOpen, setIsAddEngineerModalOpen] = useState(false);
   const [isEditEngineerModalOpen, setIsEditEngineerModalOpen] = useState(false);
-  const [isDeleteEngineerModalOpen, setIsDeleteEngineerModalOpen] = useState(false);
+  const [isRemoveEngineerModalOpen, setIsRemoveEngineerModalOpen] = useState(false);
   const [isAddPitchModalOpen, setIsAddPitchModalOpen] = useState(false);
   const [isEditPitchModalOpen, setIsEditPitchModalOpen] = useState(false);
   const [isEditCycleModalOpen, setIsEditCycleModalOpen] = useState(false);
@@ -1211,7 +1211,7 @@ export default function CycleDetailPage() {
   const [isAddToBettingModalOpen, setIsAddToBettingModalOpen] = useState(false);
   const [selectedBettingPitches, setSelectedBettingPitches] = useState<Set<string>>(new Set());
   const [editingEngineer, setEditingEngineer] = useState<EngineerWithCapacity | null>(null);
-  const [engineerToDelete, setEngineerToDelete] = useState<EngineerWithCapacity | null>(null);
+  const [engineerToRemove, setEngineerToRemove] = useState<EngineerWithCapacity | null>(null);
 
   // Form states
   const [selectedEngineersMap, setSelectedEngineersMap] = useState<Record<string, string>>({});
@@ -2199,31 +2199,34 @@ export default function CycleDetailPage() {
     }
   }
 
-  function handleOpenDeleteEngineer(engineer: EngineerWithCapacity) {
-    setEngineerToDelete(engineer);
-    setIsDeleteEngineerModalOpen(true);
+  function handleOpenRemoveEngineer(engineer: EngineerWithCapacity) {
+    setEngineerToRemove(engineer);
+    setIsRemoveEngineerModalOpen(true);
   }
 
-  async function handleDeleteEngineer() {
-    if (!engineerToDelete) return;
+  async function handleRemoveEngineerFromCycle() {
+    if (!engineerToRemove) return;
 
     try {
-      const res = await fetch(`/api/engineers/${engineerToDelete.id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/engineers/${engineerToRemove.id}/capacities/${cycleId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to delete engineer");
+        throw new Error(data.error || "Failed to remove engineer from cycle");
       }
 
-      toast.success("Engineer deleted");
-      setIsDeleteEngineerModalOpen(false);
-      setEngineerToDelete(null);
+      toast.success("Engineer removed from cycle");
+      setIsRemoveEngineerModalOpen(false);
+      setEngineerToRemove(null);
       fetchCycle();
       fetchEngineers();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete engineer");
+      toast.error(err instanceof Error ? err.message : "Failed to remove engineer from cycle");
     }
   }
 
@@ -2781,7 +2784,7 @@ export default function CycleDetailPage() {
                           engineer={engineer}
                           isDragging={activeEngineer?.id === engineer.id}
                           onEdit={handleOpenEditEngineer}
-                          onDelete={handleOpenDeleteEngineer}
+                          onRemove={handleOpenRemoveEngineer}
                         />
                       ))}
                     {cycle.engineers.filter((e) => e.remainingWeeks > 0).length === 0 &&
@@ -4267,31 +4270,31 @@ export default function CycleDetailPage() {
         </form>
       </Modal>
 
-      {/* Delete Engineer Confirmation Modal */}
+      {/* Remove Engineer From Cycle Confirmation Modal */}
       <Modal
-        isOpen={isDeleteEngineerModalOpen}
+        isOpen={isRemoveEngineerModalOpen}
         onClose={() => {
-          setIsDeleteEngineerModalOpen(false);
-          setEngineerToDelete(null);
+          setIsRemoveEngineerModalOpen(false);
+          setEngineerToRemove(null);
         }}
-        title="Delete Engineer"
+        title="Remove from Cycle"
       >
         <div className="space-y-5">
           <p className="text-gray-400">
-            Are you sure you want to delete{" "}
+            Remove{" "}
             <span className="font-semibold text-gray-100">
-              {engineerToDelete?.name}
-            </span>
-            ? This will remove them from all cycles and delete all their assignments.
-            This action cannot be undone.
+              {engineerToRemove?.name}
+            </span>{" "}
+            from this cycle? Their assignments in this cycle will be cleared.
+            They will stay in the system and can be added back anytime.
           </p>
 
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={() => {
-                setIsDeleteEngineerModalOpen(false);
-                setEngineerToDelete(null);
+                setIsRemoveEngineerModalOpen(false);
+                setEngineerToRemove(null);
               }}
               className="btn-secondary"
             >
@@ -4299,10 +4302,10 @@ export default function CycleDetailPage() {
             </button>
             <button
               type="button"
-              onClick={handleDeleteEngineer}
+              onClick={handleRemoveEngineerFromCycle}
               className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
             >
-              Delete Engineer
+              Remove from Cycle
             </button>
           </div>
         </div>

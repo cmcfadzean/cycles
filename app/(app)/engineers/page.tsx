@@ -19,9 +19,9 @@ export default function EngineersPage() {
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [editingEngineer, setEditingEngineer] = useState<Engineer | null>(null);
-  const [deletingEngineer, setDeletingEngineer] = useState<Engineer | null>(null);
+  const [deactivatingEngineer, setDeactivatingEngineer] = useState<Engineer | null>(null);
   const [formData, setFormData] = useState({ name: "", email: "" });
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function EngineersPage() {
 
   async function fetchEngineers() {
     try {
-      const res = await fetch("/api/engineers");
+      const res = await fetch("/api/engineers?includeInactive=true");
       if (!res.ok) throw new Error("Failed to fetch engineers");
       const data = await res.json();
       setEngineers(data);
@@ -104,25 +104,40 @@ export default function EngineersPage() {
     }
   }
 
-  async function handleDelete() {
-    if (!deletingEngineer) return;
+  async function setActive(engineer: Engineer, active: boolean) {
+    const res = await fetch(`/api/engineers/${engineer.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Failed to update engineer");
+    }
+  }
+
+  async function handleDeactivate() {
+    if (!deactivatingEngineer) return;
 
     try {
-      const res = await fetch(`/api/engineers/${deletingEngineer.id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to delete engineer");
-      }
-
-      toast.success("Engineer deleted");
-      setIsDeleteModalOpen(false);
-      setDeletingEngineer(null);
+      await setActive(deactivatingEngineer, false);
+      toast.success("Engineer deactivated");
+      setIsDeactivateModalOpen(false);
+      setDeactivatingEngineer(null);
       fetchEngineers();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete engineer");
+      toast.error(err instanceof Error ? err.message : "Failed to deactivate engineer");
+    }
+  }
+
+  async function handleReactivate(engineer: Engineer) {
+    try {
+      await setActive(engineer, true);
+      toast.success("Engineer reactivated");
+      fetchEngineers();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to reactivate engineer");
     }
   }
 
@@ -132,9 +147,9 @@ export default function EngineersPage() {
     setIsEditModalOpen(true);
   }
 
-  function openDeleteModal(engineer: Engineer) {
-    setDeletingEngineer(engineer);
-    setIsDeleteModalOpen(true);
+  function openDeactivateModal(engineer: Engineer) {
+    setDeactivatingEngineer(engineer);
+    setIsDeactivateModalOpen(true);
   }
 
   if (loading) {
@@ -272,17 +287,28 @@ export default function EngineersPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
-                      {isAdmin && (
-                        <button
-                          onClick={() => openDeleteModal(engineer)}
-                          className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
-                          title="Delete"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      )}
+                      {isAdmin &&
+                        (engineer.active ? (
+                          <button
+                            onClick={() => openDeactivateModal(engineer)}
+                            className="p-1.5 text-gray-400 hover:text-amber-400 hover:bg-amber-500/10 rounded transition-colors"
+                            title="Deactivate"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleReactivate(engineer)}
+                            className="p-1.5 text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded transition-colors"
+                            title="Reactivate"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </button>
+                        ))}
                     </div>
                   </td>
                 </tr>
@@ -398,36 +424,38 @@ export default function EngineersPage() {
         </form>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
+      {/* Deactivate Confirmation Modal */}
       <Modal
-        isOpen={isDeleteModalOpen}
+        isOpen={isDeactivateModalOpen}
         onClose={() => {
-          setIsDeleteModalOpen(false);
-          setDeletingEngineer(null);
+          setIsDeactivateModalOpen(false);
+          setDeactivatingEngineer(null);
         }}
-        title="Delete Engineer"
+        title="Deactivate Engineer"
       >
         <div className="space-y-5">
           <p className="text-gray-300">
-            Are you sure you want to delete <span className="font-semibold text-gray-100">{deletingEngineer?.name}</span>?
+            Deactivate <span className="font-semibold text-gray-100">{deactivatingEngineer?.name}</span>?
           </p>
           <p className="text-sm text-gray-500">
-            This will remove them from all cycles and assignments. This action cannot be undone.
+            They won&apos;t appear when adding engineers to new cycles, but their
+            history and existing assignments are kept. You can reactivate them
+            anytime.
           </p>
 
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={() => {
-                setIsDeleteModalOpen(false);
-                setDeletingEngineer(null);
+                setIsDeactivateModalOpen(false);
+                setDeactivatingEngineer(null);
               }}
               className="btn-secondary"
             >
               Cancel
             </button>
-            <button onClick={handleDelete} className="btn-danger">
-              Delete Engineer
+            <button onClick={handleDeactivate} className="btn-danger">
+              Deactivate
             </button>
           </div>
         </div>

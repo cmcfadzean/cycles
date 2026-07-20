@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOrganization, requireAdmin } from "@/lib/auth";
+import { requireOrganization } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
@@ -115,6 +115,12 @@ export async function PATCH(
     }
 
     if (body.active !== undefined) {
+      if (!organization.isAdmin) {
+        return NextResponse.json(
+          { error: "Admin access required" },
+          { status: 403 }
+        );
+      }
       updateData.active = body.active;
     }
 
@@ -136,49 +142,6 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const organization = await requireAdmin();
-    const { id } = await params;
-
-    // Check if engineer exists and belongs to organization
-    const engineer = await prisma.engineer.findFirst({
-      where: {
-        id,
-        organizationId: organization.id,
-      },
-      include: {
-        assignments: true,
-      },
-    });
-
-    if (!engineer) {
-      return NextResponse.json(
-        { error: "Engineer not found" },
-        { status: 404 }
-      );
-    }
-
-    // Delete the engineer (cascades to capacities and assignments)
-    await prisma.engineer.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Failed to delete engineer:", error);
-    if (error instanceof Error && error.message === "Admin access required") {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
-    }
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return NextResponse.json(
-      { error: "Failed to delete engineer" },
-      { status: 500 }
-    );
-  }
-}
+// Engineers are never deleted from the system — deactivate via PATCH { active: false }
+// instead. Removing an engineer from a single cycle is handled by
+// DELETE /api/engineers/[id]/capacities/[cycleId].
